@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import JoinButton from '@/components/JoinButton'
 import ReviewForm from '@/components/ReviewForm'
+import HowToUseGuide from '@/components/HowToUseGuide'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -155,6 +156,9 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </li>
           </ul>
         </div>
+
+        {/* 使い方ガイド */}
+        <HowToUseGuide />
 
         {/* OK例・NG例 */}
         {(challenge.ok_photo_url || challenge.ng_photo_url) && (() => {
