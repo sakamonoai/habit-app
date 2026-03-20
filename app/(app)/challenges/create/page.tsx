@@ -337,7 +337,7 @@ export default function CreateChallengePage() {
               }`}
             >
               <p className="font-semibold text-sm text-gray-900 mb-1">いつでも参加</p>
-              <p className="text-xs text-gray-500">参加した日からカウント開始。新しい人が入りやすい</p>
+              <p className="text-xs text-gray-500">参加した日からカウント開始。新しい人が入りやすい。（いつでも削除できます）</p>
             </button>
             <button
               onClick={() => setScheduleType('fixed')}
@@ -348,7 +348,7 @@ export default function CreateChallengePage() {
               }`}
             >
               <p className="font-semibold text-sm text-gray-900 mb-1">期間を決める</p>
-              <p className="text-xs text-gray-500">全員同じ日程で走る。締切効果で盛り上がる</p>
+              <p className="text-xs text-gray-500">全員同じ日程で走る。皆で一緒に達成感を味わえる。</p>
             </button>
           </div>
         </div>
