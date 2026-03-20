@@ -30,7 +30,7 @@ export default function JoinButton({ challengeId, isFull }: Props) {
       .from('groups')
       .select('id')
       .eq('challenge_id', challengeId)
-      .single()
+      .maybeSingle()
 
     let groupId = existingGroup?.id
 
@@ -42,11 +42,11 @@ export default function JoinButton({ challengeId, isFull }: Props) {
         .single()
 
       if (groupError) {
-        setError(`参加に失敗しました: ${groupError.message}`)
+        setError(`グループ作成失敗: ${groupError.message}`)
         setLoading(false)
         return
       }
-      groupId = newGroup.id
+      groupId = newGroup!.id
     }
 
     // メンバーとして参加
