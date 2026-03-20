@@ -77,6 +77,7 @@ export default async function ChallengesPage({ searchParams }: Props) {
     category: challenge.category as string | null,
     start_date: challenge.start_date as string | null,
     created_at: challenge.created_at as string,
+    created_by: challenge.created_by as string | null,
     memberCount: (challenge.member_count ?? 0) as number,
     gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
   }))
@@ -94,9 +95,12 @@ export default async function ChallengesPage({ searchParams }: Props) {
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">チャレンジ</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">{profile?.nickname}</span>
-          </div>
+          <Link
+            href="/challenges/create"
+            className="bg-orange-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-orange-600 transition-colors active:scale-[0.98]"
+          >
+            + 作成
+          </Link>
         </div>
         <div className="max-w-lg mx-auto px-4 py-3">
           <CategoryIcons />
@@ -155,7 +159,9 @@ export default async function ChallengesPage({ searchParams }: Props) {
                 </div>
                 {/* カード情報 */}
                 <div className="pt-2 pb-1">
-                  <p className="text-orange-500 text-xs font-semibold">公式チャレンジ</p>
+                  <p className={`text-xs font-semibold ${challenge.created_by ? 'text-blue-500' : 'text-orange-500'}`}>
+                    {challenge.created_by ? 'ユーザー作成' : '公式チャレンジ'}
+                  </p>
                   <h3 className="font-semibold text-gray-900 text-sm mt-0.5 line-clamp-1">{challenge.title}</h3>
                   <div className="flex items-center gap-1.5 mt-1.5">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
