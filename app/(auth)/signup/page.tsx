@@ -22,7 +22,8 @@ export default function SignupPage() {
     const { error: signUpError } = await supabase.auth.signUp({ email, password })
 
     if (signUpError) {
-      setError('登録に失敗しました。もう一度お試しください。')
+      console.error('Signup error:', signUpError.message)
+      setError(`登録に失敗しました: ${signUpError.message}`)
       setLoading(false)
       return
     }
