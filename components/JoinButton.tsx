@@ -15,6 +15,7 @@ export default function JoinButton({ challengeId, isFull }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showSelector, setShowSelector] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [selectedAmount, setSelectedAmount] = useState(1000)
   const supabase = createClient()
   const router = useRouter()
@@ -129,13 +130,51 @@ export default function JoinButton({ challengeId, isFull }: Props) {
           戻る
         </button>
         <button
-          onClick={handleJoin}
+          onClick={() => setShowConfirm(true)}
           disabled={loading}
           className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
         >
-          {loading ? '参加処理中...' : '参加する'}
+          参加する
         </button>
       </div>
+
+      {/* 確認ポップアップ */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
+            <div className="text-center mb-4">
+              <span className="text-4xl">⚠️</span>
+              <h3 className="text-lg font-bold text-gray-900 mt-2">本当に参加しますか？</h3>
+            </div>
+            <div className="space-y-2 mb-5">
+              <p className="text-sm text-gray-600">
+                一度チャレンジを始めたら、途中でやめることはできません。
+              </p>
+              <p className="text-sm text-red-500 font-medium">
+                達成率85%未満の場合、デポジット（¥{selectedAmount.toLocaleString()}）は返金されません。
+              </p>
+              <p className="text-sm text-gray-600">
+                必ず達成できる自信のある、現実的な金額を選択してください。
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                やめる
+              </button>
+              <button
+                onClick={() => { setShowConfirm(false); handleJoin() }}
+                disabled={loading}
+                className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+              >
+                {loading ? '処理中...' : '参加する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
