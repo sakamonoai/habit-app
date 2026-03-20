@@ -21,6 +21,8 @@ const DURATION_OPTIONS = [
   { label: '30日間', value: 30 },
 ]
 
+const FIXED_DEPOSIT_OPTIONS = [500, 1000, 2000, 3000, 5000, 10000]
+
 const MAX_MEMBERS_OPTIONS = [
   { label: '3人', value: 3 },
   { label: '5人', value: 5 },
@@ -50,6 +52,8 @@ export default function CreateChallengePage() {
   const [durationDays, setDurationDays] = useState(7)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [depositType, setDepositType] = useState<'choosable' | 'fixed'>('choosable')
+  const [fixedDeposit, setFixedDeposit] = useState(1000)
   const [maxMembers, setMaxMembers] = useState(10)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
@@ -140,7 +144,8 @@ export default function CreateChallengePage() {
         duration_days: computedDurationDays,
         start_date: scheduleType === 'fixed' ? startDate : null,
         end_date: scheduleType === 'fixed' ? endDate : null,
-        deposit_amount: 1000,
+        deposit_type: depositType,
+        deposit_amount: depositType === 'fixed' ? fixedDeposit : 1000,
         max_group_size: maxMembers,
         status: 'active',
         created_by: user.id,
@@ -426,6 +431,52 @@ export default function CreateChallengePage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* デポジット設定 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">デポジット金額</label>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <button
+              onClick={() => setDepositType('choosable')}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                depositType === 'choosable'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900 mb-1">挑戦者が選ぶ</p>
+              <p className="text-xs text-gray-500">参加時に自分で金額を選択</p>
+            </button>
+            <button
+              onClick={() => setDepositType('fixed')}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                depositType === 'fixed'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900 mb-1">金額を固定</p>
+              <p className="text-xs text-gray-500">全員同じ金額で参加</p>
+            </button>
+          </div>
+          {depositType === 'fixed' && (
+            <div className="grid grid-cols-3 gap-2">
+              {FIXED_DEPOSIT_OPTIONS.map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => setFixedDeposit(amount)}
+                  className={`py-3 rounded-xl text-sm font-semibold transition-colors ${
+                    fixedDeposit === amount
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  ¥{amount.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* OK例 */}

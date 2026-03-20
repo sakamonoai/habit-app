@@ -110,8 +110,15 @@ export default async function ChallengeDetailPage({ params }: Props) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-orange-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">デポジット目安</p>
-              <p className="text-lg font-bold text-orange-500">¥500〜</p>
+              <p className="text-xs text-gray-500 mb-1">デポジット</p>
+              <p className="text-lg font-bold text-orange-500">
+                {challenge.deposit_type === 'fixed'
+                  ? `¥${(challenge.deposit_amount ?? 1000).toLocaleString()}`
+                  : '¥500〜'}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {challenge.deposit_type === 'fixed' ? '金額固定' : '自分で選べる'}
+              </p>
             </div>
             <div className="bg-blue-50 rounded-xl p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">期間</p>
@@ -294,6 +301,8 @@ export default async function ChallengeDetailPage({ params }: Props) {
             <JoinButton
               challengeId={id}
               isFull={isFull}
+              depositType={challenge.deposit_type ?? 'choosable'}
+              fixedDepositAmount={challenge.deposit_amount ?? 1000}
             />
           )}
         </div>
