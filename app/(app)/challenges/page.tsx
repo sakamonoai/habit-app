@@ -82,19 +82,15 @@ export default async function ChallengesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ヘッダー */}
-      <header className="sticky top-0 z-10 bg-white">
+      {/* ヘッダー + カテゴリ（固定） */}
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">チャレンジ</h1>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">{profile?.nickname}</span>
           </div>
         </div>
-      </header>
-
-      <main className="max-w-lg mx-auto pb-24">
-        {/* カテゴリアイコン */}
-        <div className="px-4 py-3">
+        <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex gap-4 overflow-x-auto scrollbar-hide">
             {CATEGORY_ICONS.map((cat) => (
               <div key={cat.label} className="flex flex-col items-center gap-1 shrink-0">
@@ -106,6 +102,9 @@ export default async function ChallengesPage() {
             ))}
           </div>
         </div>
+      </header>
+
+      <main className="max-w-lg mx-auto pb-24">
 
         {/* 使い方バナー */}
         <div className="px-4 py-2">
