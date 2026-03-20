@@ -8,6 +8,7 @@ import Link from 'next/link'
 export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [nickname, setNickname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -18,6 +19,12 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    if (password !== passwordConfirm) {
+      setError('パスワードが一致しません')
+      setLoading(false)
+      return
+    }
 
     const { error: signUpError } = await supabase.auth.signUp({ email, password })
 
@@ -44,15 +51,16 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">🔥 ハビチャレ</h1>
-          <p className="mt-2 text-gray-500 text-sm">仲間と一緒に習慣を作ろう</p>
+          <div className="text-5xl mb-3">🔥</div>
+          <h1 className="text-2xl font-bold text-gray-900">ハビチャレ</h1>
+          <p className="mt-1 text-gray-400 text-sm">仲間と一緒に習慣を作ろう</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">新規登録</h2>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl">
               {error}
             </div>
           )}
@@ -67,7 +75,7 @@ export default function SignupPage() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 placeholder="がんばるたろう"
               />
             </div>
@@ -81,7 +89,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -96,14 +104,36 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 placeholder="6文字以上"
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                パスワード（確認）
+              </label>
+              <input
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+                minLength={6}
+                className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent ${
+                  passwordConfirm && password !== passwordConfirm
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-200'
+                }`}
+                placeholder="もう一度入力"
+              />
+              {passwordConfirm && password !== passwordConfirm && (
+                <p className="text-red-500 text-xs mt-1">パスワードが一致しません</p>
+              )}
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (!!passwordConfirm && password !== passwordConfirm)}
               className="w-full py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-colors"
             >
               {loading ? '登録中...' : '無料で始める'}

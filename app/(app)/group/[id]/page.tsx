@@ -89,18 +89,25 @@ export default async function GroupTimelinePage({ params }: Props) {
     : { count: 0 }
   const myRate = Math.min(Math.round(((myCheckinCount ?? 0) / durationDays) * 100), 100)
 
+  // メンバー数取得
+  const { count: memberCount } = await supabase
+    .from('group_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('group_id', id)
+
   return (
     <div className="min-h-screen bg-gray-50 pb-4">
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href="/challenges" className="text-gray-400 hover:text-gray-600">
+          <Link href="/challenges" className="text-gray-400 hover:text-gray-600 shrink-0">
             ← 戻る
           </Link>
           <div className="flex-1 min-w-0">
             <h1 className="font-semibold text-gray-900 truncate">
               {group.challenges?.title ?? 'グループ'}
             </h1>
+            <p className="text-xs text-gray-400">{memberCount ?? 0}人参加中</p>
           </div>
         </div>
       </header>
@@ -117,20 +124,25 @@ export default async function GroupTimelinePage({ params }: Props) {
             </div>
             <div className="w-full bg-gray-100 rounded-full h-3">
               <div
-                className={`h-3 rounded-full transition-all ${myRate >= 85 ? 'bg-green-500' : myRate >= 50 ? 'bg-orange-500' : 'bg-red-400'}`}
-                style={{ width: `${myRate}%` }}
+                className={`h-3 rounded-full transition-all duration-500 ${myRate >= 85 ? 'bg-green-500' : myRate >= 50 ? 'bg-orange-500' : 'bg-red-400'}`}
+                style={{ width: `${Math.max(myRate, 2)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1">{myCheckinCount ?? 0} / {durationDays}日</p>
+            <div className="flex justify-between mt-1">
+              <p className="text-xs text-gray-400">{myCheckinCount ?? 0} / {durationDays}日</p>
+              {myRate < 85 && (
+                <p className="text-xs text-orange-500">あと{Math.max(Math.ceil(durationDays * 0.85) - (myCheckinCount ?? 0), 0)}日で返金ライン</p>
+              )}
+            </div>
           </div>
         )}
 
         {/* チェックイン状態 */}
         {hasCheckedInToday ? (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 text-center">
-            <p className="text-2xl mb-1">✅</p>
-            <p className="text-green-700 font-semibold">今日のチェックイン完了！</p>
-            <p className="text-green-600 text-sm">明日もがんばろう</p>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6 text-center">
+            <div className="text-4xl mb-2">🎉</div>
+            <p className="text-green-800 font-bold text-lg">今日もやりきった！</p>
+            <p className="text-green-600 text-sm mt-1">連続記録を伸ばしていこう</p>
           </div>
         ) : (
           <CheckinForm groupId={id} memberId={myMember?.id ?? ''} />
@@ -142,9 +154,9 @@ export default async function GroupTimelinePage({ params }: Props) {
           <div className="space-y-3">
             {checkins.map((checkin) => (
               <div key={checkin.id} className="bg-white rounded-2xl shadow-sm p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-sm">
-                    🔥
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {(checkin.profiles?.nickname ?? '?')[0]}
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 text-sm">
@@ -161,11 +173,11 @@ export default async function GroupTimelinePage({ params }: Props) {
                   <img
                     src={checkin.photo_url}
                     alt="証拠写真"
-                    className="w-full rounded-xl mb-2 object-cover max-h-64"
+                    className="w-full rounded-xl mb-2 object-cover max-h-72"
                   />
                 )}
                 {checkin.comment && (
-                  <p className="text-sm text-gray-600">{checkin.comment}</p>
+                  <p className="text-sm text-gray-600 mb-1">{checkin.comment}</p>
                 )}
                 <ReactionButton
                   checkinId={checkin.id}
@@ -177,7 +189,8 @@ export default async function GroupTimelinePage({ params }: Props) {
         ) : (
           <div className="text-center py-12 text-gray-400">
             <p className="text-4xl mb-3">📷</p>
-            <p className="text-sm">まだ投稿がありません。最初の投稿をしよう！</p>
+            <p className="text-sm">まだ投稿がありません</p>
+            <p className="text-xs mt-1">最初のチェックインをしてみよう！</p>
           </div>
         )}
       </main>

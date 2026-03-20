@@ -33,15 +33,16 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">🔥 ハビチャレ</h1>
-          <p className="mt-2 text-gray-500 text-sm">仲間と一緒に習慣を作ろう</p>
+          <div className="text-5xl mb-3">🔥</div>
+          <h1 className="text-2xl font-bold text-gray-900">ハビチャレ</h1>
+          <p className="mt-1 text-gray-400 text-sm">仲間と一緒に習慣を作ろう</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">ログイン</h2>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl">
               {error}
             </div>
           )}
@@ -56,7 +57,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -70,7 +71,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 placeholder="••••••••"
               />
             </div>
