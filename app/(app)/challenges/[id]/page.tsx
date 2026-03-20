@@ -14,40 +14,25 @@ export default async function ChallengeDetailPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: challenge } = await supabase
-    .from('challenges')
-    .select('*')
-    .eq('id', id)
-    .single()
+  // チャレンジとグループを並列取得
+  const [{ data: challenge }, { data: group }] = await Promise.all([
+    supabase.from('challenges').select('*').eq('id', id).single(),
+    supabase.from('groups').select('id').eq('challenge_id', id).maybeSingle(),
+  ])
 
   if (!challenge) notFound()
 
-  // このチャレンジのグループを取得
-  const { data: group } = await supabase
-    .from('groups')
-    .select('id')
-    .eq('challenge_id', id)
-    .single()
+  // メンバー数と参加チェックを並列取得
+  const [{ count: memberCount }, { data: myMembership }] = await Promise.all([
+    group
+      ? supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', group.id)
+      : Promise.resolve({ count: 0 }),
+    group
+      ? supabase.from('group_members').select('id').eq('group_id', group.id).eq('user_id', user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
 
-  // 参加メンバー数を取得
-  const { count: memberCount } = group
-    ? await supabase
-        .from('group_members')
-        .select('*', { count: 'exact', head: true })
-        .eq('group_id', group.id)
-    : { count: 0 }
-
-  // 自分が参加済みか確認
-  let isJoined = false
-  if (group) {
-    const { data: myMembership } = await supabase
-      .from('group_members')
-      .select('id')
-      .eq('group_id', group.id)
-      .eq('user_id', user.id)
-      .single()
-    isJoined = !!myMembership
-  }
+  const isJoined = !!myMembership
   const isFull = (memberCount ?? 0) >= challenge.max_members
 
   const durationLabel = (days: number) => {

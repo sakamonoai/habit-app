@@ -15,45 +15,25 @@ export default async function GroupTimelinePage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // グループ情報取得
-  const { data: group } = await supabase
-    .from('groups')
-    .select('*, challenges(*)')
-    .eq('id', id)
-    .single()
+  const today = new Date().toISOString().split('T')[0]
+
+  // 全クエリを並列実行
+  const [
+    { data: group },
+    { data: myMember },
+    { data: todayCheckin },
+    { data: checkins },
+  ] = await Promise.all([
+    supabase.from('groups').select('*, challenges(*)').eq('id', id).single(),
+    supabase.from('group_members').select('id').eq('group_id', id).eq('user_id', user.id).single(),
+    supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', `${today}T00:00:00`).lt('checked_in_at', `${today}T23:59:59`).maybeSingle(),
+    supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
+  ])
 
   if (!group) notFound()
-
-  // 自分のメンバーIDを取得
-  const { data: myMember } = await supabase
-    .from('group_members')
-    .select('id')
-    .eq('group_id', id)
-    .eq('user_id', user.id)
-    .single()
-
-  // 今日既にチェックインしたか確認
-  const today = new Date().toISOString().split('T')[0]
-  const { data: todayCheckin } = await supabase
-    .from('checkins')
-    .select('id')
-    .eq('group_id', id)
-    .eq('user_id', user.id)
-    .gte('checked_in_at', `${today}T00:00:00`)
-    .lt('checked_in_at', `${today}T23:59:59`)
-    .maybeSingle()
-
   const hasCheckedInToday = !!todayCheckin
 
-  // タイムライン取得（直近20件）
-  const { data: checkins } = await supabase
-    .from('checkins')
-    .select('*, profiles!checkins_user_id_profiles_fkey(nickname)')
-    .eq('group_id', id)
-    .order('checked_in_at', { ascending: false })
-    .limit(20)
-
-  // 各チェックインのリアクションを取得
+  // リアクション取得（チェックイン結果に依存）
   const checkinIds = checkins?.map(c => c.id) ?? []
   const { data: allReactions } = checkinIds.length > 0
     ? await supabase
@@ -79,21 +59,15 @@ export default async function GroupTimelinePage({ params }: Props) {
     }))
   }
 
-  // 達成率計算
+  // 達成率とメンバー数を並列取得
   const durationDays = group.challenges?.duration_days ?? 1
-  const { count: myCheckinCount } = myMember
-    ? await supabase
-        .from('checkins')
-        .select('*', { count: 'exact', head: true })
-        .eq('member_id', myMember.id)
-    : { count: 0 }
+  const [{ count: myCheckinCount }, { count: memberCount }] = await Promise.all([
+    myMember
+      ? supabase.from('checkins').select('*', { count: 'exact', head: true }).eq('member_id', myMember.id)
+      : Promise.resolve({ count: 0 }),
+    supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', id),
+  ])
   const myRate = Math.min(Math.round(((myCheckinCount ?? 0) / durationDays) * 100), 100)
-
-  // メンバー数取得
-  const { count: memberCount } = await supabase
-    .from('group_members')
-    .select('*', { count: 'exact', head: true })
-    .eq('group_id', id)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-4">

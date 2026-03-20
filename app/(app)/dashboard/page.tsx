@@ -10,48 +10,56 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('nickname')
-    .eq('id', user.id)
-    .single()
+  // プロフィールとメンバーシップを並列取得
+  const [{ data: profile }, { data: memberships }] = await Promise.all([
+    supabase.from('profiles').select('nickname').eq('id', user.id).single(),
+    supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id),
+  ])
 
-  // 参加中のメンバーシップ取得
-  const { data: memberships } = await supabase
-    .from('group_members')
-    .select('*')
-    .eq('user_id', user.id)
-
-  // 各メンバーシップに対してチャレンジ情報とチェックイン数を取得
-  const challengeStats = await Promise.all(
-    (memberships ?? []).map(async (m) => {
-      const { data: challenge } = await supabase
-        .from('challenges')
-        .select('title, duration_days')
-        .eq('id', m.challenge_id)
-        .single()
-
-      const { count } = await supabase
-        .from('checkins')
-        .select('*', { count: 'exact', head: true })
-        .eq('member_id', m.id)
-
-      const durationDays = challenge?.duration_days ?? 1
-      const checkinCount = count ?? 0
-      const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
-
-      return {
-        membershipId: m.id,
-        groupId: m.group_id,
-        title: challenge?.title ?? '不明',
-        durationDays,
-        checkinCount,
-        rate,
-        depositAmount: m.deposit_amount,
-        status: m.status,
+  // メンバーIDリストでチェックイン数を一括取得
+  const memberIds = (memberships ?? []).map(m => m.id)
+  let checkinCounts: Record<string, number> = {}
+  if (memberIds.length > 0) {
+    const { data: counts } = await supabase.rpc('get_checkin_counts', { member_ids: memberIds })
+    if (counts) {
+      for (const row of counts as { member_id: string; count: number }[]) {
+        checkinCounts[row.member_id] = row.count
       }
-    })
-  )
+    }
+  }
+
+  // RPCが無い場合のフォールバック: 並列で個別取得
+  if (memberIds.length > 0 && Object.keys(checkinCounts).length === 0) {
+    const results = await Promise.all(
+      memberIds.map(async (mid) => {
+        const { count } = await supabase
+          .from('checkins')
+          .select('*', { count: 'exact', head: true })
+          .eq('member_id', mid)
+        return { member_id: mid, count: count ?? 0 }
+      })
+    )
+    for (const r of results) {
+      checkinCounts[r.member_id] = r.count
+    }
+  }
+
+  const challengeStats = (memberships ?? []).map((m) => {
+    const challenge = m.challenges as { title: string; duration_days: number } | null
+    const durationDays = challenge?.duration_days ?? 1
+    const checkinCount = checkinCounts[m.id] ?? 0
+    const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
+    return {
+      membershipId: m.id,
+      groupId: m.group_id,
+      title: challenge?.title ?? '不明',
+      durationDays,
+      checkinCount,
+      rate,
+      depositAmount: m.deposit_amount,
+      status: m.status,
+    }
+  })
 
   const totalCheckins = challengeStats.reduce((sum, s) => sum + s.checkinCount, 0)
   const totalDeposit = challengeStats.reduce((sum, s) => sum + s.depositAmount, 0)

@@ -47,46 +47,39 @@ export default async function ChallengesPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  // プロフィールとチャレンジを並列取得
+  const profilePromise = supabase
     .from('profiles')
     .select('nickname')
     .eq('id', user.id)
     .single()
 
   let query = supabase
-    .from('challenges')
+    .from('challenges_with_members')
     .select('*')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
-  // カテゴリフィルタ適用
   if (category && category !== '全て' && CATEGORY_MAP[category]) {
     query = query.in('category', CATEGORY_MAP[category])
   }
 
-  const { data: challenges } = await query
+  const [{ data: profile }, { data: challenges }] = await Promise.all([profilePromise, query])
 
-  // 各チャレンジの参加者数を取得
-  const challengesWithMembers = await Promise.all(
-    (challenges ?? []).map(async (challenge, index) => {
-      const { data: group } = await supabase
-        .from('groups')
-        .select('id')
-        .eq('challenge_id', challenge.id)
-        .maybeSingle()
-
-      let memberCount = 0
-      if (group) {
-        const { count } = await supabase
-          .from('group_members')
-          .select('*', { count: 'exact', head: true })
-          .eq('group_id', group.id)
-        memberCount = count ?? 0
-      }
-
-      return { ...challenge, memberCount, gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length] }
-    })
-  )
+  const challengesWithMembers = (challenges ?? []).map((challenge, index) => ({
+    id: challenge.id as string,
+    title: challenge.title as string,
+    description: challenge.description as string | null,
+    duration_days: challenge.duration_days as number,
+    deposit_amount: challenge.deposit_amount as number,
+    max_members: (challenge.max_group_size ?? challenge.max_members ?? 6) as number,
+    status: challenge.status as string,
+    category: challenge.category as string | null,
+    start_date: challenge.start_date as string | null,
+    created_at: challenge.created_at as string,
+    memberCount: (challenge.member_count ?? 0) as number,
+    gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
+  }))
 
   const durationLabel = (days: number) => {
     if (days <= 7) return `${days}日間`
