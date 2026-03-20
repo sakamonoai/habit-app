@@ -221,7 +221,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
         {/* 参加者レビュー */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">参加者の後記</h3>
+            <h3 className="font-semibold text-gray-900">参加者のレビュー</h3>
             {avgRating && (
               <span className="text-sm text-gray-400">累計{totalParticipants ?? 0}人参加</span>
             )}

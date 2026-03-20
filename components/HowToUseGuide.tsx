@@ -81,16 +81,16 @@ export default function HowToUseGuide() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="w-full bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full bg-gray-50 rounded-2xl px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="text-2xl">📖</span>
+          <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center text-xl">🎯</div>
           <div className="text-left">
-            <p className="font-semibold text-gray-900 text-sm">使い方ガイド</p>
-            <p className="text-xs text-gray-400">初めての方はこちらをチェック</p>
+            <p className="font-semibold text-gray-900 text-sm">チャレンジの使い方</p>
+            <p className="text-xs text-gray-400">チャレンジって何？どうやるの？</p>
           </div>
         </div>
-        <span className="text-gray-300">→</span>
+        <span className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium">見る</span>
       </button>
 
       {open && (

@@ -5,6 +5,7 @@ import BottomNav from '@/components/BottomNav'
 import InstallBanner from '@/components/InstallBanner'
 import CategoryTabs from '@/components/CategoryTabs'
 import CategoryIcons from '@/components/CategoryIcons'
+import HowToUseGuide from '@/components/HowToUseGuide'
 
 type Challenge = {
   id: string
@@ -119,16 +120,7 @@ export default async function ChallengesPage({ searchParams }: Props) {
 
         {/* 使い方バナー */}
         <div className="px-4 py-2">
-          <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center text-xl">🎯</div>
-              <div>
-                <p className="font-semibold text-gray-900 text-sm">チャレンジの使い方</p>
-                <p className="text-xs text-gray-400">チャレンジって何？どうやるの？</p>
-              </div>
-            </div>
-            <span className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium">見る</span>
-          </div>
+          <HowToUseGuide />
         </div>
 
         {/* 人気チャレンジ */}
