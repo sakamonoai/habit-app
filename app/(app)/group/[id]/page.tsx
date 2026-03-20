@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import CheckinForm from '@/components/CheckinForm'
 import ReactionButton from '@/components/ReactionButton'
+import ReportButton from '@/components/ReportButton'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -33,14 +34,17 @@ export default async function GroupTimelinePage({ params }: Props) {
   if (!group) notFound()
   const hasCheckedInToday = !!todayCheckin
 
-  // リアクション取得（チェックイン結果に依存）
+  // リアクションと報告済みリストを並列取得
   const checkinIds = checkins?.map(c => c.id) ?? []
-  const { data: allReactions } = checkinIds.length > 0
-    ? await supabase
-        .from('reactions')
-        .select('checkin_id, emoji, user_id')
-        .in('checkin_id', checkinIds)
-    : { data: [] }
+  const [{ data: allReactions }, { data: myReports }] = await Promise.all([
+    checkinIds.length > 0
+      ? supabase.from('reactions').select('checkin_id, emoji, user_id').in('checkin_id', checkinIds)
+      : Promise.resolve({ data: [] as { checkin_id: string; emoji: string; user_id: string }[] }),
+    checkinIds.length > 0
+      ? supabase.from('reports').select('checkin_id').in('checkin_id', checkinIds)
+      : Promise.resolve({ data: [] as { checkin_id: string }[] }),
+  ])
+  const reportedCheckinIds = new Set((myReports ?? []).map(r => r.checkin_id))
 
   // リアクションを集計
   const getReactionsForCheckin = (checkinId: string) => {
@@ -132,7 +136,7 @@ export default async function GroupTimelinePage({ params }: Props) {
                   <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                     {(checkin.profiles?.nickname ?? '?')[0]}
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">
                       {checkin.profiles?.nickname ?? '匿名'}
                     </p>
@@ -142,6 +146,12 @@ export default async function GroupTimelinePage({ params }: Props) {
                       })}
                     </p>
                   </div>
+                  {checkin.user_id !== user.id && (
+                    <ReportButton
+                      checkinId={checkin.id}
+                      alreadyReported={reportedCheckinIds.has(checkin.id)}
+                    />
+                  )}
                 </div>
                 {checkin.photo_url && (
                   <img
