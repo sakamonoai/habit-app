@@ -40,7 +40,20 @@ export default async function CheckinPage() {
         .select('*', { count: 'exact', head: true })
         .eq('member_id', m.id)
 
-      const rate = Math.min(Math.round(((count ?? 0) / (challenge?.duration_days ?? 1)) * 100), 100)
+      const durationDays = challenge?.duration_days ?? 1
+      const checkinCount = count ?? 0
+      const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
+
+      // リーチ判定
+      const joinedAt = m.joined_at ? new Date(m.joined_at) : new Date()
+      const now = new Date()
+      const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+      const requiredDays = Math.ceil(durationDays * 0.85)
+      const allowedMisses = durationDays - requiredDays
+      const missedDays = elapsedDays - checkinCount
+      const remainingMisses = allowedMisses - missedDays
+      const remainingDays = durationDays - elapsedDays
+      const isOngoing = remainingDays >= 0
 
       return {
         groupId: m.group_id,
@@ -48,8 +61,10 @@ export default async function CheckinPage() {
         title: challenge?.title ?? '不明',
         checkedInToday: !!todayCheckin,
         rate,
-        checkinCount: count ?? 0,
-        durationDays: challenge?.duration_days ?? 1,
+        checkinCount,
+        durationDays,
+        remainingMisses,
+        isOngoing,
       }
     })
   )
@@ -97,6 +112,20 @@ export default async function CheckinPage() {
                     )}
                   </div>
                 </div>
+                {g.isOngoing && g.remainingMisses <= 0 && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-red-600 font-semibold">
+                      {g.remainingMisses < 0
+                        ? '⛔ 達成率85%を下回っています…'
+                        : '🚨 あと1日でもサボるとアウトです！'}
+                    </p>
+                  </div>
+                )}
+                {g.isOngoing && g.remainingMisses === 1 && (
+                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
+                  </div>
+                )}
               </Link>
             ))}
           </div>

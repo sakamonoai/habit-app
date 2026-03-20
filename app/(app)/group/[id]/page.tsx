@@ -26,7 +26,7 @@ export default async function GroupTimelinePage({ params }: Props) {
     { data: checkins },
   ] = await Promise.all([
     supabase.from('groups').select('*, challenges(*)').eq('id', id).single(),
-    supabase.from('group_members').select('id').eq('group_id', id).eq('user_id', user.id).single(),
+    supabase.from('group_members').select('id, joined_at').eq('group_id', id).eq('user_id', user.id).single(),
     supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', `${today}T00:00:00`).lt('checked_in_at', `${today}T23:59:59`).maybeSingle(),
     supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
   ])
@@ -73,6 +73,17 @@ export default async function GroupTimelinePage({ params }: Props) {
   ])
   const myRate = Math.min(Math.round(((myCheckinCount ?? 0) / durationDays) * 100), 100)
 
+  // リーチ判定
+  const joinedAt = myMember?.joined_at ? new Date(myMember.joined_at) : new Date()
+  const now = new Date()
+  const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+  const requiredDays = Math.ceil(durationDays * 0.85)
+  const allowedMisses = durationDays - requiredDays
+  const missedDays = elapsedDays - (myCheckinCount ?? 0)
+  const remainingMisses = allowedMisses - missedDays
+  const remainingDaysTillEnd = durationDays - elapsedDays
+  const isOngoing = remainingDaysTillEnd >= 0
+
   return (
     <div className="min-h-screen bg-gray-50 pb-4">
       {/* ヘッダー */}
@@ -109,9 +120,23 @@ export default async function GroupTimelinePage({ params }: Props) {
             <div className="flex justify-between mt-1">
               <p className="text-xs text-gray-400">{myCheckinCount ?? 0} / {durationDays}日</p>
               {myRate < 85 && (
-                <p className="text-xs text-orange-500">あと{Math.max(Math.ceil(durationDays * 0.85) - (myCheckinCount ?? 0), 0)}日で返金ライン</p>
+                <p className="text-xs text-orange-500">あと{Math.max(requiredDays - (myCheckinCount ?? 0), 0)}日で返金ライン</p>
               )}
             </div>
+            {isOngoing && remainingMisses <= 0 && (
+              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+                <p className="text-sm text-red-600 font-semibold">
+                  {remainingMisses < 0
+                    ? '⛔ 達成率85%を下回っています。今日から毎日チェックインしましょう！'
+                    : '🚨 あと1日でもサボるとアウト！今日も必ずチェックインしよう！'}
+                </p>
+              </div>
+            )}
+            {isOngoing && remainingMisses === 1 && (
+              <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5">
+                <p className="text-sm text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
+              </div>
+            )}
           </div>
         )}
 

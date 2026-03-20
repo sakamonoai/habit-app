@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   // プロフィールとメンバーシップを並列取得
   const [{ data: profile }, { data: memberships }] = await Promise.all([
     supabase.from('profiles').select('nickname, avatar_url').eq('id', user.id).single(),
-    supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id),
+    supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id).eq('status', 'active'),
   ])
 
   // メンバーIDリストでチェックイン数を一括取得
@@ -50,6 +50,18 @@ export default async function DashboardPage() {
     const durationDays = challenge?.duration_days ?? 1
     const checkinCount = checkinCounts[m.id] ?? 0
     const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
+
+    // リーチ判定: あと何日サボれるか
+    const joinedAt = m.joined_at ? new Date(m.joined_at) : new Date()
+    const now = new Date()
+    const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+    const requiredDays = Math.ceil(durationDays * 0.85)
+    const allowedMisses = durationDays - requiredDays
+    const missedDays = elapsedDays - checkinCount
+    const remainingMisses = allowedMisses - missedDays
+    const remainingDays = durationDays - elapsedDays
+    const isOngoing = remainingDays >= 0
+
     return {
       membershipId: m.id,
       groupId: m.group_id,
@@ -59,6 +71,8 @@ export default async function DashboardPage() {
       rate,
       depositAmount: m.deposit_amount,
       status: m.status,
+      remainingMisses,
+      isOngoing,
     }
   })
 
@@ -134,6 +148,20 @@ export default async function DashboardPage() {
                   <span>{s.checkinCount} / {s.durationDays}日</span>
                   <span>¥{s.depositAmount.toLocaleString()}</span>
                 </div>
+                {s.isOngoing && s.remainingMisses <= 0 && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-red-600 font-semibold">
+                      {s.remainingMisses < 0
+                        ? '⛔ 達成率85%を下回っています…'
+                        : '🚨 あと1日でもサボるとアウトです！'}
+                    </p>
+                  </div>
+                )}
+                {s.isOngoing && s.remainingMisses === 1 && (
+                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
+                  </div>
+                )}
               </Link>
             ))}
           </div>
