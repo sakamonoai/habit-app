@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -20,19 +20,55 @@ const DURATION_OPTIONS = [
   { label: '30日間', value: 30 },
 ]
 
-const MAX_MEMBERS_OPTIONS = [3, 5, 6, 10, 15, 20]
+const MAX_MEMBERS_OPTIONS = [
+  { label: '3人', value: 3 },
+  { label: '5人', value: 5 },
+  { label: '10人', value: 10 },
+  { label: '30人', value: 30 },
+  { label: '50人', value: 50 },
+  { label: '無制限', value: 9999 },
+]
 
 export default function CreateChallengePage() {
   const router = useRouter()
   const supabase = createClient()
+  const thumbnailRef = useRef<HTMLInputElement>(null)
+  const exampleRef = useRef<HTMLInputElement>(null)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [durationDays, setDurationDays] = useState(7)
-  const [maxMembers, setMaxMembers] = useState(6)
+  const [maxMembers, setMaxMembers] = useState(10)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+  const [exampleFile, setExampleFile] = useState<File | null>(null)
+  const [examplePreview, setExamplePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const handleImageSelect = (
+    file: File | undefined,
+    setFile: (f: File | null) => void,
+    setPreview: (url: string | null) => void,
+  ) => {
+    if (!file) return
+    setFile(file)
+    const reader = new FileReader()
+    reader.onload = (e) => setPreview(e.target?.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  const uploadImage = async (file: File, userId: string, prefix: string): Promise<string | null> => {
+    const ext = file.name.split('.').pop()
+    const path = `${userId}/${prefix}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage
+      .from('challenge-images')
+      .upload(path, file, { upsert: true })
+    if (error) return null
+    const { data } = supabase.storage.from('challenge-images').getPublicUrl(path)
+    return data.publicUrl
+  }
 
   const handleSubmit = async () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return }
@@ -43,6 +79,12 @@ export default function CreateChallengePage() {
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
+
+    // 画像アップロード（並列）
+    const [thumbnailUrl, examplePhotoUrl] = await Promise.all([
+      thumbnailFile ? uploadImage(thumbnailFile, user.id, 'thumb') : Promise.resolve(null),
+      exampleFile ? uploadImage(exampleFile, user.id, 'example') : Promise.resolve(null),
+    ])
 
     const { data: challenge, error: createError } = await supabase
       .from('challenges')
@@ -55,6 +97,8 @@ export default function CreateChallengePage() {
         max_group_size: maxMembers,
         status: 'active',
         created_by: user.id,
+        thumbnail_url: thumbnailUrl,
+        example_photo_url: examplePhotoUrl,
       })
       .select('id')
       .single()
@@ -80,6 +124,32 @@ export default function CreateChallengePage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-5">
+        {/* サムネイル画像 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">サムネイル画像（任意）</label>
+          <input
+            ref={thumbnailRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleImageSelect(e.target.files?.[0], setThumbnailFile, setThumbnailPreview)}
+          />
+          <button
+            onClick={() => thumbnailRef.current?.click()}
+            className="w-full aspect-[2/1] bg-white border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center overflow-hidden hover:border-orange-300 transition-colors"
+          >
+            {thumbnailPreview ? (
+              <img src={thumbnailPreview} alt="サムネイル" className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <span className="text-3xl mb-1">📷</span>
+                <span className="text-sm text-gray-400">タップして画像を選択</span>
+                <span className="text-xs text-gray-300 mt-0.5">チャレンジ一覧に表示されます</span>
+              </>
+            )}
+          </button>
+        </div>
+
         {/* タイトル */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">タイトル</label>
@@ -153,35 +223,67 @@ export default function CreateChallengePage() {
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">最大参加人数</label>
           <div className="grid grid-cols-3 gap-2">
-            {MAX_MEMBERS_OPTIONS.map((n) => (
+            {MAX_MEMBERS_OPTIONS.map((opt) => (
               <button
-                key={n}
-                onClick={() => setMaxMembers(n)}
+                key={opt.value}
+                onClick={() => setMaxMembers(opt.value)}
                 className={`py-3 rounded-xl text-sm font-semibold transition-colors ${
-                  maxMembers === n
+                  maxMembers === opt.value
                     ? 'bg-orange-500 text-white'
                     : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {n}人
+                {opt.label}
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 報告例の画像 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-1">報告例の画像（任意）</label>
+          <p className="text-xs text-gray-400 mb-2">参加者が「こんな写真を投稿すればOK」とわかる見本です</p>
+          <input
+            ref={exampleRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleImageSelect(e.target.files?.[0], setExampleFile, setExamplePreview)}
+          />
+          <button
+            onClick={() => exampleRef.current?.click()}
+            className="w-full aspect-square max-w-[200px] bg-white border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center overflow-hidden hover:border-orange-300 transition-colors"
+          >
+            {examplePreview ? (
+              <img src={examplePreview} alt="報告例" className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <span className="text-3xl mb-1">📸</span>
+                <span className="text-sm text-gray-400">見本画像を選択</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* プレビュー */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-xs text-gray-400 mb-2">プレビュー</p>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-xl flex items-center justify-center text-2xl">
-              {CATEGORIES.find(c => c.label === category)?.emoji ?? '🔥'}
-            </div>
+            {thumbnailPreview ? (
+              <img src={thumbnailPreview} alt="" className="w-12 h-12 rounded-xl object-cover" />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-xl flex items-center justify-center text-2xl">
+                {CATEGORIES.find(c => c.label === category)?.emoji ?? '🔥'}
+              </div>
+            )}
             <div>
               <h3 className="font-semibold text-gray-900 text-sm">{title || 'タイトル未入力'}</h3>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{durationDays}日間</span>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{maxMembers}人</span>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                  {maxMembers >= 9999 ? '無制限' : `${maxMembers}人`}
+                </span>
               </div>
             </div>
           </div>

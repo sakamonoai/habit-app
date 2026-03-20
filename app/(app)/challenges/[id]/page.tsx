@@ -84,6 +84,13 @@ export default async function ChallengeDetailPage({ params }: Props) {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
+        {/* サムネイル */}
+        {challenge.thumbnail_url && (
+          <div className="mb-4 -mx-4 -mt-6">
+            <img src={challenge.thumbnail_url} alt={challenge.title} className="w-full aspect-[2/1] object-cover" />
+          </div>
+        )}
+
         {/* チャレンジ情報カード */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
           <h2 className="text-xl font-bold text-gray-900 mb-1">{challenge.title}</h2>
@@ -142,6 +149,19 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </li>
           </ul>
         </div>
+
+        {/* 報告例の画像 */}
+        {challenge.example_photo_url && (
+          <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+            <h3 className="font-semibold text-gray-900 mb-3">報告例</h3>
+            <p className="text-xs text-gray-400 mb-3">このような写真を毎日投稿してください</p>
+            <img
+              src={challenge.example_photo_url}
+              alt="報告例"
+              className="w-full rounded-xl object-cover max-h-64"
+            />
+          </div>
+        )}
 
         {/* 参加者レビュー */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">

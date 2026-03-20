@@ -81,6 +81,7 @@ export default async function ChallengesPage({ searchParams }: Props) {
     memberCount: (challenge.member_count ?? 0) as number,
     avgRating: (challenge.avg_rating ?? null) as number | null,
     reviewCount: (challenge.review_count ?? 0) as number,
+    thumbnail_url: (challenge.thumbnail_url ?? null) as string | null,
     gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
   }))
 
@@ -146,14 +147,18 @@ export default async function ChallengesPage({ searchParams }: Props) {
                 className="block group"
               >
                 {/* カード画像エリア */}
-                <div className={`relative aspect-[4/5] bg-gradient-to-br ${challenge.gradient} rounded-2xl overflow-hidden`}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-6xl opacity-30">
-                      {challenge.title.includes('朝活') ? '☀️' :
-                       challenge.title.includes('筋トレ') || challenge.title.includes('運動') ? '💪' :
-                       challenge.title.includes('勉強') || challenge.title.includes('読書') ? '📚' : '🔥'}
-                    </span>
-                  </div>
+                <div className={`relative aspect-[4/5] ${challenge.thumbnail_url ? 'bg-gray-100' : `bg-gradient-to-br ${challenge.gradient}`} rounded-2xl overflow-hidden`}>
+                  {challenge.thumbnail_url ? (
+                    <img src={challenge.thumbnail_url} alt={challenge.title} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-6xl opacity-30">
+                        {challenge.title.includes('朝活') ? '☀️' :
+                         challenge.title.includes('筋トレ') || challenge.title.includes('運動') ? '💪' :
+                         challenge.title.includes('勉強') || challenge.title.includes('読書') ? '📚' : '🔥'}
+                      </span>
+                    </div>
+                  )}
                   {/* 参加者数 */}
                   <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
                     <span>👤</span> {challenge.memberCount}人
