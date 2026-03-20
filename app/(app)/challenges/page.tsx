@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
+import BottomNav from '@/components/BottomNav'
 
 type Challenge = {
   id: string
@@ -106,6 +107,7 @@ export default async function ChallengesPage() {
           </div>
         )}
       </main>
+      <BottomNav />
     </div>
   )
 }
