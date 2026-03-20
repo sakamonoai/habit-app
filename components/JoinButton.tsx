@@ -4,15 +4,18 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
+const DEPOSIT_OPTIONS = [500, 1000, 2000, 3000, 5000, 10000]
+
 type Props = {
   challengeId: string
-  depositAmount: number
   isFull: boolean
 }
 
-export default function JoinButton({ challengeId, depositAmount, isFull }: Props) {
+export default function JoinButton({ challengeId, isFull }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showSelector, setShowSelector] = useState(false)
+  const [selectedAmount, setSelectedAmount] = useState(1000)
   const supabase = createClient()
   const router = useRouter()
 
@@ -26,7 +29,6 @@ export default function JoinButton({ challengeId, depositAmount, isFull }: Props
       return
     }
 
-    // グループが存在するか確認、なければ作成
     const { data: existingGroup } = await supabase
       .from('groups')
       .select('id')
@@ -50,14 +52,13 @@ export default function JoinButton({ challengeId, depositAmount, isFull }: Props
       groupId = newGroup!.id
     }
 
-    // メンバーとして参加
     const { error: joinError } = await supabase
       .from('group_members')
       .insert({
         group_id: groupId,
         user_id: user.id,
         challenge_id: challengeId,
-        deposit_amount: depositAmount,
+        deposit_amount: selectedAmount,
       })
 
     if (joinError) {
@@ -74,18 +75,67 @@ export default function JoinButton({ challengeId, depositAmount, isFull }: Props
     router.refresh()
   }
 
+  if (!showSelector) {
+    return (
+      <div>
+        {error && <p className="text-red-500 text-sm text-center mb-2">{error}</p>}
+        <button
+          onClick={() => setShowSelector(true)}
+          disabled={isFull}
+          className="w-full py-4 bg-orange-500 text-white font-semibold rounded-2xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+        >
+          {isFull ? '定員に達しました' : 'このチャレンジに参加する'}
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div>
-      {error && (
-        <p className="text-red-500 text-sm text-center mb-2">{error}</p>
-      )}
-      <button
-        onClick={handleJoin}
-        disabled={loading || isFull}
-        className="w-full py-4 bg-orange-500 text-white font-semibold rounded-2xl hover:bg-orange-600 disabled:opacity-50 transition-colors"
-      >
-        {isFull ? '定員に達しました' : loading ? '参加処理中...' : 'このチャレンジに参加する'}
-      </button>
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
+      <h3 className="font-bold text-gray-900 text-center mb-1">デポジット金額を選択</h3>
+      <p className="text-xs text-gray-400 text-center mb-4">85%以上達成で全額返金されます</p>
+
+      {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
+
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {DEPOSIT_OPTIONS.map((amount) => (
+          <button
+            key={amount}
+            onClick={() => setSelectedAmount(amount)}
+            className={`py-3 rounded-xl text-sm font-semibold transition-all ${
+              selectedAmount === amount
+                ? 'bg-orange-500 text-white scale-105'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            ¥{amount.toLocaleString()}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-orange-50 rounded-xl p-3 mb-4">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">デポジット</span>
+          <span className="font-bold text-orange-500">¥{selectedAmount.toLocaleString()}</span>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">※ 決済機能は現在準備中です（無料で参加できます）</p>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowSelector(false)}
+          className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+        >
+          戻る
+        </button>
+        <button
+          onClick={handleJoin}
+          disabled={loading}
+          className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+        >
+          {loading ? '参加処理中...' : '参加する'}
+        </button>
+      </div>
     </div>
   )
 }

@@ -176,7 +176,7 @@ export default async function ChallengesPage() {
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{durationLabel(challenge.duration_days)}</span>
                   </div>
-                  <p className="text-xs text-orange-500 mt-1.5 font-medium">¥{challenge.deposit_amount.toLocaleString()}</p>
+                  <p className="text-xs text-orange-500 mt-1.5 font-medium">¥500〜</p>
                 </div>
               </Link>
             ))}
