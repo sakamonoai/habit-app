@@ -23,6 +23,14 @@ export default async function GroupTimelinePage({ params }: Props) {
 
   if (!group) notFound()
 
+  // 自分のメンバーIDを取得
+  const { data: myMember } = await supabase
+    .from('group_members')
+    .select('id')
+    .eq('group_id', id)
+    .eq('user_id', user.id)
+    .single()
+
   // 今日既にチェックインしたか確認
   const today = new Date().toISOString().split('T')[0]
   const { data: todayCheckin } = await supabase
@@ -30,9 +38,9 @@ export default async function GroupTimelinePage({ params }: Props) {
     .select('id')
     .eq('group_id', id)
     .eq('user_id', user.id)
-    .gte('created_at', `${today}T00:00:00`)
-    .lt('created_at', `${today}T23:59:59`)
-    .single()
+    .gte('checked_in_at', `${today}T00:00:00`)
+    .lt('checked_in_at', `${today}T23:59:59`)
+    .maybeSingle()
 
   const hasCheckedInToday = !!todayCheckin
 
@@ -41,7 +49,7 @@ export default async function GroupTimelinePage({ params }: Props) {
     .from('checkins')
     .select('*, profiles(nickname)')
     .eq('group_id', id)
-    .order('created_at', { ascending: false })
+    .order('checked_in_at', { ascending: false })
     .limit(20)
 
   return (
@@ -69,7 +77,7 @@ export default async function GroupTimelinePage({ params }: Props) {
             <p className="text-green-600 text-sm">明日もがんばろう</p>
           </div>
         ) : (
-          <CheckinForm groupId={id} />
+          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} />
         )}
 
         {/* タイムライン */}
@@ -87,15 +95,15 @@ export default async function GroupTimelinePage({ params }: Props) {
                       {checkin.profiles?.nickname ?? '匿名'}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {new Date(checkin.created_at).toLocaleString('ja-JP', {
+                      {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </p>
                   </div>
                 </div>
-                {checkin.image_url && (
+                {checkin.photo_url && (
                   <img
-                    src={checkin.image_url}
+                    src={checkin.photo_url}
                     alt="証拠写真"
                     className="w-full rounded-xl mb-2 object-cover max-h-64"
                   />

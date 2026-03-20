@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 
 type Props = {
   groupId: string
+  memberId: string
 }
 
-export default function CheckinForm({ groupId }: Props) {
+export default function CheckinForm({ groupId, memberId }: Props) {
   const [comment, setComment] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -65,7 +66,8 @@ export default function CheckinForm({ groupId }: Props) {
       .insert({
         group_id: groupId,
         user_id: user.id,
-        image_url: imageUrl,
+        member_id: memberId,
+        photo_url: imageUrl,
         comment: comment || null,
       })
 
