@@ -11,6 +11,7 @@ const CATEGORIES = [
   { label: '生活', emoji: '📅' },
   { label: '勉強', emoji: '✏️' },
   { label: '趣味', emoji: '📚' },
+  { label: 'その他', emoji: '🔥' },
 ]
 
 const DURATION_OPTIONS = [

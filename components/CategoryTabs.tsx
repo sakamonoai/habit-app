@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
-const CATEGORIES = ['全て', '運動', '食習慣', '生活', '勉強', '趣味']
+const CATEGORIES = ['全て', '運動', '食習慣', '生活', '勉強', '趣味', 'その他']
 const SCHEDULE_FILTERS = [
   { label: '全て', value: '' },
   { label: '募集中', value: 'fixed' },
