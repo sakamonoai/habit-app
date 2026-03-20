@@ -15,28 +15,35 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  // 参加中のチャレンジ一覧
+  // 参加中のメンバーシップ取得
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('*, groups(id), challenges(title, duration_days, start_date)')
+    .select('*')
     .eq('user_id', user.id)
 
-  // 各チャレンジのチェックイン数を取得
+  // 各メンバーシップに対してチャレンジ情報とチェックイン数を取得
   const challengeStats = await Promise.all(
     (memberships ?? []).map(async (m) => {
+      // チャレンジ情報を取得
+      const { data: challenge } = await supabase
+        .from('challenges')
+        .select('title, duration_days')
+        .eq('id', m.challenge_id)
+        .single()
+
+      // チェックイン数を取得
       const { count } = await supabase
         .from('checkins')
         .select('*', { count: 'exact', head: true })
         .eq('member_id', m.id)
 
-      const challenge = m.challenges
       const durationDays = challenge?.duration_days ?? 1
       const checkinCount = count ?? 0
       const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
 
       return {
         membershipId: m.id,
-        groupId: m.groups?.id,
+        groupId: m.group_id,
         title: challenge?.title ?? '不明',
         durationDays,
         checkinCount,
