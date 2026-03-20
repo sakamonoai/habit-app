@@ -45,7 +45,10 @@ export default function CreateChallengePage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
+  const [scheduleType, setScheduleType] = useState<'flexible' | 'fixed'>('flexible')
   const [durationDays, setDurationDays] = useState(7)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [maxMembers, setMaxMembers] = useState(10)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
@@ -53,6 +56,11 @@ export default function CreateChallengePage() {
   const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // 固定期間の場合、開始日・終了日からduration_daysを計算
+  const computedDurationDays = scheduleType === 'fixed' && startDate && endDate
+    ? Math.max(Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1, 1)
+    : durationDays
 
   const handleImageSelect = (file: File | undefined, onSelect: (f: File, preview: string) => void) => {
     if (!file) return
@@ -88,6 +96,11 @@ export default function CreateChallengePage() {
   const handleSubmit = async () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return }
     if (!category) { setError('カテゴリを選択してください'); return }
+    if (scheduleType === 'fixed') {
+      if (!startDate || !endDate) { setError('開始日と終了日を選択してください'); return }
+      if (new Date(startDate) < new Date(new Date().toISOString().split('T')[0])) { setError('開始日は今日以降を選択してください'); return }
+      if (new Date(endDate) <= new Date(startDate)) { setError('終了日は開始日より後を選択してください'); return }
+    }
 
     setLoading(true)
     setError('')
@@ -122,7 +135,10 @@ export default function CreateChallengePage() {
         title: title.trim(),
         description: description.trim() || null,
         category,
-        duration_days: durationDays,
+        schedule_type: scheduleType,
+        duration_days: computedDurationDays,
+        start_date: scheduleType === 'fixed' ? startDate : null,
+        end_date: scheduleType === 'fixed' ? endDate : null,
         deposit_amount: 1000,
         max_group_size: maxMembers,
         status: 'active',
@@ -308,25 +324,88 @@ export default function CreateChallengePage() {
           </div>
         </div>
 
-        {/* 期間 */}
+        {/* スケジュールタイプ */}
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">チャレンジ期間</label>
-          <div className="grid grid-cols-4 gap-2">
-            {DURATION_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setDurationDays(opt.value)}
-                className={`py-3 rounded-xl text-sm font-semibold transition-colors ${
-                  durationDays === opt.value
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <label className="block text-sm font-semibold text-gray-900 mb-2">期間タイプ</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setScheduleType('flexible')}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                scheduleType === 'flexible'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900 mb-1">いつでも参加</p>
+              <p className="text-xs text-gray-500">参加した日からカウント開始。新しい人が入りやすい</p>
+            </button>
+            <button
+              onClick={() => setScheduleType('fixed')}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                scheduleType === 'fixed'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900 mb-1">期間を決める</p>
+              <p className="text-xs text-gray-500">全員同じ日程で走る。締切効果で盛り上がる</p>
+            </button>
           </div>
         </div>
+
+        {/* 期間設定 */}
+        {scheduleType === 'flexible' ? (
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">チャレンジ期間</label>
+            <div className="grid grid-cols-4 gap-2">
+              {DURATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setDurationDays(opt.value)}
+                  className={`py-3 rounded-xl text-sm font-semibold transition-colors ${
+                    durationDays === opt.value
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">開始日</label>
+              <input
+                type="date"
+                value={startDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">終了日</label>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate || new Date().toISOString().split('T')[0]}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-200"
+              />
+            </div>
+            {startDate && endDate && (
+              <div className="bg-orange-50 rounded-xl px-4 py-3">
+                <p className="text-sm text-orange-700 font-medium">
+                  {new Date(startDate).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}
+                  〜{new Date(endDate).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}
+                  （{computedDurationDays}日間）
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 最大人数 */}
         <div>
@@ -369,7 +448,12 @@ export default function CreateChallengePage() {
               <h3 className="font-semibold text-gray-900 text-sm">{title || 'タイトル未入力'}</h3>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{durationDays}日間</span>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{computedDurationDays}日間</span>
+                {scheduleType === 'fixed' && startDate && (
+                  <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded">
+                    {new Date(startDate).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}〜
+                  </span>
+                )}
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                   {maxMembers >= 9999 ? '無制限' : `${maxMembers}人`}
                 </span>

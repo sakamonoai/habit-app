@@ -115,6 +115,12 @@ export default async function ChallengeDetailPage({ params }: Props) {
             <div className="bg-blue-50 rounded-xl p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">期間</p>
               <p className="text-lg font-bold text-blue-500">{durationLabel(challenge.duration_days)}</p>
+              {challenge.schedule_type === 'fixed' && challenge.start_date && challenge.end_date && (
+                <p className="text-xs text-blue-400 mt-0.5">
+                  {new Date(challenge.start_date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
+                  〜{new Date(challenge.end_date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
+                </p>
+              )}
             </div>
             <div className="bg-green-50 rounded-xl p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">参加者</p>

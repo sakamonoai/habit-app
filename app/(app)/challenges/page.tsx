@@ -28,7 +28,7 @@ const CARD_GRADIENTS = [
 ]
 
 type Props = {
-  searchParams: Promise<{ category?: string }>
+  searchParams: Promise<{ category?: string; schedule?: string }>
 }
 
 // カテゴリマッピング（タブ名 → DBのcategoryカラム値）
@@ -41,7 +41,7 @@ const CATEGORY_MAP: Record<string, string[]> = {
 }
 
 export default async function ChallengesPage({ searchParams }: Props) {
-  const { category } = await searchParams
+  const { category, schedule } = await searchParams
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -63,6 +63,9 @@ export default async function ChallengesPage({ searchParams }: Props) {
   if (category && category !== '全て' && CATEGORY_MAP[category]) {
     query = query.in('category', CATEGORY_MAP[category])
   }
+  if (schedule === 'fixed' || schedule === 'flexible') {
+    query = query.eq('schedule_type', schedule)
+  }
 
   const [{ data: profile }, { data: challenges }] = await Promise.all([profilePromise, query])
 
@@ -82,6 +85,8 @@ export default async function ChallengesPage({ searchParams }: Props) {
     avgRating: (challenge.avg_rating ?? null) as number | null,
     reviewCount: (challenge.review_count ?? 0) as number,
     thumbnail_url: (challenge.thumbnail_url ?? null) as string | null,
+    schedule_type: (challenge.schedule_type ?? 'flexible') as string,
+    end_date: (challenge.end_date ?? null) as string | null,
     gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
   }))
 
@@ -128,7 +133,10 @@ export default async function ChallengesPage({ searchParams }: Props) {
 
         {/* 人気チャレンジ */}
         <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">{category && category !== '全て' ? category : '人気'}チャレンジ</h2>
+          <h2 className="text-lg font-bold text-gray-900">
+            {schedule === 'fixed' ? '📅 募集中の' : schedule === 'flexible' ? '🔄 いつでも参加の' : ''}
+            {category && category !== '全て' ? category : schedule ? '' : '人気'}チャレンジ
+          </h2>
           <span className="text-sm text-gray-400">全{challengesWithMembers.length}件</span>
         </div>
 
@@ -163,6 +171,18 @@ export default async function ChallengesPage({ searchParams }: Props) {
                   <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
                     <span>👤</span> {challenge.memberCount}人
                   </div>
+                  {/* 締切バッジ */}
+                  {challenge.schedule_type === 'fixed' && challenge.start_date && (() => {
+                    const start = new Date(challenge.start_date!)
+                    const now = new Date()
+                    const daysUntil = Math.ceil((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                    if (daysUntil > 7) return null
+                    return (
+                      <div className={`absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-lg font-bold ${daysUntil <= 1 ? 'bg-red-500' : daysUntil <= 3 ? 'bg-orange-500' : 'bg-yellow-500'}`}>
+                        {daysUntil <= 0 ? '開催中' : daysUntil === 1 ? '明日開始！' : `あと${daysUntil}日`}
+                      </div>
+                    )
+                  })()}
                 </div>
                 {/* カード情報 */}
                 <div className="pt-2 pb-1">
@@ -177,9 +197,14 @@ export default async function ChallengesPage({ searchParams }: Props) {
                       <span className="text-xs text-gray-400">({challenge.reviewCount})</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{durationLabel(challenge.duration_days)}</span>
+                    {challenge.schedule_type === 'fixed' && challenge.start_date && (
+                      <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-medium">
+                        {new Date(challenge.start_date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}〜
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>
