@@ -150,18 +150,63 @@ export default async function ChallengeDetailPage({ params }: Props) {
           </ul>
         </div>
 
-        {/* 報告例の画像 */}
-        {challenge.example_photo_url && (
-          <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
-            <h3 className="font-semibold text-gray-900 mb-3">報告例</h3>
-            <p className="text-xs text-gray-400 mb-3">このような写真を毎日投稿してください</p>
-            <img
-              src={challenge.example_photo_url}
-              alt="報告例"
-              className="w-full rounded-xl object-cover max-h-64"
-            />
-          </div>
-        )}
+        {/* OK例・NG例 */}
+        {(challenge.ok_photo_url || challenge.ng_photo_url) && (() => {
+          const okPhotos: { url: string; desc: string }[] = challenge.ok_photo_url ? JSON.parse(challenge.ok_photo_url) : []
+          const ngPhotos: { url: string; desc: string }[] = challenge.ng_photo_url ? JSON.parse(challenge.ng_photo_url) : []
+          const hasPhotos = okPhotos.length > 0 || ngPhotos.length > 0
+          if (!hasPhotos) return null
+          return (
+            <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+              <h3 className="font-semibold text-gray-900 mb-4">こうやって認証してください</h3>
+
+              {/* OK例 */}
+              {okPhotos.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                    {okPhotos.map((photo, i) => (
+                      <div key={i} className="shrink-0 w-44">
+                        <div className="relative rounded-xl overflow-hidden">
+                          <img src={photo.url} alt={`OK例${i + 1}`} className="w-44 h-56 object-cover" />
+                          <div className="absolute bottom-0 inset-x-0 bg-green-500 py-1.5 flex items-center justify-center">
+                            <span className="text-white text-lg font-bold">○</span>
+                          </div>
+                        </div>
+                        {photo.desc && (
+                          <p className="text-xs text-gray-600 mt-2 line-clamp-2">{photo.desc}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* NG例 */}
+              {ngPhotos.length > 0 && (
+                <div>
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                    {ngPhotos.map((photo, i) => (
+                      <div key={i} className="shrink-0 w-44">
+                        <div className="relative rounded-xl overflow-hidden">
+                          <img src={photo.url} alt={`NG例${i + 1}`} className="w-44 h-56 object-cover" />
+                          <div className="absolute bottom-0 inset-x-0 bg-red-500 py-1.5 flex items-center justify-center">
+                            <span className="text-white text-lg font-bold">✕</span>
+                          </div>
+                        </div>
+                        <div className="mt-1.5">
+                          <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">失敗処理</span>
+                        </div>
+                        {photo.desc && (
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{photo.desc}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* 参加者レビュー */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">

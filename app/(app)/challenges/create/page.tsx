@@ -29,11 +29,18 @@ const MAX_MEMBERS_OPTIONS = [
   { label: '無制限', value: 9999 },
 ]
 
+type PhotoEntry = {
+  file: File | null
+  preview: string | null
+  desc: string
+}
+
 export default function CreateChallengePage() {
   const router = useRouter()
   const supabase = createClient()
   const thumbnailRef = useRef<HTMLInputElement>(null)
-  const exampleRef = useRef<HTMLInputElement>(null)
+  const okRefs = useRef<(HTMLInputElement | null)[]>([])
+  const ngRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -42,29 +49,37 @@ export default function CreateChallengePage() {
   const [maxMembers, setMaxMembers] = useState(10)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
-  const [exampleFile, setExampleFile] = useState<File | null>(null)
-  const [examplePreview, setExamplePreview] = useState<string | null>(null)
+  const [okPhotos, setOkPhotos] = useState<PhotoEntry[]>([])
+  const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleImageSelect = (
-    file: File | undefined,
-    setFile: (f: File | null) => void,
-    setPreview: (url: string | null) => void,
-  ) => {
+  const handleImageSelect = (file: File | undefined, onSelect: (f: File, preview: string) => void) => {
     if (!file) return
-    setFile(file)
     const reader = new FileReader()
-    reader.onload = (e) => setPreview(e.target?.result as string)
+    reader.onload = (e) => onSelect(file, e.target?.result as string)
     reader.readAsDataURL(file)
+  }
+
+  const addPhoto = (type: 'ok' | 'ng') => {
+    const setter = type === 'ok' ? setOkPhotos : setNgPhotos
+    setter(prev => [...prev, { file: null, preview: null, desc: '' }])
+  }
+
+  const updatePhoto = (type: 'ok' | 'ng', index: number, updates: Partial<PhotoEntry>) => {
+    const setter = type === 'ok' ? setOkPhotos : setNgPhotos
+    setter(prev => prev.map((p, i) => i === index ? { ...p, ...updates } : p))
+  }
+
+  const removePhoto = (type: 'ok' | 'ng', index: number) => {
+    const setter = type === 'ok' ? setOkPhotos : setNgPhotos
+    setter(prev => prev.filter((_, i) => i !== index))
   }
 
   const uploadImage = async (file: File, userId: string, prefix: string): Promise<string | null> => {
     const ext = file.name.split('.').pop()
-    const path = `${userId}/${prefix}-${Date.now()}.${ext}`
-    const { error } = await supabase.storage
-      .from('challenge-images')
-      .upload(path, file, { upsert: true })
+    const path = `${userId}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
+    const { error } = await supabase.storage.from('challenge-images').upload(path, file, { upsert: true })
     if (error) return null
     const { data } = supabase.storage.from('challenge-images').getPublicUrl(path)
     return data.publicUrl
@@ -80,11 +95,26 @@ export default function CreateChallengePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    // 画像アップロード（並列）
-    const [thumbnailUrl, examplePhotoUrl] = await Promise.all([
-      thumbnailFile ? uploadImage(thumbnailFile, user.id, 'thumb') : Promise.resolve(null),
-      exampleFile ? uploadImage(exampleFile, user.id, 'example') : Promise.resolve(null),
-    ])
+    // 画像アップロード
+    const thumbnailUrl = thumbnailFile ? await uploadImage(thumbnailFile, user.id, 'thumb') : null
+
+    // OK/NG写真をアップロード
+    const okUploaded = await Promise.all(
+      okPhotos.filter(p => p.file).map(async (p) => ({
+        url: await uploadImage(p.file!, user.id, 'ok'),
+        desc: p.desc.trim(),
+      }))
+    )
+    const ngUploaded = await Promise.all(
+      ngPhotos.filter(p => p.file).map(async (p) => ({
+        url: await uploadImage(p.file!, user.id, 'ng'),
+        desc: p.desc.trim(),
+      }))
+    )
+
+    // OK/NG写真データをJSON化
+    const okPhotoData = okUploaded.filter(p => p.url).map(p => ({ url: p.url, desc: p.desc }))
+    const ngPhotoData = ngUploaded.filter(p => p.url).map(p => ({ url: p.url, desc: p.desc }))
 
     const { data: challenge, error: createError } = await supabase
       .from('challenges')
@@ -98,7 +128,8 @@ export default function CreateChallengePage() {
         status: 'active',
         created_by: user.id,
         thumbnail_url: thumbnailUrl,
-        example_photo_url: examplePhotoUrl,
+        ok_photo_url: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
+        ng_photo_url: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
       })
       .select('id')
       .single()
@@ -110,6 +141,81 @@ export default function CreateChallengePage() {
     }
 
     router.push(`/challenges/${challenge.id}`)
+  }
+
+  const renderPhotoSection = (type: 'ok' | 'ng', photos: PhotoEntry[], refs: React.MutableRefObject<(HTMLInputElement | null)[]>) => {
+    const isOk = type === 'ok'
+    return (
+      <div>
+        <label className="block text-sm font-semibold text-gray-900 mb-1">
+          {isOk ? 'OK例' : 'NG例'}の写真（任意）
+        </label>
+        <p className="text-xs text-gray-400 mb-3">
+          {isOk ? '「こんな写真ならOK」という見本です' : '「こんな写真はNG」という見本です'}
+        </p>
+
+        <div className="space-y-3">
+          {photos.map((photo, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded-xl p-3">
+              <div className="flex gap-3">
+                {/* 画像選択 */}
+                <div>
+                  <input
+                    ref={(el) => { refs.current[i] = el }}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      handleImageSelect(e.target.files?.[0], (file, preview) => {
+                        updatePhoto(type, i, { file, preview })
+                      })
+                    }}
+                  />
+                  <button
+                    onClick={() => refs.current[i]?.click()}
+                    className="w-24 h-24 bg-gray-50 border border-dashed border-gray-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
+                  >
+                    {photo.preview ? (
+                      <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl text-gray-300">📷</span>
+                    )}
+                  </button>
+                </div>
+                {/* 説明 + 削除 */}
+                <div className="flex-1 flex flex-col">
+                  <input
+                    type="text"
+                    value={photo.desc}
+                    onChange={(e) => updatePhoto(type, i, { desc: e.target.value })}
+                    placeholder={isOk ? 'OK例の説明' : 'NG例の説明'}
+                    maxLength={80}
+                    className="w-full bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-200"
+                  />
+                  <button
+                    onClick={() => removePhoto(type, i)}
+                    className="text-xs text-gray-400 hover:text-red-500 mt-auto self-end transition-colors"
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => addPhoto(type)}
+          className={`mt-2 w-full py-2.5 rounded-xl text-sm font-medium border-2 border-dashed transition-colors ${
+            isOk
+              ? 'border-green-200 text-green-500 hover:bg-green-50'
+              : 'border-red-200 text-red-400 hover:bg-red-50'
+          }`}
+        >
+          + {isOk ? 'OK例' : 'NG例'}を追加
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -132,7 +238,10 @@ export default function CreateChallengePage() {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => handleImageSelect(e.target.files?.[0], setThumbnailFile, setThumbnailPreview)}
+            onChange={(e) => handleImageSelect(e.target.files?.[0], (file, preview) => {
+              setThumbnailFile(file)
+              setThumbnailPreview(preview)
+            })}
           />
           <button
             onClick={() => thumbnailRef.current?.click()}
@@ -239,31 +348,11 @@ export default function CreateChallengePage() {
           </div>
         </div>
 
-        {/* 報告例の画像 */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-1">報告例の画像（任意）</label>
-          <p className="text-xs text-gray-400 mb-2">参加者が「こんな写真を投稿すればOK」とわかる見本です</p>
-          <input
-            ref={exampleRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleImageSelect(e.target.files?.[0], setExampleFile, setExamplePreview)}
-          />
-          <button
-            onClick={() => exampleRef.current?.click()}
-            className="w-full aspect-square max-w-[200px] bg-white border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center overflow-hidden hover:border-orange-300 transition-colors"
-          >
-            {examplePreview ? (
-              <img src={examplePreview} alt="報告例" className="w-full h-full object-cover" />
-            ) : (
-              <>
-                <span className="text-3xl mb-1">📸</span>
-                <span className="text-sm text-gray-400">見本画像を選択</span>
-              </>
-            )}
-          </button>
-        </div>
+        {/* OK例 */}
+        {renderPhotoSection('ok', okPhotos, okRefs)}
+
+        {/* NG例 */}
+        {renderPhotoSection('ng', ngPhotos, ngRefs)}
 
         {/* プレビュー */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
@@ -291,7 +380,6 @@ export default function CreateChallengePage() {
 
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-        {/* 作成ボタン */}
         <button
           onClick={handleSubmit}
           disabled={loading}
