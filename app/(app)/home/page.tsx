@@ -37,7 +37,7 @@ export default async function HomePage({ searchParams }: Props) {
       <div className="min-h-screen bg-white">
         <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
           <div className="max-w-lg mx-auto px-4 pt-4 pb-3">
-            <h1 className="text-2xl font-bold text-gray-900">ホーム</h1>
+            <h1 className="text-2xl font-bold text-gray-900">タイムライン</h1>
           </div>
         </header>
         <main className="max-w-lg mx-auto px-4 py-16 text-center">
