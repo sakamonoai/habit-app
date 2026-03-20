@@ -131,6 +131,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
           ) : (
             <JoinButton
               challengeId={id}
+              depositAmount={challenge.deposit_amount}
               isFull={isFull}
             />
           )}

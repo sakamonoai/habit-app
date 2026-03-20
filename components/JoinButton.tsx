@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation'
 
 type Props = {
   challengeId: string
+  depositAmount: number
   isFull: boolean
 }
 
-export default function JoinButton({ challengeId, isFull }: Props) {
+export default function JoinButton({ challengeId, depositAmount, isFull }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const supabase = createClient()
@@ -52,7 +53,12 @@ export default function JoinButton({ challengeId, isFull }: Props) {
     // メンバーとして参加
     const { error: joinError } = await supabase
       .from('group_members')
-      .insert({ group_id: groupId, user_id: user.id })
+      .insert({
+        group_id: groupId,
+        user_id: user.id,
+        challenge_id: challengeId,
+        deposit_amount: depositAmount,
+      })
 
     if (joinError) {
       if (joinError.code === '23505') {
