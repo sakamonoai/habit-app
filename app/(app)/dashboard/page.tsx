@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   // 参加中のチャレンジ一覧
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('*, groups(id, challenge_id, challenges(title, duration_days, start_date))')
+    .select('*, groups(id), challenges(title, duration_days, start_date)')
     .eq('user_id', user.id)
 
   // 各チャレンジのチェックイン数を取得
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
         .select('*', { count: 'exact', head: true })
         .eq('member_id', m.id)
 
-      const challenge = m.groups?.challenges
+      const challenge = m.challenges
       const durationDays = challenge?.duration_days ?? 1
       const checkinCount = count ?? 0
       const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
