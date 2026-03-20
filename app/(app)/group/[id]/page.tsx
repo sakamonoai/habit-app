@@ -47,7 +47,7 @@ export default async function GroupTimelinePage({ params }: Props) {
   // タイムライン取得（直近20件）
   const { data: checkins } = await supabase
     .from('checkins')
-    .select('*, profiles(nickname)')
+    .select('*, profiles!checkins_user_id_profiles_fkey(nickname)')
     .eq('group_id', id)
     .order('checked_in_at', { ascending: false })
     .limit(20)
