@@ -37,12 +37,12 @@ export default function JoinButton({ challengeId, isFull }: Props) {
     if (!groupId) {
       const { data: newGroup, error: groupError } = await supabase
         .from('groups')
-        .insert({ challenge_id: challengeId, name: 'デフォルトグループ' })
+        .insert({ challenge_id: challengeId })
         .select('id')
         .single()
 
       if (groupError) {
-        setError('参加に失敗しました')
+        setError(`参加に失敗しました: ${groupError.message}`)
         setLoading(false)
         return
       }
@@ -58,7 +58,7 @@ export default function JoinButton({ challengeId, isFull }: Props) {
       if (joinError.code === '23505') {
         setError('既に参加しています')
       } else {
-        setError('参加に失敗しました')
+        setError(`参加に失敗しました: ${joinError.message}`)
       }
       setLoading(false)
       return

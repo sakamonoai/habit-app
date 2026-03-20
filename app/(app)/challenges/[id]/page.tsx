@@ -22,21 +22,32 @@ export default async function ChallengeDetailPage({ params }: Props) {
 
   if (!challenge) notFound()
 
-  // 参加メンバー数を取得
-  const { count: memberCount } = await supabase
-    .from('group_members')
-    .select('*', { count: 'exact', head: true })
-    .eq('group_id', id)
-
-  // 自分が参加済みか確認
-  const { data: myMembership } = await supabase
-    .from('group_members')
+  // このチャレンジのグループを取得
+  const { data: group } = await supabase
+    .from('groups')
     .select('id')
-    .eq('group_id', id)
-    .eq('user_id', user.id)
+    .eq('challenge_id', id)
     .single()
 
-  const isJoined = !!myMembership
+  // 参加メンバー数を取得
+  const { count: memberCount } = group
+    ? await supabase
+        .from('group_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('group_id', group.id)
+    : { count: 0 }
+
+  // 自分が参加済みか確認
+  let isJoined = false
+  if (group) {
+    const { data: myMembership } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', group.id)
+      .eq('user_id', user.id)
+      .single()
+    isJoined = !!myMembership
+  }
   const isFull = (memberCount ?? 0) >= challenge.max_members
 
   const durationLabel = (days: number) => {
@@ -110,9 +121,9 @@ export default async function ChallengeDetailPage({ params }: Props) {
 
         {/* 参加ボタン */}
         <div className="sticky bottom-4">
-          {isJoined ? (
+          {isJoined && group ? (
             <Link
-              href={`/group/${id}`}
+              href={`/group/${group.id}`}
               className="block w-full py-4 bg-green-500 text-white font-semibold rounded-2xl text-center hover:bg-green-600 transition-colors"
             >
               タイムラインを見る
