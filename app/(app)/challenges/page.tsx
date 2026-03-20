@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
 import BottomNav from '@/components/BottomNav'
+import InstallBanner from '@/components/InstallBanner'
 
 type Challenge = {
   id: string
@@ -107,6 +108,7 @@ export default async function ChallengesPage() {
           </div>
         )}
       </main>
+      <InstallBanner />
       <BottomNav />
     </div>
   )
