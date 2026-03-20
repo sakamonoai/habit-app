@@ -79,6 +79,8 @@ export default async function ChallengesPage({ searchParams }: Props) {
     created_at: challenge.created_at as string,
     created_by: challenge.created_by as string | null,
     memberCount: (challenge.member_count ?? 0) as number,
+    avgRating: (challenge.avg_rating ?? null) as number | null,
+    reviewCount: (challenge.review_count ?? 0) as number,
     gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
   }))
 
@@ -163,11 +165,17 @@ export default async function ChallengesPage({ searchParams }: Props) {
                     {challenge.created_by ? 'ユーザー作成' : '公式チャレンジ'}
                   </p>
                   <h3 className="font-semibold text-gray-900 text-sm mt-0.5 line-clamp-1">{challenge.title}</h3>
-                  <div className="flex items-center gap-1.5 mt-1.5">
+                  {challenge.avgRating && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-yellow-400 text-xs">★</span>
+                      <span className="text-xs font-semibold text-gray-700">{challenge.avgRating}</span>
+                      <span className="text-xs text-gray-400">({challenge.reviewCount})</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-1">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{durationLabel(challenge.duration_days)}</span>
                   </div>
-                  <p className="text-xs text-orange-500 mt-1.5 font-medium">¥500〜</p>
                 </div>
               </Link>
             ))}
