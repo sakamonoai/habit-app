@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
+import ProfileSettings from '@/components/ProfileSettings'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -12,7 +13,7 @@ export default async function DashboardPage() {
 
   // プロフィールとメンバーシップを並列取得
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from('profiles').select('nickname').eq('id', user.id).single(),
+    supabase.from('profiles').select('nickname, avatar_url').eq('id', user.id).single(),
     supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id),
   ])
 
@@ -76,9 +77,13 @@ export default async function DashboardPage() {
       <main className="max-w-lg mx-auto px-4 py-4 pb-24">
         {/* プロフィール */}
         <div className="flex items-center gap-4 py-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            {(profile?.nickname ?? '?')[0]}
-          </div>
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="アイコン" className="w-16 h-16 rounded-full object-cover" />
+          ) : (
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              {(profile?.nickname ?? '?')[0]}
+            </div>
+          )}
           <div>
             <h2 className="text-lg font-bold text-gray-900">{profile?.nickname ?? 'ゲスト'}</h2>
             <p className="text-sm text-gray-400">{user.email}</p>
@@ -140,10 +145,19 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* メニュー */}
-        <div className="mt-8 space-y-1">
-          <h3 className="font-bold text-gray-900 mb-3">設定</h3>
-          <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100">
+        {/* プロフィール・アカウント設定 */}
+        <div className="mt-8">
+          <ProfileSettings
+            userId={user.id}
+            initialNickname={profile?.nickname ?? ''}
+            initialAvatarUrl={profile?.avatar_url ?? null}
+            initialEmail={user.email ?? ''}
+          />
+        </div>
+
+        {/* その他メニュー */}
+        <div className="mt-4">
+          <div className="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
             <div className="px-4 py-3.5 flex items-center justify-between">
               <span className="text-sm text-gray-700">お知らせ</span>
               <span className="text-gray-300">→</span>
