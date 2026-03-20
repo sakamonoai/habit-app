@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
 import InstallBanner from '@/components/InstallBanner'
+import CategoryTabs from '@/components/CategoryTabs'
+import CategoryIcons from '@/components/CategoryIcons'
 
 type Challenge = {
   id: string
@@ -12,18 +14,10 @@ type Challenge = {
   deposit_amount: number
   max_members: number
   status: string
+  category: string | null
   start_date: string | null
   created_at: string
 }
-
-const CATEGORY_ICONS = [
-  { label: '運動', emoji: '🏃', color: 'bg-pink-50' },
-  { label: 'ルーティン', emoji: '📅', color: 'bg-blue-50' },
-  { label: '食習慣', emoji: '🥗', color: 'bg-green-50' },
-  { label: '読書', emoji: '📚', color: 'bg-yellow-50' },
-  { label: '早起き', emoji: '☀️', color: 'bg-orange-50' },
-  { label: '勉強', emoji: '✏️', color: 'bg-purple-50' },
-]
 
 const CARD_GRADIENTS = [
   'from-orange-400 to-rose-400',
@@ -33,7 +27,21 @@ const CARD_GRADIENTS = [
   'from-yellow-400 to-orange-400',
 ]
 
-export default async function ChallengesPage() {
+type Props = {
+  searchParams: Promise<{ category?: string }>
+}
+
+// カテゴリマッピング（タブ名 → DBのcategoryカラム値）
+const CATEGORY_MAP: Record<string, string[]> = {
+  '運動': ['運動'],
+  '食習慣': ['食習慣'],
+  '生活': ['生活', '朝活'],
+  '勉強': ['勉強', '学習'],
+  '趣味': ['趣味', '読書'],
+}
+
+export default async function ChallengesPage({ searchParams }: Props) {
+  const { category } = await searchParams
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -45,11 +53,18 @@ export default async function ChallengesPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: challenges } = await supabase
+  let query = supabase
     .from('challenges')
     .select('*')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
+
+  // カテゴリフィルタ適用
+  if (category && category !== '全て' && CATEGORY_MAP[category]) {
+    query = query.in('category', CATEGORY_MAP[category])
+  }
+
+  const { data: challenges } = await query
 
   // 各チャレンジの参加者数を取得
   const challengesWithMembers = await Promise.all(
@@ -91,16 +106,7 @@ export default async function ChallengesPage() {
           </div>
         </div>
         <div className="max-w-lg mx-auto px-4 py-3">
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide">
-            {CATEGORY_ICONS.map((cat) => (
-              <div key={cat.label} className="flex flex-col items-center gap-1 shrink-0">
-                <div className={`w-14 h-14 ${cat.color} rounded-2xl flex items-center justify-center text-2xl`}>
-                  {cat.emoji}
-                </div>
-                <span className="text-xs text-gray-600">{cat.label}</span>
-              </div>
-            ))}
-          </div>
+          <CategoryIcons />
         </div>
       </header>
 
@@ -122,26 +128,13 @@ export default async function ChallengesPage() {
 
         {/* 人気チャレンジ */}
         <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">人気チャレンジ</h2>
+          <h2 className="text-lg font-bold text-gray-900">{category && category !== '全て' ? category : '人気'}チャレンジ</h2>
           <span className="text-sm text-gray-400">全{challengesWithMembers.length}件</span>
         </div>
 
         {/* カテゴリタブ */}
         <div className="px-4 pb-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {['全て', '運動', '食習慣', '生活', '勉強', '趣味'].map((tab, i) => (
-              <button
-                key={tab}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                  i === 0
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          <CategoryTabs />
         </div>
 
         {/* チャレンジカードグリッド */}
