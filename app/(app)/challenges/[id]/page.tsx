@@ -57,7 +57,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
 
   const isJoined = !!myMembership
   const hasReviewed = !!myReview
-  const isFull = (memberCount ?? 0) >= challenge.max_members
+  const isFull = (memberCount ?? 0) >= challenge.max_group_size
 
   // レビュー平均計算
   const reviewList = reviews ?? []
@@ -124,7 +124,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </div>
             <div className="bg-green-50 rounded-xl p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">参加者</p>
-              <p className="text-lg font-bold text-green-500">{memberCount ?? 0} / {challenge.max_members}人</p>
+              <p className="text-lg font-bold text-green-500">{memberCount ?? 0} / {challenge.max_group_size}人</p>
             </div>
             <div className="bg-purple-50 rounded-xl p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">達成条件</p>
