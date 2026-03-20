@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -16,16 +16,58 @@ export default function CheckinForm({ groupId, memberId }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const [cameraError, setCameraError] = useState('')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const supabase = createClient()
   const router = useRouter()
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file)
-    setPreview(URL.createObjectURL(file))
-  }
+  const startCamera = useCallback(async () => {
+    setCameraError('')
+    setCameraOpen(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } },
+        audio: false,
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+    } catch {
+      setCameraError('カメラにアクセスできません。カメラの権限を許可してください。')
+    }
+  }, [])
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop())
+      streamRef.current = null
+    }
+    setCameraOpen(false)
+  }, [])
+
+  const takePhoto = useCallback(() => {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    if (!video || !canvas) return
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.drawImage(video, 0, 0)
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      const file = new File([blob], `checkin_${Date.now()}.jpg`, { type: 'image/jpeg' })
+      setImageFile(file)
+      setPreview(URL.createObjectURL(blob))
+      stopCamera()
+    }, 'image/jpeg', 0.85)
+  }, [stopCamera])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -39,9 +81,8 @@ export default function CheckinForm({ groupId, memberId }: Props) {
 
     let imageUrl: string | null = null
 
-    // 画像アップロード
     if (imageFile) {
-      const ext = imageFile.name.split('.').pop()
+      const ext = 'jpg'
       const filePath = `checkins/${user.id}/${Date.now()}.${ext}`
 
       const { error: uploadError } = await supabase.storage
@@ -61,7 +102,6 @@ export default function CheckinForm({ groupId, memberId }: Props) {
       imageUrl = publicUrl.publicUrl
     }
 
-    // チェックイン作成
     const { error: checkinError } = await supabase
       .from('checkins')
       .insert({
@@ -106,8 +146,48 @@ export default function CheckinForm({ groupId, memberId }: Props) {
         <p className="text-red-500 text-sm mb-2">{error}</p>
       )}
 
-      {/* 画像選択 */}
-      {preview ? (
+      {/* カメラUI */}
+      {cameraOpen ? (
+        <div className="relative mb-3 rounded-xl overflow-hidden bg-black">
+          {cameraError ? (
+            <div className="py-16 text-center">
+              <p className="text-white text-sm mb-3">{cameraError}</p>
+              <button
+                onClick={stopCamera}
+                className="px-4 py-2 bg-white/20 text-white text-sm rounded-lg"
+              >
+                閉じる
+              </button>
+            </div>
+          ) : (
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full rounded-xl"
+              />
+              <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-6">
+                <button
+                  onClick={stopCamera}
+                  className="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white text-lg"
+                >
+                  ✕
+                </button>
+                <button
+                  onClick={takePhoto}
+                  className="w-16 h-16 bg-white rounded-full border-4 border-orange-400 flex items-center justify-center active:scale-90 transition-transform"
+                >
+                  <div className="w-12 h-12 bg-orange-500 rounded-full" />
+                </button>
+                <div className="w-12 h-12" />
+              </div>
+            </>
+          )}
+          <canvas ref={canvasRef} className="hidden" />
+        </div>
+      ) : preview ? (
         <div className="relative mb-3">
           <img src={preview} alt="プレビュー" className="w-full rounded-xl object-cover max-h-48" />
           <button
@@ -119,21 +199,14 @@ export default function CheckinForm({ groupId, memberId }: Props) {
         </div>
       ) : (
         <button
-          onClick={() => fileInputRef.current?.click()}
+          onClick={startCamera}
           className="w-full py-10 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-orange-300 hover:text-orange-400 transition-all mb-3 active:scale-[0.98]"
         >
           <p className="text-4xl mb-2">📸</p>
-          <p className="text-sm font-medium">タップして写真を撮る</p>
+          <p className="text-sm font-medium">タップしてカメラを起動</p>
+          <p className="text-xs mt-1">その場で撮影してください</p>
         </button>
       )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
-        className="hidden"
-      />
 
       {/* コメント */}
       <input
