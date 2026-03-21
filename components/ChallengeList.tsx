@@ -23,6 +23,18 @@ type Challenge = {
   gradient: string
 }
 
+const DEFAULT_THUMBNAILS: Record<string, string> = {
+  '運動': '/defaults/exercise.jpg',
+  '食習慣': '/defaults/food.jpg',
+  '生活': '/defaults/lifestyle.jpg',
+  '朝活': '/defaults/lifestyle.jpg',
+  '勉強': '/defaults/study.jpg',
+  '学習': '/defaults/study.jpg',
+  '趣味': '/defaults/hobby.jpg',
+  '読書': '/defaults/hobby.jpg',
+}
+const DEFAULT_THUMBNAIL_FALLBACK = '/defaults/other.jpg'
+
 const CARD_GRADIENTS = [
   'from-orange-400 to-rose-400',
   'from-blue-400 to-indigo-400',
@@ -191,18 +203,15 @@ export default function ChallengeList({ challenges }: Props) {
               href={`/challenges/${challenge.id}`}
               className="block group"
             >
-              <div className={`relative aspect-[4/5] ${challenge.thumbnail_url ? 'bg-gray-100' : `bg-gradient-to-br ${challenge.gradient}`} rounded-2xl overflow-hidden`}>
-                {challenge.thumbnail_url ? (
-                  <Image src={challenge.thumbnail_url} alt={challenge.title} fill className="object-cover" sizes="(max-width: 512px) 50vw, 256px" loading="lazy" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-6xl opacity-30">
-                      {challenge.title.includes('朝活') ? '☀️' :
-                       challenge.title.includes('筋トレ') || challenge.title.includes('運動') ? '💪' :
-                       challenge.title.includes('勉強') || challenge.title.includes('読書') ? '📚' : '🔥'}
-                    </span>
-                  </div>
-                )}
+              <div className="relative aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
+                <Image
+                  src={challenge.thumbnail_url || DEFAULT_THUMBNAILS[challenge.category ?? ''] || DEFAULT_THUMBNAIL_FALLBACK}
+                  alt={challenge.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 512px) 50vw, 256px"
+                  loading="lazy"
+                />
                 <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
                   <span>👤</span> {challenge.memberCount}人
                 </div>
