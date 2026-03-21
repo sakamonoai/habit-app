@@ -188,18 +188,18 @@ export default async function DashboardPage() {
         {/* その他メニュー */}
         <div className="mt-4">
           <div className="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
-            <div className="px-4 py-3.5 flex items-center justify-between">
+            <Link href="/notifications" className="px-4 py-3.5 flex items-center justify-between">
               <span className="text-sm text-gray-700">お知らせ</span>
               <span className="text-gray-300">→</span>
-            </div>
-            <div className="px-4 py-3.5 flex items-center justify-between">
+            </Link>
+            <Link href="/terms" className="px-4 py-3.5 flex items-center justify-between">
               <span className="text-sm text-gray-700">利用規約</span>
               <span className="text-gray-300">→</span>
-            </div>
-            <div className="px-4 py-3.5 flex items-center justify-between">
+            </Link>
+            <Link href="/contact" className="px-4 py-3.5 flex items-center justify-between">
               <span className="text-sm text-gray-700">お問い合わせ</span>
               <span className="text-gray-300">→</span>
-            </div>
+            </Link>
           </div>
         </div>
       </main>
