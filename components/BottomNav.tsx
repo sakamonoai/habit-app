@@ -14,7 +14,7 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-20 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-20 pb-[max(env(safe-area-inset-bottom),8px)]">
       <div className="max-w-lg mx-auto grid grid-cols-4">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || pathname.startsWith(tab.href + '/')
@@ -22,7 +22,7 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center py-2 text-[10px] transition-colors ${
+              className={`flex flex-col items-center py-3 text-[10px] transition-colors ${
                 isActive ? 'text-gray-900' : 'text-gray-400'
               }`}
             >

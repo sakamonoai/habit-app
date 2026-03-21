@@ -148,7 +148,7 @@ export default async function GroupTimelinePage({ params }: Props) {
             <p className="text-green-600 text-sm mt-1">連続記録を伸ばしていこう</p>
           </div>
         ) : (
-          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} />
+          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} />
         )}
 
         {/* タイムライン */}
@@ -158,13 +158,15 @@ export default async function GroupTimelinePage({ params }: Props) {
             {checkins.map((checkin) => (
               <div key={checkin.id} className="bg-white rounded-2xl shadow-sm p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    {(checkin.profiles?.nickname ?? '?')[0]}
-                  </div>
+                  <Link href={`/user/${checkin.user_id}`} className="shrink-0">
+                    <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {(checkin.profiles?.nickname ?? '?')[0]}
+                    </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">
+                    <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">
                       {checkin.profiles?.nickname ?? '匿名'}
-                    </p>
+                    </Link>
                     <p className="text-xs text-gray-400">
                       {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'

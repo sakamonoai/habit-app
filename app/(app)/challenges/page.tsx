@@ -59,13 +59,16 @@ export default async function ChallengesPage({ searchParams }: Props) {
     .from('challenges_with_members')
     .select('*')
     .eq('status', 'active')
-    .order('created_at', { ascending: false })
 
   if (category && category !== '全て' && CATEGORY_MAP[category]) {
     query = query.in('category', CATEGORY_MAP[category])
   }
-  if (schedule === 'fixed' || schedule === 'flexible') {
-    query = query.eq('schedule_type', schedule)
+  if (schedule === 'fixed') {
+    query = query.eq('schedule_type', 'fixed').order('start_date', { ascending: true, nullsFirst: false })
+  } else if (schedule === 'flexible') {
+    query = query.eq('schedule_type', 'flexible').order('created_at', { ascending: false })
+  } else {
+    query = query.order('created_at', { ascending: false })
   }
 
   const [{ data: profile }, { data: challenges }] = await Promise.all([profilePromise, query])

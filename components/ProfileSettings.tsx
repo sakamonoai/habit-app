@@ -4,14 +4,24 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
+type SnsLinks = {
+  twitter?: string
+  instagram?: string
+  youtube?: string
+  tiktok?: string
+  website?: string
+}
+
 type Props = {
   userId: string
   initialNickname: string
   initialAvatarUrl: string | null
   initialEmail: string
+  initialBio: string
+  initialSnsLinks: SnsLinks
 }
 
-export default function ProfileSettings({ userId, initialNickname, initialAvatarUrl, initialEmail }: Props) {
+export default function ProfileSettings({ userId, initialNickname, initialAvatarUrl, initialEmail, initialBio, initialSnsLinks }: Props) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -19,6 +29,8 @@ export default function ProfileSettings({ userId, initialNickname, initialAvatar
   const [nickname, setNickname] = useState(initialNickname)
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl ?? '')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [bio, setBio] = useState(initialBio)
+  const [snsLinks, setSnsLinks] = useState<SnsLinks>(initialSnsLinks)
 
   // メールアドレス
   const [email, setEmail] = useState(initialEmail)
@@ -83,8 +95,8 @@ export default function ProfileSettings({ userId, initialNickname, initialAvatar
     }
   }
 
-  // ニックネーム保存
-  const handleSaveNickname = async () => {
+  // プロフィール保存
+  const handleSaveProfile = async () => {
     if (!nickname.trim()) {
       showMessage('error', '名前を入力してください')
       return
@@ -94,10 +106,10 @@ export default function ProfileSettings({ userId, initialNickname, initialAvatar
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname: nickname.trim() }),
+        body: JSON.stringify({ nickname: nickname.trim(), bio: bio.trim(), sns_links: snsLinks }),
       })
       if (!res.ok) throw new Error()
-      showMessage('success', '名前を更新しました')
+      showMessage('success', 'プロフィールを更新しました')
       router.refresh()
     } catch {
       showMessage('error', '更新に失敗しました')
@@ -211,22 +223,55 @@ export default function ProfileSettings({ userId, initialNickname, initialAvatar
 
         {/* ニックネーム */}
         <label className="block text-xs text-gray-500 mb-1">表示名</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            maxLength={20}
-            className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
-          />
-          <button
-            onClick={handleSaveNickname}
-            disabled={saving || nickname === initialNickname}
-            className="px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-40 transition-colors"
-          >
-            保存
-          </button>
+        <input
+          type="text"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          maxLength={20}
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 mb-3"
+        />
+
+        {/* 自己紹介 */}
+        <label className="block text-xs text-gray-500 mb-1">自己紹介</label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          maxLength={100}
+          rows={2}
+          placeholder="自己紹介を書いてみよう"
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none mb-3"
+        />
+
+        {/* SNSリンク */}
+        <label className="block text-xs text-gray-500 mb-2">SNSリンク</label>
+        <div className="space-y-2 mb-4">
+          {([
+            { key: 'twitter' as const, label: 'X (Twitter)', placeholder: '@username' },
+            { key: 'instagram' as const, label: 'Instagram', placeholder: '@username' },
+            { key: 'youtube' as const, label: 'YouTube', placeholder: 'チャンネルURL' },
+            { key: 'tiktok' as const, label: 'TikTok', placeholder: '@username' },
+            { key: 'website' as const, label: 'Webサイト', placeholder: 'https://...' },
+          ]).map((sns) => (
+            <div key={sns.key} className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 w-20 shrink-0">{sns.label}</span>
+              <input
+                type="text"
+                value={snsLinks[sns.key] ?? ''}
+                onChange={(e) => setSnsLinks(prev => ({ ...prev, [sns.key]: e.target.value }))}
+                placeholder={sns.placeholder}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+          ))}
         </div>
+
+        <button
+          onClick={handleSaveProfile}
+          disabled={saving}
+          className="w-full py-2.5 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-40 transition-colors"
+        >
+          {saving ? '保存中...' : 'プロフィールを保存'}
+        </button>
       </div>
 
       {/* アカウント設定 */}

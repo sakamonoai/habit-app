@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation'
 type Props = {
   groupId: string
   memberId: string
+  challengeId?: string
+  durationDays?: number
 }
 
-export default function CheckinForm({ groupId, memberId }: Props) {
+export default function CheckinForm({ groupId, memberId, challengeId, durationDays }: Props) {
   const [comment, setComment] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -116,6 +118,15 @@ export default function CheckinForm({ groupId, memberId }: Props) {
       setError('チェックインに失敗しました')
       setLoading(false)
       return
+    }
+
+    // バッジチェック
+    if (challengeId && durationDays) {
+      fetch('/api/badges/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challenge_id: challengeId, member_id: memberId, duration_days: durationDays }),
+      }).catch(() => {})
     }
 
     setSuccess(true)

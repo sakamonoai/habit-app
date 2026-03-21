@@ -13,7 +13,7 @@ export default async function DashboardPage() {
 
   // プロフィールとメンバーシップを並列取得
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from('profiles').select('nickname, avatar_url').eq('id', user.id).single(),
+    supabase.from('profiles').select('nickname, avatar_url, bio, sns_links').eq('id', user.id).single(),
     supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id).eq('status', 'active'),
   ])
 
@@ -180,6 +180,8 @@ export default async function DashboardPage() {
             initialNickname={profile?.nickname ?? ''}
             initialAvatarUrl={profile?.avatar_url ?? null}
             initialEmail={user.email ?? ''}
+            initialBio={(profile?.bio as string) ?? ''}
+            initialSnsLinks={(profile?.sns_links as Record<string, string>) ?? {}}
           />
         </div>
 
