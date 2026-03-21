@@ -152,6 +152,11 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-4 text-center text-sm text-gray-500">
+            <Link href="/reset-password" className="text-gray-400 hover:underline">
+              パスワードを忘れた方はこちら
+            </Link>
+          </p>
+          <p className="mt-2 text-center text-sm text-gray-500">
             アカウントがない方は{' '}
             <Link href="/signup" className="text-orange-500 font-medium hover:underline">
               新規登録

@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 認証不要のパス
-  const publicPaths = ['/login', '/signup', '/callback']
+  const publicPaths = ['/login', '/signup', '/callback', '/reset-password', '/update-password']
   const isPublicPath = publicPaths.some(p => pathname.startsWith(p))
 
   if (!session && !isPublicPath) {
