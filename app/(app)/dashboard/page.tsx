@@ -11,10 +11,11 @@ export default async function DashboardPage() {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  // プロフィールとメンバーシップを並列取得
-  const [{ data: profile }, { data: memberships }] = await Promise.all([
+  // プロフィール・メンバーシップ・バッジを並列取得
+  const [{ data: profile }, { data: memberships }, { data: badges }] = await Promise.all([
     supabase.from('profiles').select('nickname, avatar_url, bio, sns_links').eq('id', user.id).single(),
     supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id).eq('status', 'active'),
+    supabase.from('badges').select('*, challenges(title, thumbnail_url, category)').eq('user_id', user.id).eq('badge_type', 'perfect'),
   ])
 
   // メンバーIDリストでチェックイン数を一括取得
@@ -103,6 +104,32 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-400">{user.email}</p>
           </div>
         </div>
+
+        {/* 100%達成バッジ */}
+        {badges && badges.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>🏆</span>100%達成バッジ
+            </h3>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {badges.map((badge) => {
+                const challenge = badge.challenges as unknown as { title: string; thumbnail_url: string | null; category: string | null } | null
+                return (
+                  <div key={badge.id} className="shrink-0 w-20 text-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-400 p-0.5 shadow-md">
+                      <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center">
+                        <span className="text-3xl">🏆</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-gray-600 font-medium mt-1.5 line-clamp-2 leading-tight">
+                      {challenge?.title ?? '不明'}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* サマリーカード */}
         <div className="bg-gray-50 rounded-2xl p-4 mb-6">
