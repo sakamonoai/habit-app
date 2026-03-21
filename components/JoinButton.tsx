@@ -3,6 +3,16 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+
+const StripeJoinFlow = dynamic(() => import('@/components/StripeJoinFlow'), {
+  loading: () => (
+    <div className="text-center py-8">
+      <div className="inline-block w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <p className="text-sm text-gray-400 mt-2">読み込み中...</p>
+    </div>
+  ),
+})
 
 const DEPOSIT_OPTIONS = [500, 1000, 2000, 3000, 5000, 10000]
 
@@ -14,16 +24,17 @@ type Props = {
 }
 
 export default function JoinButton({ challengeId, isFull, depositType = 'choosable', fixedDepositAmount = 1000 }: Props) {
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showSelector, setShowSelector] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showStripeFlow, setShowStripeFlow] = useState(false)
   const [selectedAmount, setSelectedAmount] = useState(depositType === 'fixed' ? fixedDepositAmount : 1000)
   const supabase = createClient()
   const router = useRouter()
 
-  const handleJoin = async () => {
-    setLoading(true)
+  const feeAmount = Math.round(selectedAmount * 0.1)
+
+  const handleConfirmJoin = async () => {
     setError('')
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -32,50 +43,24 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
       return
     }
 
-    const { data: existingGroup } = await supabase
-      .from('groups')
-      .select('id')
-      .eq('challenge_id', challengeId)
-      .maybeSingle()
+    // 確認後、Stripe決済フローを表示
+    setShowConfirm(false)
+    setShowStripeFlow(true)
+  }
 
-    let groupId = existingGroup?.id
-
-    if (!groupId) {
-      const { data: newGroup, error: groupError } = await supabase
-        .from('groups')
-        .insert({ challenge_id: challengeId })
-        .select('id')
-        .single()
-
-      if (groupError) {
-        setError(`グループ作成失敗: ${groupError.message}`)
-        setLoading(false)
-        return
-      }
-      groupId = newGroup!.id
-    }
-
-    const { error: joinError } = await supabase
-      .from('group_members')
-      .insert({
-        group_id: groupId,
-        user_id: user.id,
-        challenge_id: challengeId,
-        deposit_amount: selectedAmount,
-      })
-
-    if (joinError) {
-      if (joinError.code === '23505') {
-        setError('既に参加しています')
-      } else {
-        setError(`参加に失敗しました: ${joinError.message}`)
-      }
-      setLoading(false)
-      return
-    }
-
-    router.push(`/group/${groupId}`)
-    router.refresh()
+  // Stripe決済フロー表示中
+  if (showStripeFlow) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
+        <h3 className="font-bold text-gray-900 text-center mb-1">カード情報を入力</h3>
+        <p className="text-xs text-gray-400 text-center mb-4">安全な決済でチャレンジに参加</p>
+        <StripeJoinFlow
+          challengeId={challengeId}
+          depositAmount={selectedAmount}
+          onCancel={() => setShowStripeFlow(false)}
+        />
+      </div>
+    )
   }
 
   if (!showSelector) {
@@ -102,13 +87,19 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
             <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
               <div className="text-center mb-4">
-                <span className="text-4xl">⚠️</span>
                 <h3 className="text-lg font-bold text-gray-900 mt-2">本当に参加しますか？</h3>
               </div>
               <div className="space-y-2 mb-5">
                 <div className="bg-orange-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500">デポジット金額</p>
                   <p className="text-xl font-bold text-orange-500">¥{selectedAmount.toLocaleString()}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">システム利用料</span>
+                    <span className="font-semibold">¥{feeAmount.toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">利用料は即時引き落としされます</p>
                 </div>
                 <p className="text-sm text-gray-600">
                   一度チャレンジを始めたら、途中でやめることはできません。
@@ -125,11 +116,10 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
                   やめる
                 </button>
                 <button
-                  onClick={() => { setShowConfirm(false); handleJoin() }}
-                  disabled={loading}
-                  className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+                  onClick={handleConfirmJoin}
+                  className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
                 >
-                  {loading ? '処理中...' : '参加する'}
+                  次へ（カード入力）
                 </button>
               </div>
             </div>
@@ -164,10 +154,13 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
 
       <div className="bg-orange-50 rounded-xl p-3 mb-4">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">デポジット</span>
+          <span className="text-gray-600">デポジット（仮押さえ）</span>
           <span className="font-bold text-orange-500">¥{selectedAmount.toLocaleString()}</span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">※ 決済機能は現在準備中です（無料で参加できます）</p>
+        <div className="flex justify-between text-sm mt-1">
+          <span className="text-gray-600">システム利用料</span>
+          <span className="font-semibold text-gray-700">¥{feeAmount.toLocaleString()}</span>
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -179,8 +172,7 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
         </button>
         <button
           onClick={() => setShowConfirm(true)}
-          disabled={loading}
-          className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+          className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
         >
           参加する
         </button>
@@ -191,10 +183,19 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
             <div className="text-center mb-4">
-              <span className="text-4xl">⚠️</span>
               <h3 className="text-lg font-bold text-gray-900 mt-2">本当に参加しますか？</h3>
             </div>
             <div className="space-y-2 mb-5">
+              <div className="bg-orange-50 rounded-xl p-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">デポジット（仮押さえ）</span>
+                  <span className="font-bold text-orange-500">¥{selectedAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-600">システム利用料（即時）</span>
+                  <span className="font-semibold text-gray-700">¥{feeAmount.toLocaleString()}</span>
+                </div>
+              </div>
               <p className="text-sm text-gray-600">
                 一度チャレンジを始めたら、途中でやめることはできません。
               </p>
@@ -213,11 +214,10 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
                 やめる
               </button>
               <button
-                onClick={() => { setShowConfirm(false); handleJoin() }}
-                disabled={loading}
-                className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+                onClick={handleConfirmJoin}
+                className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
               >
-                {loading ? '処理中...' : '参加する'}
+                次へ（カード入力）
               </button>
             </div>
           </div>
