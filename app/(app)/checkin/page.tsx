@@ -1,12 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
 
 export default async function CheckinPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
   const today = new Date().toISOString().split('T')[0]

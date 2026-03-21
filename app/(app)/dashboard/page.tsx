@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,9 +9,7 @@ import LogoutButton from '@/components/LogoutButton'
 const ProfileSettings = dynamic(() => import('@/components/ProfileSettings'))
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
   // プロフィールとメンバーシップを並列取得

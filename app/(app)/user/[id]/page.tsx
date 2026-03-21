@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -17,9 +17,7 @@ const SNS_CONFIG: Record<string, { label: string; prefix: string }> = {
 
 export default async function UserProfilePage({ params }: Props) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
   // プロフィール、バッジ、チェックインを並列取得

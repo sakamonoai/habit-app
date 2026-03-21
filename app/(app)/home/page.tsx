@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -22,9 +22,7 @@ type Props = {
 
 export default async function HomePage({ searchParams }: Props) {
   const { challenge: filterChallengeId } = await searchParams
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
   // 参加中のグループ一覧を取得

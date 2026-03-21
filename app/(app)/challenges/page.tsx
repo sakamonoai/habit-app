@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -46,17 +46,8 @@ const CATEGORY_MAP: Record<string, string[]> = {
 
 export default async function ChallengesPage({ searchParams }: Props) {
   const { category, schedule } = await searchParams
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
-
-  // プロフィールとチャレンジを並列取得
-  const profilePromise = supabase
-    .from('profiles')
-    .select('nickname')
-    .eq('id', user.id)
-    .single()
 
   let query = supabase
     .from('challenges_with_members')
@@ -74,7 +65,7 @@ export default async function ChallengesPage({ searchParams }: Props) {
     query = query.order('created_at', { ascending: false })
   }
 
-  const [{ data: profile }, { data: challenges }] = await Promise.all([profilePromise, query])
+  const { data: challenges } = await query
 
   const challengesWithMembers = (challenges ?? []).map((challenge, index) => ({
     id: challenge.id as string,

@@ -23,3 +23,10 @@ export async function createClient() {
     }
   )
 }
+
+/** セッションからユーザーIDを高速取得（JWTローカル検証のみ、API往復なし） */
+export async function getSessionUser() {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  return { supabase, user: session?.user ?? null }
+}

@@ -23,7 +23,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession()はJWTをローカル検証するだけ（API往復なし = 高速）
+  const { data: { session } } = await supabase.auth.getSession()
 
   const { pathname } = request.nextUrl
 
@@ -31,11 +32,11 @@ export async function middleware(request: NextRequest) {
   const publicPaths = ['/login', '/signup']
   const isPublicPath = publicPaths.some(p => pathname.startsWith(p))
 
-  if (!user && !isPublicPath) {
+  if (!session && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && isPublicPath) {
+  if (session && isPublicPath) {
     return NextResponse.redirect(new URL('/challenges', request.url))
   }
 
