@@ -21,9 +21,12 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   const [success, setSuccess] = useState(false)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [timerSeconds, setTimerSeconds] = useState(0)
+  const [countdown, setCountdown] = useState<number | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -45,6 +48,8 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   }, [])
 
   const stopCamera = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    setCountdown(null)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop())
       streamRef.current = null
@@ -71,6 +76,27 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
       stopCamera()
     }, 'image/jpeg', 0.85)
   }, [stopCamera])
+
+  const handleShutter = useCallback(() => {
+    if (timerSeconds === 0) {
+      takePhoto()
+      return
+    }
+    // タイマー開始
+    setCountdown(timerSeconds)
+    let remaining = timerSeconds
+    timerRef.current = setInterval(() => {
+      remaining--
+      if (remaining <= 0) {
+        if (timerRef.current) clearInterval(timerRef.current)
+        timerRef.current = null
+        setCountdown(null)
+        takePhoto()
+      } else {
+        setCountdown(remaining)
+      }
+    }, 1000)
+  }, [timerSeconds, takePhoto])
 
   // 締め切り判定
   const isPassedDeadline = (() => {
@@ -199,6 +225,30 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
                 muted
                 className="w-full rounded-xl"
               />
+              {/* カウントダウン表示 */}
+              {countdown !== null && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-24 h-24 bg-black/50 backdrop-blur rounded-full flex items-center justify-center">
+                    <span className="text-white text-5xl font-bold">{countdown}</span>
+                  </div>
+                </div>
+              )}
+              {/* タイマー選択（上部） */}
+              <div className="absolute top-3 inset-x-0 flex items-center justify-center gap-2">
+                {[0, 3, 5, 10].map((sec) => (
+                  <button
+                    key={sec}
+                    onClick={() => setTimerSeconds(sec)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur transition-colors ${
+                      timerSeconds === sec
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {sec === 0 ? 'OFF' : `${sec}秒`}
+                  </button>
+                ))}
+              </div>
               <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-6">
                 <button
                   onClick={stopCamera}
@@ -207,10 +257,15 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
                   ✕
                 </button>
                 <button
-                  onClick={takePhoto}
-                  className="w-16 h-16 bg-white rounded-full border-4 border-orange-400 flex items-center justify-center active:scale-90 transition-transform"
+                  onClick={handleShutter}
+                  disabled={countdown !== null}
+                  className="w-16 h-16 bg-white rounded-full border-4 border-orange-400 flex items-center justify-center active:scale-90 transition-transform disabled:opacity-60"
                 >
-                  <div className="w-12 h-12 bg-orange-500 rounded-full" />
+                  <div className={`w-12 h-12 rounded-full ${timerSeconds > 0 ? 'bg-orange-500 flex items-center justify-center' : 'bg-orange-500'}`}>
+                    {timerSeconds > 0 && countdown === null && (
+                      <span className="text-white text-xs font-bold">{timerSeconds}s</span>
+                    )}
+                  </div>
                 </button>
                 <div className="w-12 h-12" />
               </div>
