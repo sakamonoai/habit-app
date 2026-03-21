@@ -241,7 +241,7 @@ export default function LandingPage() {
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">やり切れば、お金は全額戻ってくる</h3>
                 <p className="text-sm text-gray-500">
-                  85%以上達成でデポジット全額返金。100%達成ならスポンサーからの特典も。失うのはサボった人だけ。
+                  85%以上達成でデポジット全額返金。100%達成でスポンサーから特典がもらえることも。失うのはサボった人だけ。
                 </p>
               </div>
             </div>
@@ -265,8 +265,8 @@ export default function LandingPage() {
           <div className="flex items-start gap-3">
             <span className="text-yellow-500 text-lg mt-0.5">🏆</span>
             <div>
-              <p className="font-semibold text-gray-900 text-sm">100%達成 → 特典GET</p>
-              <p className="text-xs text-gray-500">スポンサーからのご褒美がもらえることも</p>
+              <p className="font-semibold text-gray-900 text-sm">100%達成 → 特典がもらえる可能性も</p>
+              <p className="text-xs text-gray-500">スポンサー企業から特典が届くことがあります（スポンサー募集中！）</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
