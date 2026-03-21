@@ -371,14 +371,85 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* スポンサー募集 */}
+      <section className="bg-white py-16">
+        <div className="max-w-lg mx-auto px-6">
+          <div className="text-center mb-8">
+            <p className="text-sm font-bold text-orange-500 mb-2">FOR BUSINESS</p>
+            <h2 className="text-2xl font-black text-gray-900 mb-2">スポンサー企業を募集しています</h2>
+            <p className="text-sm text-gray-500">御社の商品・サービスを「実際に使い続ける」ユーザーと繋がりませんか？</p>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5">
+              <div className="flex gap-4">
+                <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">
+                  🎯
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-1">商品を「毎日使う」体験を提供</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    御社の商品を使うチャレンジを作成可能。ユーザーはデポジットを預けて本気で取り組むため、<span className="font-semibold text-gray-700">確実に商品を継続利用</span>してもらえます。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-5">
+              <div className="flex gap-4">
+                <div className="shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">
+                  📸
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-1">リアルなUGC・口コミが自然に集まる</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    ユーザーは毎日の記録として商品の使用写真を投稿。<span className="font-semibold text-gray-700">作られたレビューではない、生の声と実体験</span>がチャレンジを通じて蓄積されます。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-5">
+              <div className="flex gap-4">
+                <div className="shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">
+                  🏆
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-1">達成者への特典でブランド好感度UP</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    100%達成した本気のユーザーに御社の特典を届けられます。<span className="font-semibold text-gray-700">努力の末に得た報酬は、通常の広告より圧倒的に好印象</span>に残ります。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl p-6 text-center">
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+              スポンサー提携にご興味のある企業様は<br />お気軽にお問い合わせください。
+            </p>
+            <Link
+              href="/contact"
+              className="inline-block w-full max-w-xs py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-colors"
+            >
+              お問い合わせはこちら
+            </Link>
+            <p className="text-xs text-gray-400 mt-3">
+              ※ 個人・法人を問わずお気軽にご相談ください
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* フッター */}
       <footer className="bg-gray-900 text-gray-400 py-8">
         <div className="max-w-lg mx-auto px-6 text-center space-y-3">
           <p className="text-white font-bold text-lg">ハビチャレ</p>
-          <div className="flex justify-center gap-4 text-xs">
+          <div className="flex justify-center gap-4 text-xs flex-wrap">
             <Link href="/terms" className="hover:text-white transition-colors">利用規約</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">プライバシーポリシー</Link>
             <Link href="/tokushoho" className="hover:text-white transition-colors">特商法表記</Link>
+            <Link href="/contact" className="hover:text-white transition-colors">お問い合わせ</Link>
           </div>
           <p className="text-xs text-gray-500">© 2026 株式会社buzzlife</p>
         </div>
