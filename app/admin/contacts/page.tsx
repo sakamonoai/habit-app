@@ -19,7 +19,8 @@ export default async function AdminContactsPage() {
             <thead>
               <tr className="bg-gray-50 text-left text-gray-600">
                 <th className="px-4 py-3 font-semibold">日時</th>
-                <th className="px-4 py-3 font-semibold">メール</th>
+                <th className="px-4 py-3 font-semibold">送信者</th>
+                <th className="px-4 py-3 font-semibold">返信先</th>
                 <th className="px-4 py-3 font-semibold">カテゴリ</th>
                 <th className="px-4 py-3 font-semibold">内容</th>
               </tr>
@@ -27,7 +28,7 @@ export default async function AdminContactsPage() {
             <tbody className="divide-y divide-gray-100">
               {(!contacts || contacts.length === 0) && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
                     お問い合わせはありません
                   </td>
                 </tr>
@@ -37,8 +38,16 @@ export default async function AdminContactsPage() {
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
                     {new Date(c.created_at).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap text-xs">
-                    {c.email}
+                  <td className="px-4 py-3 whitespace-nowrap text-xs">
+                    <p className="font-medium text-gray-900">{c.nickname ?? '名前未設定'}</p>
+                    <p className="text-gray-400">{c.email}</p>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-xs">
+                    {c.reply_email ? (
+                      <a href={`mailto:${c.reply_email}`} className="text-orange-500 hover:underline">{c.reply_email}</a>
+                    ) : (
+                      <span className="text-gray-300">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">

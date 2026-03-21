@@ -15,6 +15,7 @@ export default function ContactPage() {
   const router = useRouter()
   const [category, setCategory] = useState('')
   const [message, setMessage] = useState('')
+  const [replyEmail, setReplyEmail] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 
@@ -25,7 +26,7 @@ export default function ContactPage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, message }),
+        body: JSON.stringify({ category, message, reply_email: replyEmail.trim() || null }),
       })
       if (res.ok) {
         setSent(true)
@@ -99,6 +100,18 @@ export default function ContactPage() {
                   placeholder="お気軽にご記入ください"
                   rows={6}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">返信用メールアドレス<span className="text-gray-400 font-normal ml-1">（任意）</span></label>
+                <p className="text-xs text-gray-400 mb-2">返信が必要な内容の場合は、メールアドレスをご記入ください。</p>
+                <input
+                  type="email"
+                  value={replyEmail}
+                  onChange={(e) => setReplyEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
