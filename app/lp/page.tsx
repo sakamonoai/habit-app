@@ -1,4 +1,22 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'ハビチャレ | 三日坊主を卒業する習慣化アプリ',
+  description: '一人じゃ続かない。仲間となら変われる。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。だから今度こそ続く。',
+  openGraph: {
+    title: 'ハビチャレ | 三日坊主を卒業する習慣化アプリ',
+    description: '一人じゃ続かない。仲間となら変われる。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。',
+    images: [{ url: '/ogp.jpg', width: 1200, height: 630 }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ハビチャレ | 三日坊主を卒業する習慣化アプリ',
+    description: '一人じゃ続かない。仲間となら変われる。デポジットを預けて仲間とチャレンジ。達成すれば全額返金。',
+    images: ['/ogp.jpg'],
+  },
+}
 
 export default function LandingPage() {
   return (

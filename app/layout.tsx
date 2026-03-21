@@ -4,8 +4,23 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "ハビチャレ",
-  description: "仲間と一緒に習慣を作ろう",
+  description: "三日坊主を卒業する習慣化アプリ。仲間と一緒にチャレンジして、達成したらデポジット全額返金。",
   manifest: "/manifest.json",
+  metadataBase: new URL("https://habit-app-sand.vercel.app"),
+  openGraph: {
+    title: "ハビチャレ | 仲間と一緒に習慣を変えよう",
+    description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。だから続く。",
+    images: [{ url: "/ogp.jpg", width: 1200, height: 630 }],
+    type: "website",
+    locale: "ja_JP",
+    siteName: "ハビチャレ",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ハビチャレ | 仲間と一緒に習慣を変えよう",
+    description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金。",
+    images: ["/ogp.jpg"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
