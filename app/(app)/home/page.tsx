@@ -76,7 +76,7 @@ export default async function HomePage({ searchParams }: Props) {
   // 2段目: チェックイン + profiles + reactions を全てjoinで1クエリ
   const { data: checkins } = await supabase
     .from('checkins')
-    .select('*, profiles!checkins_user_id_profiles_fkey(nickname), reactions(emoji, user_id)')
+    .select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url), reactions(emoji, user_id)')
     .in('group_id', targetGroupIds)
     .order('checked_in_at', { ascending: false })
     .limit(30)
@@ -134,9 +134,13 @@ export default async function HomePage({ searchParams }: Props) {
 
                   <div className="flex items-center gap-2 mb-2">
                     <Link href={`/user/${checkin.user_id}`} className="shrink-0">
-                      <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        {(checkin.profiles?.nickname ?? '?')[0]}
-                      </div>
+                      {checkin.profiles?.avatar_url ? (
+                        <Image src={checkin.profiles.avatar_url} alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {(checkin.profiles?.nickname ?? '?')[0]}
+                        </div>
+                      )}
                     </Link>
                     <div className="flex-1 min-w-0">
                       <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">

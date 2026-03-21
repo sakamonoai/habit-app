@@ -28,7 +28,7 @@ export default async function GroupTimelinePage({ params }: Props) {
     supabase.from('groups').select('*, challenges(*)').eq('id', id).single(),
     supabase.from('group_members').select('id, joined_at').eq('group_id', id).eq('user_id', user.id).single(),
     supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', `${today}T00:00:00`).lt('checked_in_at', `${today}T23:59:59`).maybeSingle(),
-    supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
+    supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
     supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', id),
   ])
 
@@ -183,9 +183,13 @@ export default async function GroupTimelinePage({ params }: Props) {
               <div key={checkin.id} className="bg-white rounded-2xl shadow-sm p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Link href={`/user/${checkin.user_id}`} className="shrink-0">
-                    <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      {(checkin.profiles?.nickname ?? '?')[0]}
-                    </div>
+                    {checkin.profiles?.avatar_url ? (
+                      <Image src={checkin.profiles.avatar_url} alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {(checkin.profiles?.nickname ?? '?')[0]}
+                      </div>
+                    )}
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">
