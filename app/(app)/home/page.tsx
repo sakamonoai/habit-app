@@ -25,10 +25,10 @@ export default async function HomePage({ searchParams }: Props) {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  // 参加中のグループ一覧を取得
+  // 1段目: メンバーシップ + チャレンジ情報をjoinで一括取得
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('group_id, challenge_id')
+    .select('group_id, challenge_id, challenges(id, title)')
     .eq('user_id', user.id)
 
   if (!memberships || memberships.length === 0) {
@@ -51,64 +51,46 @@ export default async function HomePage({ searchParams }: Props) {
     )
   }
 
-  const groupIds = memberships.map(m => m.group_id)
-  const challengeIds = [...new Set(memberships.map(m => m.challenge_id))]
-
-  // チャレンジ情報とチェックインを並列取得
-  const [{ data: challenges }, { data: checkins }] = await Promise.all([
-    supabase
-      .from('challenges')
-      .select('id, title')
-      .in('id', challengeIds),
-    supabase
-      .from('checkins')
-      .select('*, profiles!checkins_user_id_profiles_fkey(nickname)')
-      .in('group_id', filterChallengeId
-        ? memberships.filter(m => m.challenge_id === filterChallengeId).map(m => m.group_id)
-        : groupIds
-      )
-      .order('checked_in_at', { ascending: false })
-      .limit(30),
-  ])
-
-  // チャレンジID → 名前・色マップ
+  // チャレンジマップをjoin結果から構築（別クエリ不要）
   const challengeMap = new Map<string, { title: string; color: typeof CHALLENGE_COLORS[0] }>()
-  ;(challenges ?? []).forEach((c, i) => {
-    challengeMap.set(c.id, {
-      title: c.title,
-      color: CHALLENGE_COLORS[i % CHALLENGE_COLORS.length],
-    })
-  })
-
-  // group_id → challenge_id マップ
   const groupToChallengeMap = new Map<string, string>()
-  memberships.forEach(m => groupToChallengeMap.set(m.group_id, m.challenge_id))
-
-  // リアクション一括取得
-  const checkinIds = checkins?.map(c => c.id) ?? []
-  const { data: allReactions } = checkinIds.length > 0
-    ? await supabase
-        .from('reactions')
-        .select('checkin_id, emoji, user_id')
-        .in('checkin_id', checkinIds)
-    : { data: [] }
-
-  // リアクションをcheckin_idでグループ化（O(n)で一括処理）
-  const reactionsByCheckin = new Map<string, Map<string, { count: number; hasReacted: boolean }>>()
-  for (const r of allReactions ?? []) {
-    let emojiMap = reactionsByCheckin.get(r.checkin_id)
-    if (!emojiMap) {
-      emojiMap = new Map()
-      reactionsByCheckin.set(r.checkin_id, emojiMap)
+  let colorIdx = 0
+  const seenChallenges = new Set<string>()
+  for (const m of memberships) {
+    groupToChallengeMap.set(m.group_id, m.challenge_id)
+    if (!seenChallenges.has(m.challenge_id)) {
+      seenChallenges.add(m.challenge_id)
+      const c = m.challenges as unknown as { id: string; title: string } | null
+      challengeMap.set(m.challenge_id, {
+        title: c?.title ?? '不明',
+        color: CHALLENGE_COLORS[colorIdx % CHALLENGE_COLORS.length],
+      })
+      colorIdx++
     }
-    const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
-    existing.count++
-    if (r.user_id === user!.id) existing.hasReacted = true
-    emojiMap.set(r.emoji, existing)
   }
-  const getReactionsForCheckin = (checkinId: string) => {
-    const emojiMap = reactionsByCheckin.get(checkinId)
-    if (!emojiMap) return []
+
+  const groupIds = memberships.map(m => m.group_id)
+  const targetGroupIds = filterChallengeId
+    ? memberships.filter(m => m.challenge_id === filterChallengeId).map(m => m.group_id)
+    : groupIds
+
+  // 2段目: チェックイン + profiles + reactions を全てjoinで1クエリ
+  const { data: checkins } = await supabase
+    .from('checkins')
+    .select('*, profiles!checkins_user_id_profiles_fkey(nickname), reactions(emoji, user_id)')
+    .in('group_id', targetGroupIds)
+    .order('checked_in_at', { ascending: false })
+    .limit(30)
+
+  // リアクションをcheckin_idでグループ化
+  const getReactionsForCheckin = (checkin: { reactions?: { emoji: string; user_id: string }[] }) => {
+    const emojiMap = new Map<string, { count: number; hasReacted: boolean }>()
+    for (const r of checkin.reactions ?? []) {
+      const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
+      existing.count++
+      if (r.user_id === user!.id) existing.hasReacted = true
+      emojiMap.set(r.emoji, existing)
+    }
     return Array.from(emojiMap.entries()).map(([emoji, data]) => ({
       emoji,
       count: data.count,
@@ -117,17 +99,17 @@ export default async function HomePage({ searchParams }: Props) {
   }
 
   // フィルタ用のチャレンジリスト
-  const filterOptions = (challenges ?? []).map((c, i) => ({
-    id: c.id,
-    title: c.title,
-    color: CHALLENGE_COLORS[i % CHALLENGE_COLORS.length],
+  const filterOptions = Array.from(challengeMap.entries()).map(([id, info]) => ({
+    id,
+    title: info.title,
+    color: info.color,
   }))
 
   return (
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">ホーム</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">タイムライン</h1>
           <TimelineFilter challenges={filterOptions} />
         </div>
       </header>
@@ -140,7 +122,6 @@ export default async function HomePage({ searchParams }: Props) {
               const challengeInfo = challengeMap.get(challengeId)
               return (
                 <div key={checkin.id} className="px-4 py-4">
-                  {/* チャレンジラベル */}
                   {challengeInfo && (
                     <Link
                       href={`/group/${checkin.group_id}`}
@@ -151,7 +132,6 @@ export default async function HomePage({ searchParams }: Props) {
                     </Link>
                   )}
 
-                  {/* ユーザー情報 */}
                   <div className="flex items-center gap-2 mb-2">
                     <Link href={`/user/${checkin.user_id}`} className="shrink-0">
                       <div className="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
@@ -170,7 +150,6 @@ export default async function HomePage({ searchParams }: Props) {
                     </div>
                   </div>
 
-                  {/* 写真 */}
                   {checkin.photo_url && (
                     <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
                       <Image
@@ -185,15 +164,13 @@ export default async function HomePage({ searchParams }: Props) {
                     </div>
                   )}
 
-                  {/* コメント */}
                   {checkin.comment && (
                     <p className="text-sm text-gray-600 mb-1">{checkin.comment}</p>
                   )}
 
-                  {/* リアクション */}
                   <ReactionButton
                     checkinId={checkin.id}
-                    initialReactions={getReactionsForCheckin(checkin.id)}
+                    initialReactions={getReactionsForCheckin(checkin)}
                   />
                 </div>
               )
