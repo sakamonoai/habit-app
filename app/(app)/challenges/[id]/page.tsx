@@ -85,7 +85,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-28">
         {/* サムネイル */}
         {challenge.thumbnail_url && (
           <div className="mb-4 -mx-4 -mt-6">
