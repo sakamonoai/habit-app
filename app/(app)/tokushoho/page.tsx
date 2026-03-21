@@ -25,17 +25,17 @@ export default function TokushohoPage() {
         <div className="space-y-0 text-sm">
           <div className="border-b border-gray-100 py-4">
             <dt className="font-medium text-gray-500 mb-1">販売事業者名</dt>
-            <dd className="text-gray-900">[運営者名] ※準備中</dd>
+            <dd className="text-gray-900">株式会社buzzlife</dd>
           </div>
 
           <div className="border-b border-gray-100 py-4">
             <dt className="font-medium text-gray-500 mb-1">所在地</dt>
-            <dd className="text-gray-900">[住所] ※準備中</dd>
+            <dd className="text-gray-900">〒810-0001 福岡市中央区天神二丁目3番10号 天神パインクレスト719号</dd>
           </div>
 
           <div className="border-b border-gray-100 py-4">
             <dt className="font-medium text-gray-500 mb-1">連絡先</dt>
-            <dd className="text-gray-900">[メールアドレス] ※準備中</dd>
+            <dd className="text-gray-900">info@buzzlife.net</dd>
           </div>
 
           <div className="border-b border-gray-100 py-4">
