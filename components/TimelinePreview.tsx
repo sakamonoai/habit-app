@@ -5,7 +5,7 @@ type Checkin = {
   photo_url?: string | null
   comment?: string | null
   checked_in_at: string
-  profiles?: { nickname: string } | null
+  profiles?: { nickname: string } | { nickname: string }[] | null
 }
 
 export default function TimelinePreview({ checkins }: { checkins: Checkin[] }) {
@@ -17,17 +17,20 @@ export default function TimelinePreview({ checkins }: { checkins: Checkin[] }) {
       <p className="text-xs text-gray-400 mb-4">参加者がどんな感じで取り組んでいるかチェック</p>
 
       <div className="space-y-3">
-        {checkins.map((checkin) => (
+        {checkins.map((checkin) => {
+          const profile = Array.isArray(checkin.profiles) ? checkin.profiles[0] : checkin.profiles
+          const nickname = profile?.nickname ?? '匿名'
+          return (
           <div key={checkin.id} className="flex gap-3">
             {/* アバター */}
             <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {(checkin.profiles?.nickname ?? '?')[0]}
+              {nickname[0]}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-medium text-gray-900">
-                  {checkin.profiles?.nickname ?? '匿名'}
+                  {nickname}
                 </span>
                 <span className="text-xs text-gray-400">
                   {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
@@ -55,7 +58,7 @@ export default function TimelinePreview({ checkins }: { checkins: Checkin[] }) {
               )}
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       <div className="mt-4 pt-3 border-t border-gray-100 text-center">

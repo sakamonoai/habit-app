@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import JoinButton from '@/components/JoinButton'
 import ReviewForm from '@/components/ReviewForm'
 import TimelinePreview from '@/components/TimelinePreview'
+import ChallengeReportButton from '@/components/ChallengeReportButton'
 
 const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
 
@@ -20,7 +21,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
 
   // チャレンジとグループを並列取得
   const [{ data: challenge }, { data: group }] = await Promise.all([
-    supabase.from('challenges').select('*').eq('id', id).single(),
+    supabase.from('challenges').select('*').eq('id', id).neq('status', 'suspended').single(),
     supabase.from('groups').select('id').eq('challenge_id', id).maybeSingle(),
   ])
 
@@ -175,6 +176,13 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </li>
           </ul>
         </div>
+
+        {/* 通報ボタン（作成者以外に表示） */}
+        {challenge.created_by !== user.id && (
+          <div className="text-right mb-4">
+            <ChallengeReportButton challengeId={id} />
+          </div>
+        )}
 
         {/* 使い方ガイド */}
         <HowToUseGuide />

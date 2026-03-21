@@ -24,6 +24,7 @@ export default async function ChallengesPage() {
     .from('challenges_with_members')
     .select('*')
     .eq('status', 'active')
+    .neq('status', 'suspended')
     .order('created_at', { ascending: false })
 
   const allChallenges = (challenges ?? []).map((challenge, index) => ({

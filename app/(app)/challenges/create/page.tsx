@@ -524,6 +524,32 @@ export default function CreateChallengePage() {
           </div>
         </div>
 
+        {/* ガイドライン */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+          <h3 className="font-semibold text-gray-900 text-sm mb-2">チャレンジ作成ガイドライン</h3>
+          <ul className="space-y-1.5 text-xs text-gray-600">
+            <li className="flex gap-2">
+              <span className="text-red-400 shrink-0">✕</span>
+              <span>違法行為・危険行為を促すチャレンジ</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-red-400 shrink-0">✕</span>
+              <span>差別的・暴力的・性的な内容を含むチャレンジ</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-red-400 shrink-0">✕</span>
+              <span>詐欺やスパム目的のチャレンジ</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-red-400 shrink-0">✕</span>
+              <span>他人のプライバシーを侵害するチャレンジ</span>
+            </li>
+          </ul>
+          <p className="text-xs text-yellow-700 mt-2 font-medium">
+            ガイドラインに違反するチャレンジは、運営により予告なく非公開にされる場合があります。
+          </p>
+        </div>
+
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         <button

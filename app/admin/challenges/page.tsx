@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/admin-guard'
 import Link from 'next/link'
+import { ChallengeActions } from '@/components/admin/ChallengeActions'
 
 export default async function AdminChallengesPage() {
   const { supabase } = await requireAdmin()
@@ -97,12 +98,13 @@ export default async function AdminChallengesPage() {
                 <th className="px-4 py-3 font-semibold whitespace-nowrap">没収者</th>
                 <th className="px-4 py-3 font-semibold whitespace-nowrap">日程</th>
                 <th className="px-4 py-3 font-semibold whitespace-nowrap">作成日</th>
+                <th className="px-4 py-3 font-semibold whitespace-nowrap">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {(!challenges || challenges.length === 0) && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     チャレンジがありません
                   </td>
                 </tr>
@@ -138,6 +140,11 @@ export default async function AdminChallengesPage() {
                       >
                         {c.title}
                       </Link>
+                      {c.status === 'suspended' && (
+                        <span className="ml-2 inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                          非公開
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                       {c.duration_days}日間
@@ -163,6 +170,12 @@ export default async function AdminChallengesPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
                       {createdDate}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <ChallengeActions
+                        challengeId={c.id}
+                        currentStatus={c.status}
+                      />
                     </td>
                   </tr>
                 )
