@@ -159,18 +159,18 @@ export default function HowToUseGuide() {
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-2">例: 30日間チャレンジの場合</p>
+                  <p className="text-xs text-gray-500 mb-2">例: 21日間チャレンジの場合</p>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">30日中 26日チェックイン</span>
-                      <span className="font-semibold text-green-500">→ 87% (返金)</span>
+                      <span className="text-gray-600">21日中 18日チェックイン</span>
+                      <span className="font-semibold text-green-500">→ 86% (返金)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">30日中 30日チェックイン</span>
+                      <span className="text-gray-600">21日中 21日チェックイン</span>
                       <span className="font-semibold text-yellow-500">→ 100% (返金+特典)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">30日中 20日チェックイン</span>
+                      <span className="text-gray-600">21日中 14日チェックイン</span>
                       <span className="font-semibold text-red-500">→ 67% (没収)</span>
                     </div>
                   </div>
