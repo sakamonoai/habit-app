@@ -7,6 +7,7 @@ import JoinButton from '@/components/JoinButton'
 import ReviewForm from '@/components/ReviewForm'
 import TimelinePreview from '@/components/TimelinePreview'
 import ChallengeReportButton from '@/components/ChallengeReportButton'
+import CloseRecruitmentButton from '@/components/CloseRecruitmentButton'
 
 const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
 
@@ -19,10 +20,11 @@ export default async function ChallengeDetailPage({ params }: Props) {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  // チャレンジとグループを並列取得
-  const [{ data: challenge }, { data: group }] = await Promise.all([
+  // チャレンジ・グループ・プロフィールを並列取得
+  const [{ data: challenge }, { data: group }, { data: profile }] = await Promise.all([
     supabase.from('challenges').select('*').eq('id', id).neq('status', 'suspended').single(),
     supabase.from('groups').select('id').eq('challenge_id', id).maybeSingle(),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
   if (!challenge) notFound()
@@ -72,6 +74,12 @@ export default async function ChallengeDetailPage({ params }: Props) {
   const isJoined = !!myMembership
   const hasReviewed = !!myReview
   const isFull = (memberCount ?? 0) >= challenge.max_group_size
+  const isRecruitmentClosed = !!challenge.recruitment_closed
+  const canManage = challenge.created_by === user.id || (challenge.is_official && profile?.role === 'admin')
+
+  // 開催中（固定期間で開始日を過ぎている）→ 新規参加不可
+  const todayStr = new Date().toISOString().split('T')[0]
+  const isAlreadyStarted = challenge.schedule_type === 'fixed' && challenge.start_date && challenge.start_date <= todayStr
 
   // レビュー平均計算
   const reviewList = reviews ?? []
@@ -213,6 +221,19 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </li>
           </ul>
         </div>
+
+        {/* 管理ボタン（作成者 or 公式チャレンジの管理者） */}
+        {canManage && (
+          <div className="mb-4 space-y-2">
+            <Link
+              href={`/challenges/${id}/edit`}
+              className="block w-full text-center py-3 bg-gray-100 text-gray-700 font-medium text-sm rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              ✏️ 記録条件・OK/NG例を編集
+            </Link>
+            <CloseRecruitmentButton challengeId={id} isClosed={isRecruitmentClosed} />
+          </div>
+        )}
 
         {/* 通報ボタン（作成者以外に表示） */}
         {challenge.created_by !== user.id && (
@@ -359,6 +380,15 @@ export default async function ChallengeDetailPage({ params }: Props) {
             >
               タイムラインを見る
             </Link>
+          ) : isAlreadyStarted ? (
+            <div className="w-full py-4 bg-gray-200 text-gray-500 font-semibold rounded-2xl text-center cursor-not-allowed">
+              <p>このチャレンジは開催中です</p>
+              <p className="text-xs font-normal mt-1">次回の開催をお楽しみに！</p>
+            </div>
+          ) : isRecruitmentClosed ? (
+            <div className="w-full py-4 bg-gray-300 text-white font-semibold rounded-2xl text-center cursor-not-allowed">
+              🔒 募集は締め切られました
+            </div>
           ) : (
             <JoinButton
               challengeId={id}

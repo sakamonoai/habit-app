@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -66,6 +66,50 @@ export default function CreateChallengePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [draftLoaded, setDraftLoaded] = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
+
+  const DRAFT_KEY = 'challenge_draft'
+
+  // 下書き復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY)
+      if (!saved) { setDraftLoaded(true); return }
+      const d = JSON.parse(saved)
+      if (d.title) setTitle(d.title)
+      if (d.description) setDescription(d.description)
+      if (d.category) setCategory(d.category)
+      if (d.scheduleType) setScheduleType(d.scheduleType)
+      if (d.durationDays) setDurationDays(d.durationDays)
+      if (d.startDate) setStartDate(d.startDate)
+      if (d.endDate) setEndDate(d.endDate)
+      if (d.depositType) setDepositType(d.depositType)
+      if (d.fixedDeposit) setFixedDeposit(d.fixedDeposit)
+      if (d.maxMembers) setMaxMembers(d.maxMembers)
+      if (d.hasDeadline !== undefined) setHasDeadline(d.hasDeadline)
+      if (d.deadlineTime) setDeadlineTime(d.deadlineTime)
+      if (d.checkinCondition) setCheckinCondition(d.checkinCondition)
+    } catch {}
+    setDraftLoaded(true)
+  }, [])
+
+  // 下書き保存
+  const saveDraft = useCallback(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        title, description, category, scheduleType, durationDays,
+        startDate, endDate, depositType, fixedDeposit, maxMembers,
+        hasDeadline, deadlineTime, checkinCondition,
+      }))
+      setDraftSaved(true)
+      setTimeout(() => setDraftSaved(false), 2000)
+    } catch {}
+  }, [title, description, category, scheduleType, durationDays, startDate, endDate, depositType, fixedDeposit, maxMembers, hasDeadline, deadlineTime, checkinCondition])
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY) } catch {}
+  }
 
   // 固定期間の場合、開始日・終了日からduration_daysを計算
   const computedDurationDays = scheduleType === 'fixed' && startDate && endDate
@@ -175,6 +219,7 @@ export default function CreateChallengePage() {
       return
     }
 
+    clearDraft()
     router.push(`/challenges/${challenge.id}`)
   }
 
@@ -257,14 +302,40 @@ export default function CreateChallengePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href="/challenges" className="text-gray-400 hover:text-gray-600">
+          <Link href="/challenges" className="text-gray-400 hover:text-gray-600 shrink-0">
             ← 戻る
           </Link>
-          <h1 className="font-semibold text-gray-900">チャレンジを作成</h1>
+          <h1 className="font-semibold text-gray-900 flex-1">チャレンジを作成</h1>
+          <button
+            onClick={saveDraft}
+            className="text-sm text-orange-500 font-medium hover:text-orange-600 transition-colors shrink-0"
+          >
+            {draftSaved ? '✓ 保存済み' : '下書き保存'}
+          </button>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-5">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-40 space-y-5">
+        {/* 下書き復元バナー */}
+        {draftLoaded && title && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+            <p className="text-sm text-blue-700">下書きを復元しました</p>
+            <button
+              onClick={() => {
+                clearDraft()
+                setTitle(''); setDescription(''); setCategory(''); setScheduleType('flexible')
+                setDurationDays(7); setStartDate(''); setEndDate(''); setDepositType('choosable')
+                setFixedDeposit(1000); setMaxMembers(10); setHasDeadline(false)
+                setDeadlineTime('23:59'); setCheckinCondition('')
+                setThumbnailFile(null); setThumbnailPreview(null)
+                setOkPhotos([]); setNgPhotos([])
+              }}
+              className="text-xs text-blue-500 font-medium hover:text-blue-700"
+            >
+              クリア
+            </button>
+          </div>
+        )}
         {/* サムネイル画像 */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">サムネイル画像（任意）</label>
@@ -292,6 +363,9 @@ export default function CreateChallengePage() {
               </>
             )}
           </button>
+          <p className="text-xs text-gray-400 mt-1.5">
+            いい画像がない場合は<a href="https://unsplash.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">Unsplash</a>をご活用ください（無料で商用利用可）
+          </p>
         </div>
 
         {/* タイトル */}
@@ -356,7 +430,7 @@ export default function CreateChallengePage() {
               }`}
             >
               <p className="font-semibold text-sm text-gray-900 mb-1">いつでも参加</p>
-              <p className="text-xs text-gray-500">参加した日からカウント開始。新しい人が入りやすい。（いつでも削除できます）</p>
+              <p className="text-xs text-gray-500">参加した日からカウント開始。新しい人が入りやすい。（全員の期間終了後に削除可能）</p>
             </button>
             <button
               onClick={() => setScheduleType('fixed')}
@@ -616,59 +690,64 @@ export default function CreateChallengePage() {
         </div>
 
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+      </main>
 
-        <button
-          onClick={handlePreSubmit}
-          disabled={loading}
-          className="w-full py-4 bg-orange-500 text-white font-semibold rounded-2xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
-        >
-          {loading ? '作成中...' : 'チャレンジを作成する'}
-        </button>
+      {/* 作成ボタン（固定表示） */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 py-3 pb-[calc(0.75rem+max(env(safe-area-inset-bottom),8px))]">
+        <div className="max-w-lg mx-auto">
+          <button
+            onClick={handlePreSubmit}
+            disabled={loading}
+            className="w-full py-4 bg-orange-500 text-white font-semibold rounded-2xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+          >
+            {loading ? '作成中...' : 'チャレンジを作成する'}
+          </button>
+        </div>
+      </div>
 
-        {/* 確認ポップアップ */}
-        {showConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
-              <div className="text-center mb-4">
-                <div className="text-4xl mb-2">⚠️</div>
-                <h3 className="text-lg font-bold text-gray-900">本当に作成しますか？</h3>
-              </div>
-              <div className="space-y-2 mb-5">
-                <p className="text-sm text-gray-600">
-                  一度チャレンジを作成すると、以下の条件を満たすまで削除できません：
-                </p>
-                <ul className="text-sm text-gray-700 space-y-1.5 bg-gray-50 rounded-xl p-3">
-                  <li className="flex gap-2">
-                    <span className="text-orange-500 shrink-0">1.</span>
-                    <span>チャレンジ期限が終了している</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-orange-500 shrink-0">2.</span>
-                    <span>誰もそのチャレンジに挑戦していない</span>
-                  </li>
-                </ul>
-                <p className="text-xs text-gray-400">
-                  ※ 両方の条件を満たすまで削除できません。内容をよく確認してから作成してください。
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  戻る
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
-                >
-                  作成する
-                </button>
-              </div>
+      {/* 確認ポップアップ */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">⚠️</div>
+              <h3 className="text-lg font-bold text-gray-900">本当に作成しますか？</h3>
+            </div>
+            <div className="space-y-2 mb-5">
+              <p className="text-sm text-gray-600">
+                一度チャレンジを作成すると、以下の条件を満たすまで削除できません：
+              </p>
+              <ul className="text-sm text-gray-700 space-y-1.5 bg-gray-50 rounded-xl p-3">
+                <li className="flex gap-2">
+                  <span className="text-orange-500 shrink-0">1.</span>
+                  <span>チャレンジ期限が終了している</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-orange-500 shrink-0">2.</span>
+                  <span>誰もそのチャレンジに挑戦していない</span>
+                </li>
+              </ul>
+              <p className="text-xs text-gray-400">
+                ※ 両方の条件を満たすまで削除できません。内容をよく確認してから作成してください。
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                戻る
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
+              >
+                作成する
+              </button>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   )
 }

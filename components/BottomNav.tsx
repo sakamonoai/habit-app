@@ -20,6 +20,9 @@ export default function BottomNav() {
     setOptimisticPath(pathname)
   }, [pathname])
 
+  // 作成・編集ページではナビバーを非表示
+  if (pathname.endsWith('/create') || pathname.endsWith('/edit')) return null
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-20 pb-[max(env(safe-area-inset-bottom),8px)]">
       <div className="max-w-lg mx-auto grid grid-cols-4">

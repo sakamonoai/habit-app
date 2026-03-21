@@ -74,6 +74,7 @@ export default async function GroupTimelinePage({ params }: Props) {
   }
 
   const durationDays = group.challenges?.duration_days ?? 1
+  const isFlexible = group.challenges?.schedule_type === 'flexible'
   const myRate = Math.min(Math.round(((myCheckinCount ?? 0) / durationDays) * 100), 100)
 
   // リーチ判定
@@ -86,6 +87,8 @@ export default async function GroupTimelinePage({ params }: Props) {
   const remainingMisses = allowedMisses - missedDays
   const remainingDaysTillEnd = durationDays - elapsedDays
   const isOngoing = remainingDaysTillEnd >= 0
+  const isExtension = isFlexible && !isOngoing // 延長戦（いつでも参加の期間超過）
+  const extensionDays = elapsedDays - durationDays // 延長何日目か
 
   return (
     <div className="min-h-screen bg-gray-50 pb-4">
@@ -122,7 +125,7 @@ export default async function GroupTimelinePage({ params }: Props) {
             </div>
             <div className="flex justify-between mt-1">
               <p className="text-xs text-gray-400">{myCheckinCount ?? 0} / {durationDays}日</p>
-              {myRate < 85 && (
+              {isOngoing && myRate < 85 && (
                 <p className="text-xs text-orange-500">あと{Math.max(requiredDays - (myCheckinCount ?? 0), 0)}日で返金ライン</p>
               )}
             </div>
@@ -140,18 +143,36 @@ export default async function GroupTimelinePage({ params }: Props) {
                 <p className="text-sm text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
               </div>
             )}
+            {/* 延長戦（いつでも参加で期間超過） */}
+            {isExtension && (
+              <div className="mt-3 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl px-3 py-2.5">
+                <p className="text-sm text-indigo-700 font-semibold">
+                  🔥 延長戦 {extensionDays}日目 — ここからは自分との戦い！
+                </p>
+                <p className="text-xs text-indigo-500 mt-1">
+                  チャレンジ期間は終了しましたが、引き続き記録を続けられます。通算 {myCheckinCount ?? 0}日達成中！
+                </p>
+              </div>
+            )}
           </div>
         )}
 
         {/* チェックイン状態 */}
-        {hasCheckedInToday ? (
+        {!isOngoing && !isFlexible ? (
+          /* 固定期間チャレンジの期間終了 */
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 mb-6 text-center">
+            <div className="text-4xl mb-2">🏁</div>
+            <p className="text-gray-700 font-bold text-lg">チャレンジ期間が終了しました</p>
+            <p className="text-gray-500 text-sm mt-1">お疲れさまでした！</p>
+          </div>
+        ) : hasCheckedInToday ? (
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6 text-center">
             <div className="text-4xl mb-2">🎉</div>
             <p className="text-green-800 font-bold text-lg">今日もやりきった！</p>
-            <p className="text-green-600 text-sm mt-1">連続記録を伸ばしていこう</p>
+            <p className="text-green-600 text-sm mt-1">{isExtension ? `延長戦 ${extensionDays}日目！自分に勝ち続けよう` : '連続記録を伸ばしていこう'}</p>
           </div>
         ) : (
-          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} checkinDeadline={group.challenges?.checkin_deadline} />
+          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} checkinDeadline={isExtension ? null : group.challenges?.checkin_deadline} />
         )}
 
         {/* タイムライン */}
