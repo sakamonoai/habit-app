@@ -14,11 +14,12 @@ const CATEGORIES = [
   { label: 'その他', emoji: '🔥' },
 ]
 
+const MAX_DURATION_DAYS = 21 // Stripeオーソリ保持期限（30日）内に収めるため
+
 const DURATION_OPTIONS = [
   { label: '7日間', value: 7 },
   { label: '14日間', value: 14 },
   { label: '21日間', value: 21 },
-  { label: '30日間', value: 30 },
 ]
 
 const FIXED_DEPOSIT_OPTIONS = [500, 1000, 2000, 3000, 5000, 10000]
@@ -105,6 +106,7 @@ export default function CreateChallengePage() {
       if (!startDate || !endDate) { setError('開始日と終了日を選択してください'); return }
       if (new Date(startDate) < new Date(new Date().toISOString().split('T')[0])) { setError('開始日は今日以降を選択してください'); return }
       if (new Date(endDate) <= new Date(startDate)) { setError('終了日は開始日より後を選択してください'); return }
+      if (computedDurationDays > MAX_DURATION_DAYS) { setError(`チャレンジ期間は最大${MAX_DURATION_DAYS}日間です`); return }
     }
 
     setLoading(true)
@@ -397,9 +399,11 @@ export default function CreateChallengePage() {
                 type="date"
                 value={endDate}
                 min={startDate || new Date().toISOString().split('T')[0]}
+                max={startDate ? new Date(new Date(startDate).getTime() + (MAX_DURATION_DAYS - 1) * 86400000).toISOString().split('T')[0] : undefined}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-200"
               />
+              <p className="text-xs text-gray-400 mt-1">最大{MAX_DURATION_DAYS}日間まで</p>
             </div>
             {startDate && endDate && (
               <div className="bg-orange-50 rounded-xl px-4 py-3">
