@@ -62,12 +62,11 @@ export default function PushNotificationPrompt() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription: subscription.toJSON() }),
       })
-
-      setVisible(false)
     } catch {
-      // User cancelled or error
+      // User cancelled or subscription error — still dismiss
     } finally {
       setLoading(false)
+      setVisible(false)
     }
   }
 
