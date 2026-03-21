@@ -1,7 +1,6 @@
 import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import BottomNav from '@/components/BottomNav'
 
 export default async function CheckinPage() {
   const { supabase, user } = await getSessionUser()
@@ -29,7 +28,6 @@ export default async function CheckinPage() {
           <p className="text-sm">参加中のチャレンジがありません</p>
           <Link href="/challenges" className="text-orange-500 text-sm mt-2 inline-block font-medium">チャレンジを探す →</Link>
         </main>
-        <BottomNav />
       </div>
     )
   }
@@ -152,7 +150,6 @@ export default async function CheckinPage() {
           ))}
         </div>
       </main>
-      <BottomNav />
     </div>
   )
 }

@@ -2,7 +2,6 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import BottomNav from '@/components/BottomNav'
 import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
 
@@ -46,7 +45,6 @@ export default async function HomePage({ searchParams }: Props) {
             チャレンジを探す
           </Link>
         </main>
-        <BottomNav />
       </div>
     )
   }
@@ -183,7 +181,6 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         )}
       </main>
-      <BottomNav />
     </div>
   )
 }

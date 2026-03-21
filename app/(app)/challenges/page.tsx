@@ -2,7 +2,6 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import BottomNav from '@/components/BottomNav'
 import ChallengeList from '@/components/ChallengeList'
 
 const InstallBanner = dynamic(() => import('@/components/InstallBanner'))
@@ -64,7 +63,6 @@ export default async function ChallengesPage() {
         <ChallengeList challenges={allChallenges} />
       </main>
       <InstallBanner />
-      <BottomNav />
     </div>
   )
 }

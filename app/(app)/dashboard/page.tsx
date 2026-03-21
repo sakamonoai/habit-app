@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
 
 const ProfileSettings = dynamic(() => import('@/components/ProfileSettings'))
@@ -204,7 +203,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </main>
-      <BottomNav />
     </div>
   )
 }
