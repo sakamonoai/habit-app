@@ -106,8 +106,8 @@ export default async function ChallengesPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ヘッダー + カテゴリ（固定） */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
+      {/* ヘッダー + カテゴリ */}
+      <header className="bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">チャレンジ</h1>
           <Link
