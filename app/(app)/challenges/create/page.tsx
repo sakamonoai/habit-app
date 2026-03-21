@@ -62,6 +62,7 @@ export default function CreateChallengePage() {
   const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
 
   // 固定期間の場合、開始日・終了日からduration_daysを計算
   const computedDurationDays = scheduleType === 'fixed' && startDate && endDate
@@ -99,7 +100,7 @@ export default function CreateChallengePage() {
     return data.publicUrl
   }
 
-  const handleSubmit = async () => {
+  const handlePreSubmit = () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return }
     if (!category) { setError('カテゴリを選択してください'); return }
     if (scheduleType === 'fixed') {
@@ -108,7 +109,12 @@ export default function CreateChallengePage() {
       if (new Date(endDate) <= new Date(startDate)) { setError('終了日は開始日より後を選択してください'); return }
       if (computedDurationDays > MAX_DURATION_DAYS) { setError(`チャレンジ期間は最大${MAX_DURATION_DAYS}日間です`); return }
     }
+    setError('')
+    setShowConfirm(true)
+  }
 
+  const handleSubmit = async () => {
+    setShowConfirm(false)
     setLoading(true)
     setError('')
 
@@ -521,12 +527,56 @@ export default function CreateChallengePage() {
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         <button
-          onClick={handleSubmit}
+          onClick={handlePreSubmit}
           disabled={loading}
           className="w-full py-4 bg-orange-500 text-white font-semibold rounded-2xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
         >
           {loading ? '作成中...' : 'チャレンジを作成する'}
         </button>
+
+        {/* 確認ポップアップ */}
+        {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
+              <div className="text-center mb-4">
+                <div className="text-4xl mb-2">⚠️</div>
+                <h3 className="text-lg font-bold text-gray-900">本当に作成しますか？</h3>
+              </div>
+              <div className="space-y-2 mb-5">
+                <p className="text-sm text-gray-600">
+                  一度チャレンジを作成すると、以下の条件を満たすまで削除できません：
+                </p>
+                <ul className="text-sm text-gray-700 space-y-1.5 bg-gray-50 rounded-xl p-3">
+                  <li className="flex gap-2">
+                    <span className="text-orange-500 shrink-0">1.</span>
+                    <span>チャレンジ期限が終了している</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-orange-500 shrink-0">2.</span>
+                    <span>誰もそのチャレンジに挑戦していない</span>
+                  </li>
+                </ul>
+                <p className="text-xs text-gray-400">
+                  ※ 両方の条件を満たすまで削除できません。内容をよく確認してから作成してください。
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  戻る
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
+                >
+                  作成する
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
