@@ -1,4 +1,5 @@
 import BottomNav from '@/components/BottomNav'
+import PushNotificationPrompt from '@/components/PushNotificationPrompt'
 
 export default function AppLayout({
   children,
@@ -8,6 +9,7 @@ export default function AppLayout({
   return (
     <>
       {children}
+      <PushNotificationPrompt />
       <BottomNav />
     </>
   )
