@@ -40,7 +40,7 @@ const RESULTS = [
   {
     icon: '🏆',
     title: '100%達成',
-    desc: 'デポジット返金に加えて、スポンサーからの特典がもらえます！',
+    desc: 'デポジット返金に加えて、スポンサーから特典がもらえることがあります（スポンサー募集中）',
     color: 'bg-yellow-50 border-yellow-200',
   },
   {
@@ -167,7 +167,7 @@ export default function HowToUseGuide() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">21日中 21日チェックイン</span>
-                      <span className="font-semibold text-yellow-500">→ 100% (返金+特典)</span>
+                      <span className="font-semibold text-yellow-500">→ 100% (返金+特典の可能性)</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">21日中 14日チェックイン</span>

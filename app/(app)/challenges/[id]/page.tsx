@@ -193,7 +193,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </li>
             <li className="flex gap-2">
               <span>🏆</span>
-              <span>100%達成でスポンサー特典GET</span>
+              <span>100%達成で特典がもらえることも</span>
             </li>
             <li className="flex gap-2">
               <span>⚠️</span>
