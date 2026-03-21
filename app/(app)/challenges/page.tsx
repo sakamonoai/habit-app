@@ -27,21 +27,33 @@ export default async function ChallengesPage() {
     .neq('status', 'suspended')
     .order('created_at', { ascending: false })
 
-  const allChallenges = (challenges ?? []).map((challenge, index) => ({
-    id: challenge.id as string,
-    title: challenge.title as string,
-    duration_days: challenge.duration_days as number,
-    category: challenge.category as string | null,
-    start_date: challenge.start_date as string | null,
-    created_by: challenge.created_by as string | null,
-    memberCount: (challenge.member_count ?? 0) as number,
-    avgRating: (challenge.avg_rating ?? null) as number | null,
-    reviewCount: (challenge.review_count ?? 0) as number,
-    thumbnail_url: (challenge.thumbnail_url ?? null) as string | null,
-    schedule_type: (challenge.schedule_type ?? 'flexible') as string,
-    is_official: (challenge.is_official ?? false) as boolean,
-    gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
-  }))
+  // 作成者のプロフィールを取得
+  const creatorIds = [...new Set((challenges ?? []).map(c => c.created_by).filter(Boolean))]
+  const { data: creators } = creatorIds.length > 0
+    ? await supabase.from('profiles').select('id, nickname, avatar_url').in('id', creatorIds)
+    : { data: [] }
+  const creatorMap = new Map((creators ?? []).map(c => [c.id, c]))
+
+  const allChallenges = (challenges ?? []).map((challenge, index) => {
+    const creator = creatorMap.get(challenge.created_by)
+    return {
+      id: challenge.id as string,
+      title: challenge.title as string,
+      duration_days: challenge.duration_days as number,
+      category: challenge.category as string | null,
+      start_date: challenge.start_date as string | null,
+      created_by: challenge.created_by as string | null,
+      creator_nickname: (creator?.nickname ?? null) as string | null,
+      creator_avatar_url: (creator?.avatar_url ?? null) as string | null,
+      memberCount: (challenge.member_count ?? 0) as number,
+      avgRating: (challenge.avg_rating ?? null) as number | null,
+      reviewCount: (challenge.review_count ?? 0) as number,
+      thumbnail_url: (challenge.thumbnail_url ?? null) as string | null,
+      schedule_type: (challenge.schedule_type ?? 'flexible') as string,
+      is_official: (challenge.is_official ?? false) as boolean,
+      gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
+    }
+  })
 
   return (
     <div className="min-h-screen bg-white">

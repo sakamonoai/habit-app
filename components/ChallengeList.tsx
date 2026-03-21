@@ -11,6 +11,8 @@ type Challenge = {
   category: string | null
   start_date: string | null
   created_by: string | null
+  creator_nickname: string | null
+  creator_avatar_url: string | null
   memberCount: number
   avgRating: number | null
   reviewCount: number
@@ -209,9 +211,22 @@ export default function ChallengeList({ challenges }: Props) {
                 })()}
               </div>
               <div className="pt-2 pb-1">
-                {challenge.is_official && (
-                  <p className="text-xs font-semibold text-orange-500">公式チャレンジ</p>
-                )}
+                <div className="flex items-center gap-1.5">
+                  {challenge.is_official ? (
+                    <p className="text-xs font-semibold text-orange-500">公式チャレンジ</p>
+                  ) : challenge.creator_nickname ? (
+                    <>
+                      {challenge.creator_avatar_url ? (
+                        <Image src={challenge.creator_avatar_url} alt="" width={16} height={16} className="w-4 h-4 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-4 h-4 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white text-[8px] font-bold">
+                          {challenge.creator_nickname[0]}
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 truncate">{challenge.creator_nickname}</p>
+                    </>
+                  ) : null}
+                </div>
                 <h3 className="font-semibold text-gray-900 text-sm mt-0.5 line-clamp-1">{challenge.title}</h3>
                 {challenge.avgRating && (
                   <div className="flex items-center gap-1 mt-0.5">
