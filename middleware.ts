@@ -36,8 +36,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // /callback はOAuthコールバックなのでリダイレクトしない
-  if (session && isPublicPath && !pathname.startsWith('/callback')) {
+  // /callback, /lp はログイン済みでもリダイレクトしない
+  if (session && isPublicPath && !pathname.startsWith('/callback') && !pathname.startsWith('/lp')) {
     return NextResponse.redirect(new URL('/challenges', request.url))
   }
 
