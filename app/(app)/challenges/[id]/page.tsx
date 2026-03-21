@@ -5,6 +5,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import JoinButton from '@/components/JoinButton'
 import ReviewForm from '@/components/ReviewForm'
+import TimelinePreview from '@/components/TimelinePreview'
 
 const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
 
@@ -56,6 +57,16 @@ export default async function ChallengeDetailPage({ params }: Props) {
       .select('*', { count: 'exact', head: true })
       .eq('challenge_id', id),
   ])
+
+  // タイムラインプレビュー用のチェックインを取得（最新5件）
+  const { data: previewCheckins } = group
+    ? await supabase
+        .from('checkins')
+        .select('id, photo_url, comment, checked_in_at, profiles!checkins_user_id_profiles_fkey(nickname)')
+        .eq('group_id', group.id)
+        .order('checked_in_at', { ascending: false })
+        .limit(5)
+    : { data: [] }
 
   const isJoined = !!myMembership
   const hasReviewed = !!myReview
@@ -225,6 +236,11 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </div>
           )
         })()}
+
+        {/* タイムラインプレビュー */}
+        {!isJoined && (previewCheckins ?? []).length > 0 && (
+          <TimelinePreview checkins={previewCheckins ?? []} />
+        )}
 
         {/* 参加者レビュー */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
