@@ -51,6 +51,7 @@ export default async function ChallengesPage() {
       thumbnail_url: (challenge.thumbnail_url ?? null) as string | null,
       schedule_type: (challenge.schedule_type ?? 'flexible') as string,
       is_official: (challenge.is_official ?? false) as boolean,
+      reward_title: (challenge.reward_title ?? null) as string | null,
       gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
     }
   })

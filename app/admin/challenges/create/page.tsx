@@ -59,6 +59,9 @@ export default function AdminCreateChallengePage() {
   const [maxMembers, setMaxMembers] = useState(10)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+  const [hasReward, setHasReward] = useState(false)
+  const [rewardTitle, setRewardTitle] = useState('')
+  const [rewardDescription, setRewardDescription] = useState('')
   const [okPhotos, setOkPhotos] = useState<PhotoEntry[]>([])
   const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
   const [loading, setLoading] = useState(false)
@@ -151,6 +154,8 @@ export default function AdminCreateChallengePage() {
         thumbnailUrl,
         okPhotoUrl: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
         ngPhotoUrl: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
+        rewardTitle: hasReward ? rewardTitle.trim() || null : null,
+        rewardDescription: hasReward ? rewardDescription.trim() || null : null,
       }),
     })
 
@@ -469,6 +474,59 @@ export default function AdminCreateChallengePage() {
                   ¥{amount.toLocaleString()}
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* 100%達成特典 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">100%達成特典（キャンペーン）</label>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <button
+              onClick={() => setHasReward(false)}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                !hasReward
+                  ? 'border-gray-400 bg-gray-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900">特典なし</p>
+            </button>
+            <button
+              onClick={() => setHasReward(true)}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                hasReward
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900">🎁 特典あり</p>
+            </button>
+          </div>
+          {hasReward && (
+            <div className="space-y-3 bg-gradient-to-br from-yellow-50 to-orange-50 border border-orange-200 rounded-xl p-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">特典タイトル</label>
+                <input
+                  type="text"
+                  value={rewardTitle}
+                  onChange={(e) => setRewardTitle(e.target.value)}
+                  placeholder="例：Amazonギフト券 1,000円分"
+                  maxLength={100}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">特典の詳細（任意）</label>
+                <textarea
+                  value={rewardDescription}
+                  onChange={(e) => setRewardDescription(e.target.value)}
+                  placeholder="例：100%達成者の中から抽選で3名様にプレゼント"
+                  maxLength={300}
+                  rows={3}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200 resize-none"
+                />
+              </div>
             </div>
           )}
         </div>

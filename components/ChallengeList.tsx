@@ -19,6 +19,7 @@ type Challenge = {
   thumbnail_url: string | null
   schedule_type: string
   is_official: boolean
+  reward_title: string | null
   gradient: string
 }
 
@@ -233,6 +234,12 @@ export default function ChallengeList({ challenges }: Props) {
                   ) : null}
                 </div>
                 <h3 className="font-semibold text-gray-900 text-sm mt-0.5 line-clamp-1">{challenge.title}</h3>
+                {challenge.reward_title && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs">🎁</span>
+                    <span className="text-xs font-semibold text-amber-600">特典あり</span>
+                  </div>
+                )}
                 {challenge.avgRating && (
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-yellow-400 text-xs">★</span>

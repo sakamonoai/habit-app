@@ -157,6 +157,28 @@ export default async function ChallengeDetailPage({ params }: Props) {
           </div>
         </div>
 
+        {/* 100%達成特典 */}
+        {challenge.reward_title && (
+          <div className="relative bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-5 mb-4 overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-200/30 rounded-bl-full" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🎁</span>
+                <h3 className="font-bold text-gray-900">100%達成キャンペーン</h3>
+              </div>
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4">
+                <p className="font-bold text-lg text-orange-600 mb-1">{challenge.reward_title}</p>
+                {challenge.reward_description && (
+                  <p className="text-sm text-gray-600">{challenge.reward_description}</p>
+                )}
+              </div>
+              <p className="text-xs text-amber-600 mt-3 font-medium">
+                ※ 全日チェックイン達成（100%）した方が対象です
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ルール説明 */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
           <h3 className="font-semibold text-gray-900 mb-3">ルール</h3>
