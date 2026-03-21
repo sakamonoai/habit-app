@@ -130,52 +130,64 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
-      <h3 className="font-bold text-gray-900 text-center mb-1">デポジット金額を選択</h3>
-      <p className="text-xs text-gray-400 text-center mb-4">85%以上達成で全額返金されます</p>
+    <>
+      <button
+        onClick={() => setShowSelector(false)}
+        className="w-full py-4 bg-gray-200 text-gray-600 font-semibold rounded-2xl"
+      >
+        キャンセル
+      </button>
 
-      {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
+      {/* デポジット選択モーダル */}
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={() => setShowSelector(false)}>
+        <div className="bg-white rounded-t-2xl p-5 pb-8 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+          <h3 className="font-bold text-gray-900 text-center mb-1">デポジット金額を選択</h3>
+          <p className="text-xs text-gray-400 text-center mb-4">85%以上達成で全額返金されます</p>
 
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {DEPOSIT_OPTIONS.map((amount) => (
-          <button
-            key={amount}
-            onClick={() => setSelectedAmount(amount)}
-            className={`py-3 rounded-xl text-sm font-semibold transition-all ${
-              selectedAmount === amount
-                ? 'bg-orange-500 text-white scale-105'
-                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            ¥{amount.toLocaleString()}
-          </button>
-        ))}
-      </div>
+          {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
 
-      <div className="bg-orange-50 rounded-xl p-3 mb-4">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">デポジット（仮押さえ）</span>
-          <span className="font-bold text-orange-500">¥{selectedAmount.toLocaleString()}</span>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {DEPOSIT_OPTIONS.map((amount) => (
+              <button
+                key={amount}
+                onClick={() => setSelectedAmount(amount)}
+                className={`py-3 rounded-xl text-sm font-semibold transition-all ${
+                  selectedAmount === amount
+                    ? 'bg-orange-500 text-white scale-105'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                ¥{amount.toLocaleString()}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-orange-50 rounded-xl p-3 mb-4">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">デポジット（仮押さえ）</span>
+              <span className="font-bold text-orange-500">¥{selectedAmount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm mt-1">
+              <span className="text-gray-600">システム利用料</span>
+              <span className="font-semibold text-gray-700">¥{feeAmount.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowSelector(false)}
+              className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              戻る
+            </button>
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
+            >
+              参加する
+            </button>
+          </div>
         </div>
-        <div className="flex justify-between text-sm mt-1">
-          <span className="text-gray-600">システム利用料</span>
-          <span className="font-semibold text-gray-700">¥{feeAmount.toLocaleString()}</span>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => setShowSelector(false)}
-          className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-        >
-          戻る
-        </button>
-        <button
-          onClick={() => setShowConfirm(true)}
-          className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
-        >
-          参加する
-        </button>
       </div>
 
       {/* 確認ポップアップ */}
@@ -223,6 +235,6 @@ export default function JoinButton({ challengeId, isFull, depositType = 'choosab
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
