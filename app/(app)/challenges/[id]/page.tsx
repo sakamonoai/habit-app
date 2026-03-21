@@ -220,7 +220,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
           if (!hasPhotos) return null
           return (
             <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
-              <h3 className="font-semibold text-gray-900 mb-4">こうやって認証してください</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">こうやって記録してください</h3>
 
               {/* OK例 */}
               {okPhotos.length > 0 && (
