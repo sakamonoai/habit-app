@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/challenge-complete",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/daily-reminder",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/challenge-notify",
+      "schedule": "30 16 * * *"
     }
   ]
 }
