@@ -54,8 +54,8 @@ export default function ProfileSettings({ userId, initialNickname, initialAvatar
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 2 * 1024 * 1024) {
-      showMessage('error', '画像は2MB以下にしてください')
+    if (file.size > 10 * 1024 * 1024) {
+      showMessage('error', '画像は10MB以下にしてください')
       return
     }
 
@@ -218,7 +218,7 @@ export default function ProfileSettings({ userId, initialNickname, initialAvatar
             className="hidden"
             onChange={handleAvatarChange}
           />
-          <p className="text-xs text-gray-400">タップしてアイコンを変更<br />2MB以下のJPG/PNG</p>
+          <p className="text-xs text-gray-400">タップしてアイコンを変更<br />10MB以下のJPG/PNG</p>
         </div>
 
         {/* ニックネーム */}
