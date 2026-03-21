@@ -151,7 +151,7 @@ export default async function GroupTimelinePage({ params }: Props) {
             <p className="text-green-600 text-sm mt-1">連続記録を伸ばしていこう</p>
           </div>
         ) : (
-          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} />
+          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} checkinDeadline={group.challenges?.checkin_deadline} />
         )}
 
         {/* タイムライン */}

@@ -9,9 +9,10 @@ type Props = {
   memberId: string
   challengeId?: string
   durationDays?: number
+  checkinDeadline?: string | null
 }
 
-export default function CheckinForm({ groupId, memberId, challengeId, durationDays }: Props) {
+export default function CheckinForm({ groupId, memberId, challengeId, durationDays, checkinDeadline }: Props) {
   const [comment, setComment] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -71,7 +72,20 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     }, 'image/jpeg', 0.85)
   }, [stopCamera])
 
+  // 締め切り判定
+  const isPassedDeadline = (() => {
+    if (!checkinDeadline) return false
+    const now = new Date()
+    const [h, m] = checkinDeadline.split(':').map(Number)
+    const todayDeadline = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0)
+    return now > todayDeadline
+  })()
+
   const handleSubmit = async () => {
+    if (isPassedDeadline) {
+      setError(`本日の投稿締め切り（${checkinDeadline}）を過ぎています`)
+      return
+    }
     setLoading(true)
     setError('')
 
@@ -150,7 +164,13 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     <div className="bg-white rounded-2xl shadow-sm p-4 mb-6">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-gray-900">今日の記録</h3>
-        <span className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded-full">未投稿</span>
+        {isPassedDeadline ? (
+          <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">締切超過</span>
+        ) : checkinDeadline ? (
+          <span className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded-full">{checkinDeadline}まで</span>
+        ) : (
+          <span className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded-full">未投稿</span>
+        )}
       </div>
 
       {error && (
