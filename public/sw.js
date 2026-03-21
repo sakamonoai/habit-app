@@ -1,16 +1,7 @@
-const CACHE_NAME = 'habichalle-v1'
-const STATIC_ASSETS = [
-  '/login',
-  '/signup',
-  '/challenges',
-  '/dashboard',
-]
+const CACHE_NAME = 'habichalle-v2'
 
-// インストール時に静的アセットをキャッシュ
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  )
+// インストール時に即座にアクティブ化
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
@@ -24,19 +15,54 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// ネットワーク優先、失敗したらキャッシュ
+// フェッチ戦略: リソース種別ごとに最適化
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const clone = response.clone()
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
-        return response
+  const url = new URL(event.request.url)
+
+  // API・Supabaseリクエストはキャッシュしない
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) return
+
+  // 静的アセット（JS/CSS/画像/フォント）→ キャッシュファースト
+  if (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.woff2')
+  ) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          }
+          return response
+        })
       })
-      .catch(() => caches.match(event.request))
-  )
+    )
+    return
+  }
+
+  // HTMLページ → ネットワークファースト（高速フォールバック）
+  if (event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          return response
+        })
+        .catch(() => caches.match(event.request))
+    )
+    return
+  }
 })
 
 // プッシュ通知の受信
@@ -44,7 +70,7 @@ self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {}
   const title = data.title ?? 'ハビチャレ'
   const options = {
-    body: data.body ?? '今日のチェックインを忘れずに！',
+    body: data.body ?? '今日の記録を忘れずに！',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     data: { url: data.url ?? '/challenges' },

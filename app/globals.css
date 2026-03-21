@@ -8,8 +8,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 html {
@@ -19,13 +17,8 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-/* スムーズスクロール */
-html {
-  scroll-behavior: smooth;
 }
 
 /* PWA safe area */
@@ -33,16 +26,6 @@ html {
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
-}
-
-/* プログレスバーのアニメーション */
-.progress-bar {
-  transition: width 0.5s ease-out;
-}
-
-/* 画像の読み込み中のプレースホルダー */
-img {
-  background-color: #f3f4f6;
 }
 
 /* 横スクロールバー非表示 */
