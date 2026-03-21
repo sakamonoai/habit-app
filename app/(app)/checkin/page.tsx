@@ -11,7 +11,7 @@ export default async function CheckinPage() {
   // メンバーシップ（チャレンジ情報join）を1クエリで取得
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('id, group_id, challenge_id, joined_at, challenges(title, duration_days)')
+    .select('id, group_id, challenge_id, joined_at, challenges(title, duration_days, status, schedule_type)')
     .eq('user_id', user.id)
 
   if (!memberships || memberships.length === 0) {
@@ -64,7 +64,7 @@ export default async function CheckinPage() {
 
   const now = new Date()
   const groups = memberships.map(m => {
-    const challenge = m.challenges as unknown as { title: string; duration_days: number } | null
+    const challenge = m.challenges as unknown as { title: string; duration_days: number; status: string | null; schedule_type: string | null } | null
     const durationDays = challenge?.duration_days ?? 1
     const checkinCount = countMap[m.id] ?? 0
     const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
@@ -77,6 +77,11 @@ export default async function CheckinPage() {
     const remainingMisses = allowedMisses - missedDays
     const isOngoing = durationDays - elapsedDays >= 0
 
+    // チャレンジが削除/停止、またはfixedで期間終了ならアーカイブ
+    const isDeleted = !challenge || challenge.status === 'deleted' || challenge.status === 'suspended'
+    const isFixedEnded = challenge?.schedule_type === 'fixed' && !isOngoing
+    const isArchived = isDeleted || isFixedEnded
+
     return {
       groupId: m.group_id,
       memberId: m.id,
@@ -87,8 +92,14 @@ export default async function CheckinPage() {
       durationDays,
       remainingMisses,
       isOngoing,
+      isArchived,
+      isDeleted,
     }
   })
+
+  // アクティブなものを先、アーカイブを後に並べる
+  const activeGroups = groups.filter(g => !g.isArchived)
+  const archivedGroups = groups.filter(g => g.isArchived)
 
   return (
     <div className="min-h-screen bg-white">
@@ -100,55 +111,105 @@ export default async function CheckinPage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-4 pb-28">
-        <div className="space-y-3">
-          {groups.map((g) => (
-            <Link
-              key={g.groupId}
-              href={`/group/${g.groupId}`}
-              className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 text-sm">{g.title}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${g.rate >= 85 ? 'bg-green-500' : g.rate >= 50 ? 'bg-orange-400' : 'bg-gray-400'}`}
-                        style={{ width: `${Math.max(g.rate, 2)}%` }}
-                      />
+        {/* アクティブなチャレンジ */}
+        {activeGroups.length > 0 && (
+          <div className="space-y-3 mb-6">
+            {activeGroups.map((g) => (
+              <Link
+                key={g.groupId}
+                href={`/group/${g.groupId}`}
+                className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-sm">{g.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                        <div
+                          className={`h-1.5 rounded-full ${g.rate >= 85 ? 'bg-green-500' : g.rate >= 50 ? 'bg-orange-400' : 'bg-gray-400'}`}
+                          style={{ width: `${Math.max(g.rate, 2)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400">{g.checkinCount}/{g.durationDays}日</span>
                     </div>
-                    <span className="text-xs text-gray-400">{g.checkinCount}/{g.durationDays}日</span>
+                  </div>
+                  <div className="ml-4">
+                    {g.checkedInToday ? (
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <span className="text-xl">✅</span>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                        <span className="text-white text-xl">📸</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="ml-4">
-                  {g.checkedInToday ? (
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <span className="text-xl">✅</span>
+                {g.isOngoing && g.remainingMisses <= 0 && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-red-600 font-semibold">
+                      {g.remainingMisses < 0
+                        ? '⛔ 達成率85%を下回っています…'
+                        : '🚨 あと1日でもサボるとアウトです！'}
+                    </p>
+                  </div>
+                )}
+                {g.isOngoing && g.remainingMisses === 1 && (
+                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* アーカイブ（終了・削除済み） */}
+        {archivedGroups.length > 0 && (
+          <>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-semibold text-gray-400">アーカイブ</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+            <div className="space-y-3 opacity-60">
+              {archivedGroups.map((g) => (
+                <Link
+                  key={g.groupId}
+                  href={`/group/${g.groupId}`}
+                  className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-500 text-sm">{g.title}</h3>
+                        <span className="text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">
+                          {g.isDeleted ? '削除済み' : '終了'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full ${g.rate >= 85 ? 'bg-green-400' : 'bg-gray-300'}`}
+                            style={{ width: `${Math.max(g.rate, 2)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400">{g.checkinCount}/{g.durationDays}日</span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-                      <span className="text-white text-xl">📸</span>
+                    <div className="ml-4">
+                      <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                        <span className="text-xl">🏁</span>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-              {g.isOngoing && g.remainingMisses <= 0 && (
-                <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                  <p className="text-xs text-red-600 font-semibold">
-                    {g.remainingMisses < 0
-                      ? '⛔ 達成率85%を下回っています…'
-                      : '🚨 あと1日でもサボるとアウトです！'}
-                  </p>
-                </div>
-              )}
-              {g.isOngoing && g.remainingMisses === 1 && (
-                <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                  <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-400">
+                    達成率 {g.rate}% — お疲れさまでした！
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </main>
     </div>
   )
