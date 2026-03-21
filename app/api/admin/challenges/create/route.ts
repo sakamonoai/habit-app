@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     thumbnailUrl,
     okPhotoUrl,
     ngPhotoUrl,
+    checkinCondition,
     rewardTitle,
     rewardDescription,
   } = body
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
       thumbnail_url: thumbnailUrl || null,
       ok_photo_url: okPhotoUrl || null,
       ng_photo_url: ngPhotoUrl || null,
+      checkin_condition: checkinCondition || null,
       reward_title: rewardTitle || null,
       reward_description: rewardDescription || null,
     })

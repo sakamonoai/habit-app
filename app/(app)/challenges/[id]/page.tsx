@@ -179,6 +179,18 @@ export default async function ChallengeDetailPage({ params }: Props) {
           </div>
         )}
 
+        {/* 記録成功条件 */}
+        {challenge.checkin_condition && (
+          <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span>📋</span>こうやって記録してください
+            </h3>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{challenge.checkin_condition}</p>
+            </div>
+          </div>
+        )}
+
         {/* ルール説明 */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
           <h3 className="font-semibold text-gray-900 mb-3">ルール</h3>

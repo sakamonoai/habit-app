@@ -62,6 +62,7 @@ export default function AdminCreateChallengePage() {
   const [hasReward, setHasReward] = useState(false)
   const [rewardTitle, setRewardTitle] = useState('')
   const [rewardDescription, setRewardDescription] = useState('')
+  const [checkinCondition, setCheckinCondition] = useState('')
   const [okPhotos, setOkPhotos] = useState<PhotoEntry[]>([])
   const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
   const [loading, setLoading] = useState(false)
@@ -154,6 +155,7 @@ export default function AdminCreateChallengePage() {
         thumbnailUrl,
         okPhotoUrl: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
         ngPhotoUrl: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
+        checkinCondition: checkinCondition.trim() || null,
         rewardTitle: hasReward ? rewardTitle.trim() || null : null,
         rewardDescription: hasReward ? rewardDescription.trim() || null : null,
       }),
@@ -529,6 +531,21 @@ export default function AdminCreateChallengePage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* 記録成功条件 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">記録成功条件</label>
+          <p className="text-xs text-gray-400 mb-2">チェックインが認められる条件を具体的に書いてください</p>
+          <textarea
+            value={checkinCondition}
+            onChange={(e) => setCheckinCondition(e.target.value)}
+            placeholder={"例：\n・ランニングウェアを着て走っている写真\n・GPSアプリのスクリーンショット（距離が確認できるもの）\n・30分以上のランニングが確認できること"}
+            maxLength={500}
+            rows={5}
+            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-transparent resize-none"
+          />
+          <p className="text-xs text-gray-400 mt-1 text-right">{checkinCondition.length}/500</p>
         </div>
 
         {/* OK例 */}
