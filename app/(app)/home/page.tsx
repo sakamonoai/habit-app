@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
+import PullToRefresh from '@/components/PullToRefresh'
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -113,6 +114,7 @@ export default async function HomePage({ searchParams }: Props) {
       </header>
 
       <main className="max-w-lg mx-auto pb-24">
+        <PullToRefresh>
         {checkins && checkins.length > 0 ? (
           <div className="divide-y divide-gray-50">
             {checkins.map((checkin) => {
@@ -180,6 +182,7 @@ export default async function HomePage({ searchParams }: Props) {
             <p className="text-sm">まだ投稿がありません</p>
           </div>
         )}
+        </PullToRefresh>
       </main>
     </div>
   )
