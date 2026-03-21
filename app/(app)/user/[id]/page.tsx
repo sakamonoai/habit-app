@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -56,7 +57,7 @@ export default async function UserProfilePage({ params }: Props) {
         {/* プロフィールカード */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4 text-center">
           {profile.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-3" />
+            <Image src={profile.avatar_url} alt="" width={80} height={80} className="w-20 h-20 rounded-full object-cover mx-auto mb-3" />
           ) : (
             <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
               {(profile.nickname ?? '?')[0]}
@@ -116,11 +117,17 @@ export default async function UserProfilePage({ params }: Props) {
                   </p>
                 </div>
                 {checkin.photo_url && (
-                  <img
-                    src={checkin.photo_url}
-                    alt="チェックイン"
-                    className="w-full rounded-xl mb-2 object-cover max-h-72"
-                  />
+                  <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
+                    <Image
+                      src={checkin.photo_url}
+                      alt="チェックイン"
+                      width={500}
+                      height={500}
+                      className="w-full object-cover"
+                      loading="lazy"
+                      sizes="(max-width: 512px) 100vw, 512px"
+                    />
+                  </div>
                 )}
                 {checkin.comment && (
                   <p className="text-sm text-gray-600">{checkin.comment}</p>

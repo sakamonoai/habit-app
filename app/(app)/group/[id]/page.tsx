@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import CheckinForm from '@/components/CheckinForm'
 import ReactionButton from '@/components/ReactionButton'
 import ReportButton from '@/components/ReportButton'
@@ -18,44 +19,55 @@ export default async function GroupTimelinePage({ params }: Props) {
 
   const today = new Date().toISOString().split('T')[0]
 
-  // 全クエリを並列実行
+  // 全クエリを並列実行（1段階で全て取得）
   const [
     { data: group },
     { data: myMember },
     { data: todayCheckin },
     { data: checkins },
+    { count: memberCount },
   ] = await Promise.all([
     supabase.from('groups').select('*, challenges(*)').eq('id', id).single(),
     supabase.from('group_members').select('id, joined_at').eq('group_id', id).eq('user_id', user.id).single(),
     supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', `${today}T00:00:00`).lt('checked_in_at', `${today}T23:59:59`).maybeSingle(),
     supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
+    supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', id),
   ])
 
   if (!group) notFound()
   const hasCheckedInToday = !!todayCheckin
 
-  // リアクションと報告済みリストを並列取得
+  // リアクション・報告・チェックイン数を並列取得
   const checkinIds = checkins?.map(c => c.id) ?? []
-  const [{ data: allReactions }, { data: myReports }] = await Promise.all([
+  const [{ data: allReactions }, { data: myReports }, { count: myCheckinCount }] = await Promise.all([
     checkinIds.length > 0
       ? supabase.from('reactions').select('checkin_id, emoji, user_id').in('checkin_id', checkinIds)
       : Promise.resolve({ data: [] as { checkin_id: string; emoji: string; user_id: string }[] }),
     checkinIds.length > 0
       ? supabase.from('reports').select('checkin_id').in('checkin_id', checkinIds)
       : Promise.resolve({ data: [] as { checkin_id: string }[] }),
+    myMember
+      ? supabase.from('checkins').select('*', { count: 'exact', head: true }).eq('member_id', myMember.id)
+      : Promise.resolve({ count: 0 }),
   ])
   const reportedCheckinIds = new Set((myReports ?? []).map(r => r.checkin_id))
 
-  // リアクションを集計
-  const getReactionsForCheckin = (checkinId: string) => {
-    const checkinReactions = (allReactions ?? []).filter(r => r.checkin_id === checkinId)
-    const emojiMap = new Map<string, { count: number; hasReacted: boolean }>()
-    for (const r of checkinReactions) {
-      const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
-      existing.count++
-      if (r.user_id === user!.id) existing.hasReacted = true
-      emojiMap.set(r.emoji, existing)
+  // リアクションをcheckin_idでグループ化（O(n)で一括処理）
+  const reactionsByCheckin = new Map<string, Map<string, { count: number; hasReacted: boolean }>>()
+  for (const r of allReactions ?? []) {
+    let emojiMap = reactionsByCheckin.get(r.checkin_id)
+    if (!emojiMap) {
+      emojiMap = new Map()
+      reactionsByCheckin.set(r.checkin_id, emojiMap)
     }
+    const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
+    existing.count++
+    if (r.user_id === user!.id) existing.hasReacted = true
+    emojiMap.set(r.emoji, existing)
+  }
+  const getReactionsForCheckin = (checkinId: string) => {
+    const emojiMap = reactionsByCheckin.get(checkinId)
+    if (!emojiMap) return []
     return Array.from(emojiMap.entries()).map(([emoji, data]) => ({
       emoji,
       count: data.count,
@@ -63,14 +75,7 @@ export default async function GroupTimelinePage({ params }: Props) {
     }))
   }
 
-  // 達成率とメンバー数を並列取得
   const durationDays = group.challenges?.duration_days ?? 1
-  const [{ count: myCheckinCount }, { count: memberCount }] = await Promise.all([
-    myMember
-      ? supabase.from('checkins').select('*', { count: 'exact', head: true }).eq('member_id', myMember.id)
-      : Promise.resolve({ count: 0 }),
-    supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', id),
-  ])
   const myRate = Math.min(Math.round(((myCheckinCount ?? 0) / durationDays) * 100), 100)
 
   // リーチ判定
@@ -181,11 +186,17 @@ export default async function GroupTimelinePage({ params }: Props) {
                   )}
                 </div>
                 {checkin.photo_url && (
-                  <img
-                    src={checkin.photo_url}
-                    alt="証拠写真"
-                    className="w-full rounded-xl mb-2 object-cover max-h-72"
-                  />
+                  <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
+                    <Image
+                      src={checkin.photo_url}
+                      alt="証拠写真"
+                      width={500}
+                      height={500}
+                      className="w-full object-cover"
+                      loading="lazy"
+                      sizes="(max-width: 512px) 100vw, 512px"
+                    />
+                  </div>
                 )}
                 {checkin.comment && (
                   <p className="text-sm text-gray-600 mb-1">{checkin.comment}</p>

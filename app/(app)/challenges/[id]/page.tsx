@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import JoinButton from '@/components/JoinButton'
 import ReviewForm from '@/components/ReviewForm'
-import HowToUseGuide from '@/components/HowToUseGuide'
+
+const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
 
 type Props = {
   params: Promise<{ id: string }>
@@ -88,7 +91,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
         {/* サムネイル */}
         {challenge.thumbnail_url && (
           <div className="mb-4 -mx-4 -mt-6">
-            <img src={challenge.thumbnail_url} alt={challenge.title} className="w-full aspect-[2/1] object-cover" />
+            <Image src={challenge.thumbnail_url} alt={challenge.title} width={800} height={400} className="w-full aspect-[2/1] object-cover" priority sizes="(max-width: 512px) 100vw, 512px" />
           </div>
         )}
 
@@ -184,7 +187,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
                     {okPhotos.map((photo, i) => (
                       <div key={i} className="shrink-0 w-44">
                         <div className="relative rounded-xl overflow-hidden">
-                          <img src={photo.url} alt={`OK例${i + 1}`} className="w-44 h-56 object-cover" />
+                          <Image src={photo.url} alt={`OK例${i + 1}`} width={176} height={224} className="w-44 h-56 object-cover" loading="lazy" />
                           <div className="absolute bottom-0 inset-x-0 bg-green-500 py-1.5 flex items-center justify-center">
                             <span className="text-white text-lg font-bold">○</span>
                           </div>
@@ -205,7 +208,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
                     {ngPhotos.map((photo, i) => (
                       <div key={i} className="shrink-0 w-44">
                         <div className="relative rounded-xl overflow-hidden">
-                          <img src={photo.url} alt={`NG例${i + 1}`} className="w-44 h-56 object-cover" />
+                          <Image src={photo.url} alt={`NG例${i + 1}`} width={176} height={224} className="w-44 h-56 object-cover" loading="lazy" />
                           <div className="absolute bottom-0 inset-x-0 bg-red-500 py-1.5 flex items-center justify-center">
                             <span className="text-white text-lg font-bold">✕</span>
                           </div>

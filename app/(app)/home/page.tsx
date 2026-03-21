@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import BottomNav from '@/components/BottomNav'
 import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
@@ -94,15 +95,22 @@ export default async function HomePage({ searchParams }: Props) {
         .in('checkin_id', checkinIds)
     : { data: [] }
 
-  const getReactionsForCheckin = (checkinId: string) => {
-    const checkinReactions = (allReactions ?? []).filter(r => r.checkin_id === checkinId)
-    const emojiMap = new Map<string, { count: number; hasReacted: boolean }>()
-    for (const r of checkinReactions) {
-      const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
-      existing.count++
-      if (r.user_id === user!.id) existing.hasReacted = true
-      emojiMap.set(r.emoji, existing)
+  // リアクションをcheckin_idでグループ化（O(n)で一括処理）
+  const reactionsByCheckin = new Map<string, Map<string, { count: number; hasReacted: boolean }>>()
+  for (const r of allReactions ?? []) {
+    let emojiMap = reactionsByCheckin.get(r.checkin_id)
+    if (!emojiMap) {
+      emojiMap = new Map()
+      reactionsByCheckin.set(r.checkin_id, emojiMap)
     }
+    const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
+    existing.count++
+    if (r.user_id === user!.id) existing.hasReacted = true
+    emojiMap.set(r.emoji, existing)
+  }
+  const getReactionsForCheckin = (checkinId: string) => {
+    const emojiMap = reactionsByCheckin.get(checkinId)
+    if (!emojiMap) return []
     return Array.from(emojiMap.entries()).map(([emoji, data]) => ({
       emoji,
       count: data.count,
@@ -166,11 +174,17 @@ export default async function HomePage({ searchParams }: Props) {
 
                   {/* 写真 */}
                   {checkin.photo_url && (
-                    <img
-                      src={checkin.photo_url}
-                      alt="証拠写真"
-                      className="w-full rounded-xl mb-2 object-cover max-h-72"
-                    />
+                    <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
+                      <Image
+                        src={checkin.photo_url}
+                        alt="証拠写真"
+                        width={500}
+                        height={500}
+                        className="w-full object-cover"
+                        loading="lazy"
+                        sizes="(max-width: 512px) 100vw, 512px"
+                      />
+                    </div>
                   )}
 
                   {/* コメント */}

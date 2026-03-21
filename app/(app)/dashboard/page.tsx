@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
-import ProfileSettings from '@/components/ProfileSettings'
+
+const ProfileSettings = dynamic(() => import('@/components/ProfileSettings'))
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -92,7 +95,7 @@ export default async function DashboardPage() {
         {/* プロフィール */}
         <div className="flex items-center gap-4 py-4">
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="アイコン" className="w-16 h-16 rounded-full object-cover" />
+            <Image src={profile.avatar_url} alt="アイコン" width={64} height={64} className="w-16 h-16 rounded-full object-cover" />
           ) : (
             <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white text-2xl font-bold">
               {(profile?.nickname ?? '?')[0]}

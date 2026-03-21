@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import BottomNav from '@/components/BottomNav'
-import InstallBanner from '@/components/InstallBanner'
 import CategoryTabs from '@/components/CategoryTabs'
 import CategoryIcons from '@/components/CategoryIcons'
-import HowToUseGuide from '@/components/HowToUseGuide'
+
+const InstallBanner = dynamic(() => import('@/components/InstallBanner'))
+const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
 
 type Challenge = {
   id: string
@@ -152,7 +155,7 @@ export default async function ChallengesPage({ searchParams }: Props) {
                 {/* カード画像エリア */}
                 <div className={`relative aspect-[4/5] ${challenge.thumbnail_url ? 'bg-gray-100' : `bg-gradient-to-br ${challenge.gradient}`} rounded-2xl overflow-hidden`}>
                   {challenge.thumbnail_url ? (
-                    <img src={challenge.thumbnail_url} alt={challenge.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <Image src={challenge.thumbnail_url} alt={challenge.title} fill className="object-cover" sizes="(max-width: 512px) 50vw, 256px" loading="lazy" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-6xl opacity-30">
