@@ -22,9 +22,21 @@ export default function NotificationsPage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">🔔</p>
-          <p className="text-sm">お知らせはまだありません</p>
+        <div className="space-y-3">
+          <div className="bg-gray-50 rounded-2xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-lg">🎉</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">ハビチャレ、サービス開始しました！</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  仲間と一緒にチャレンジして、習慣を身につけよう。達成したらデポジットが戻ってきます。まずはチャレンジを探してみてください！
+                </p>
+                <p className="text-xs text-gray-300 mt-2">2026年3月21日</p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
