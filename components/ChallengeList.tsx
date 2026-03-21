@@ -50,8 +50,9 @@ const CATEGORY_MAP: Record<string, string[]> = {
 
 const SCHEDULE_FILTERS = [
   { label: '全て', value: '' },
-  { label: '募集中', value: 'fixed' },
-  { label: 'いつでも', value: 'flexible' },
+  { label: '📅 開催前', value: 'upcoming' },
+  { label: '🔥 開催中', value: 'ongoing' },
+  { label: '🔄 いつでも参加OK', value: 'flexible' },
 ]
 
 function durationLabel(days: number) {
@@ -85,10 +86,14 @@ export default function ChallengeList({ challenges }: Props) {
     }
   }
 
-  if (schedule === 'fixed') {
+  const today = new Date().toISOString().split('T')[0]
+  if (schedule === 'upcoming') {
     filtered = filtered
-      .filter(c => c.schedule_type === 'fixed')
+      .filter(c => c.schedule_type === 'fixed' && c.start_date && c.start_date > today)
       .sort((a, b) => (a.start_date ?? '').localeCompare(b.start_date ?? ''))
+  } else if (schedule === 'ongoing') {
+    filtered = filtered
+      .filter(c => c.schedule_type === 'fixed' && c.start_date && c.start_date <= today)
   } else if (schedule === 'flexible') {
     filtered = filtered.filter(c => c.schedule_type === 'flexible')
   }
@@ -136,7 +141,7 @@ export default function ChallengeList({ challenges }: Props) {
       {/* ヘッダー */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto">
         <h2 className="text-lg font-bold text-gray-900">
-          {schedule === 'fixed' ? '📅 募集中の' : schedule === 'flexible' ? '🔄 いつでも参加の' : ''}
+          {schedule === 'upcoming' ? '📅 開催前の' : schedule === 'ongoing' ? '🔥 開催中の' : schedule === 'flexible' ? '🔄 いつでも参加の' : ''}
           {activeCategory !== '全て' ? activeCategory : schedule ? '' : '人気'}チャレンジ
         </h2>
         <span className="text-sm text-gray-400">全{filtered.length}件</span>
@@ -170,7 +175,7 @@ export default function ChallengeList({ challenges }: Props) {
                   : 'bg-orange-50 text-orange-500'
               }`}
             >
-              {f.label === '募集中' ? '📅 募集中（期間限定）' : f.label === 'いつでも' ? '🔄 いつでも参加OK' : f.label}
+              {f.label}
             </button>
           ))}
         </div>
