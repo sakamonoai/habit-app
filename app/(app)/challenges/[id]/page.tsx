@@ -197,7 +197,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex gap-2">
               <span>📸</span>
-              <span>毎日、証拠写真を投稿してチェックイン</span>
+              <span>毎日、証拠写真を投稿してチェックイン{challenge.checkin_deadline ? `（${challenge.checkin_deadline}まで）` : ''}</span>
             </li>
             <li className="flex gap-2">
               <span>🎯</span>

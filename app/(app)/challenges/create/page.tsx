@@ -58,6 +58,9 @@ export default function CreateChallengePage() {
   const [maxMembers, setMaxMembers] = useState(10)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+  const [hasDeadline, setHasDeadline] = useState(false)
+  const [deadlineTime, setDeadlineTime] = useState('23:59')
+  const [checkinCondition, setCheckinCondition] = useState('')
   const [okPhotos, setOkPhotos] = useState<PhotoEntry[]>([])
   const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
   const [loading, setLoading] = useState(false)
@@ -158,6 +161,8 @@ export default function CreateChallengePage() {
         status: 'active',
         created_by: user.id,
         thumbnail_url: thumbnailUrl,
+        checkin_deadline: hasDeadline ? deadlineTime : null,
+        checkin_condition: checkinCondition.trim() || null,
         ok_photo_url: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
         ng_photo_url: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
       })
@@ -487,6 +492,66 @@ export default function CreateChallengePage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* 投稿締め切り時間 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">記録の締め切り時間（任意）</label>
+          <p className="text-xs text-gray-400 mb-3">毎日の記録投稿に締め切りを設ける場合に設定</p>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <button
+              onClick={() => setHasDeadline(false)}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                !hasDeadline
+                  ? 'border-gray-400 bg-gray-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900">締め切りなし</p>
+              <p className="text-xs text-gray-500 mt-0.5">23:59まで投稿OK</p>
+            </button>
+            <button
+              onClick={() => setHasDeadline(true)}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                hasDeadline
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900">⏰ 締め切りあり</p>
+              <p className="text-xs text-gray-500 mt-0.5">時間を指定する</p>
+            </button>
+          </div>
+          {hasDeadline && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <label className="block text-xs font-medium text-gray-700 mb-2">締め切り時刻</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="time"
+                  value={deadlineTime}
+                  onChange={(e) => setDeadlineTime(e.target.value)}
+                  className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+                />
+                <p className="text-sm text-gray-600">までに投稿</p>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">例: 朝活チャレンジなら「09:00」</p>
+            </div>
+          )}
+        </div>
+
+        {/* 記録成功条件 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">記録成功条件（任意）</label>
+          <p className="text-xs text-gray-400 mb-2">チェックインが認められる条件を書いてください</p>
+          <textarea
+            value={checkinCondition}
+            onChange={(e) => setCheckinCondition(e.target.value)}
+            placeholder={"例：\n・ランニングウェアを着て走っている写真\n・30分以上のランニングが確認できること"}
+            maxLength={500}
+            rows={4}
+            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-transparent resize-none"
+          />
+          <p className="text-xs text-gray-400 mt-1 text-right">{checkinCondition.length}/500</p>
         </div>
 
         {/* OK例 */}

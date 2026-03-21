@@ -62,6 +62,8 @@ export default function AdminCreateChallengePage() {
   const [hasReward, setHasReward] = useState(false)
   const [rewardTitle, setRewardTitle] = useState('')
   const [rewardDescription, setRewardDescription] = useState('')
+  const [hasDeadline, setHasDeadline] = useState(false)
+  const [deadlineTime, setDeadlineTime] = useState('23:59')
   const [checkinCondition, setCheckinCondition] = useState('')
   const [okPhotos, setOkPhotos] = useState<PhotoEntry[]>([])
   const [ngPhotos, setNgPhotos] = useState<PhotoEntry[]>([])
@@ -155,6 +157,7 @@ export default function AdminCreateChallengePage() {
         thumbnailUrl,
         okPhotoUrl: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
         ngPhotoUrl: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
+        checkinDeadline: hasDeadline ? deadlineTime : null,
         checkinCondition: checkinCondition.trim() || null,
         rewardTitle: hasReward ? rewardTitle.trim() || null : null,
         rewardDescription: hasReward ? rewardDescription.trim() || null : null,
@@ -476,6 +479,51 @@ export default function AdminCreateChallengePage() {
                   ¥{amount.toLocaleString()}
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* 投稿締め切り時間 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">記録の締め切り時間（任意）</label>
+          <p className="text-xs text-gray-400 mb-3">毎日の記録投稿に締め切りを設ける場合に設定してください</p>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <button
+              onClick={() => setHasDeadline(false)}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                !hasDeadline
+                  ? 'border-gray-400 bg-gray-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900">締め切りなし</p>
+              <p className="text-xs text-gray-500 mt-0.5">23:59まで投稿OK</p>
+            </button>
+            <button
+              onClick={() => setHasDeadline(true)}
+              className={`p-4 rounded-xl text-left transition-colors border-2 ${
+                hasDeadline
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <p className="font-semibold text-sm text-gray-900">⏰ 締め切りあり</p>
+              <p className="text-xs text-gray-500 mt-0.5">時間を指定する</p>
+            </button>
+          </div>
+          {hasDeadline && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <label className="block text-xs font-medium text-gray-700 mb-2">締め切り時刻</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="time"
+                  value={deadlineTime}
+                  onChange={(e) => setDeadlineTime(e.target.value)}
+                  className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+                />
+                <p className="text-sm text-gray-600">までに投稿</p>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">例: 朝活チャレンジなら「09:00」、通常なら「23:00」など</p>
             </div>
           )}
         </div>
