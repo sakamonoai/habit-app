@@ -140,16 +140,6 @@ export default function ContactPage() {
                   <span className="text-sm text-gray-700">@AImaru_company</span>
                   <span className="ml-auto text-gray-300 text-sm">→</span>
                 </a>
-                <a
-                  href="mailto:info@buzzlife.net"
-                  className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 hover:bg-gray-100 transition-colors"
-                >
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm">
-                    ✉
-                  </div>
-                  <span className="text-sm text-gray-700">info@buzzlife.net</span>
-                  <span className="ml-auto text-gray-300 text-sm">→</span>
-                </a>
               </div>
             </div>
           </>
