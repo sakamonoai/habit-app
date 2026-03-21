@@ -121,7 +121,7 @@ export default function LandingPage() {
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">チャレンジを選んで参加</h3>
                 <p className="text-sm text-gray-500">
-                  運動、早起き、読書…やりたいチャレンジを選んでデポジットを預けるだけ。
+                  運動、早起き、読書…やりたいチャレンジを選んで参加。デポジットは自分で金額を決められるものと、固定のものがあります。自分の許容範囲内の金額で始められます。
                 </p>
               </div>
             </div>
