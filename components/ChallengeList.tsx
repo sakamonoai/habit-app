@@ -212,6 +212,19 @@ export default function ChallengeList({ challenges }: Props) {
                   sizes="(max-width: 512px) 50vw, 256px"
                   loading="lazy"
                 />
+                {/* 左上バッジ: 公式 / キャンペーン */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  {challenge.is_official && (
+                    <div className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-md font-bold flex items-center gap-0.5 shadow-sm">
+                      <span className="text-[8px]">✓</span> 公式
+                    </div>
+                  )}
+                  {challenge.reward_title && (
+                    <div className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-md font-bold flex items-center gap-0.5 shadow-sm">
+                      🎁 キャンペーン
+                    </div>
+                  )}
+                </div>
                 <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
                   <span>👤</span> {challenge.memberCount}人
                 </div>
@@ -228,7 +241,12 @@ export default function ChallengeList({ challenges }: Props) {
               <div className="pt-2 pb-1">
                 <div className="flex items-center gap-1.5">
                   {challenge.is_official ? (
-                    <p className="text-xs font-semibold text-orange-500">公式チャレンジ</p>
+                    <div className="flex items-center gap-1">
+                      <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-[8px] font-black">✓</span>
+                      </div>
+                      <p className="text-xs font-bold text-orange-500">公式</p>
+                    </div>
                   ) : challenge.creator_nickname ? (
                     <>
                       {challenge.creator_avatar_url ? (
