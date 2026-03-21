@@ -29,14 +29,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 認証不要のパス
-  const publicPaths = ['/login', '/signup']
+  const publicPaths = ['/login', '/signup', '/callback']
   const isPublicPath = publicPaths.some(p => pathname.startsWith(p))
 
   if (!session && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (session && isPublicPath) {
+  // /callback はOAuthコールバックなのでリダイレクトしない
+  if (session && isPublicPath && !pathname.startsWith('/callback')) {
     return NextResponse.redirect(new URL('/challenges', request.url))
   }
 
