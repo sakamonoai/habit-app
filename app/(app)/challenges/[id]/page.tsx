@@ -107,6 +107,9 @@ export default async function ChallengeDetailPage({ params }: Props) {
 
         {/* チャレンジ情報カード */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+          {challenge.is_official && (
+            <span className="inline-block bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded mb-2">公式</span>
+          )}
           <h2 className="text-xl font-bold text-gray-900 mb-1">{challenge.title}</h2>
           {avgRating && (
             <div className="flex items-center gap-2 mb-2">

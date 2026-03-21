@@ -39,6 +39,7 @@ export default async function ChallengesPage() {
     reviewCount: (challenge.review_count ?? 0) as number,
     thumbnail_url: (challenge.thumbnail_url ?? null) as string | null,
     schedule_type: (challenge.schedule_type ?? 'flexible') as string,
+    is_official: (challenge.is_official ?? false) as boolean,
     gradient: CARD_GRADIENTS[index % CARD_GRADIENTS.length],
   }))
 

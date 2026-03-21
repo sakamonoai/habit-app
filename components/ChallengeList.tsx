@@ -16,6 +16,7 @@ type Challenge = {
   reviewCount: number
   thumbnail_url: string | null
   schedule_type: string
+  is_official: boolean
   gradient: string
 }
 
@@ -208,9 +209,9 @@ export default function ChallengeList({ challenges }: Props) {
                 })()}
               </div>
               <div className="pt-2 pb-1">
-                <p className={`text-xs font-semibold ${challenge.created_by ? 'text-blue-500' : 'text-orange-500'}`}>
-                  {challenge.created_by ? 'ユーザー作成' : '公式チャレンジ'}
-                </p>
+                {challenge.is_official && (
+                  <p className="text-xs font-semibold text-orange-500">公式チャレンジ</p>
+                )}
                 <h3 className="font-semibold text-gray-900 text-sm mt-0.5 line-clamp-1">{challenge.title}</h3>
                 {challenge.avgRating && (
                   <div className="flex items-center gap-1 mt-0.5">
