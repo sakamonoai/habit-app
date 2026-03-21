@@ -4,22 +4,17 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* ヒーロー */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-rose-500 to-pink-500 text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 text-8xl">🔥</div>
-          <div className="absolute top-32 right-8 text-7xl">💪</div>
-          <div className="absolute bottom-20 left-1/4 text-6xl">📸</div>
-          <div className="absolute bottom-10 right-1/3 text-7xl">🎯</div>
-        </div>
-        <div className="relative max-w-lg mx-auto px-6 pt-16 pb-20 text-center">
-          <div className="inline-block bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+      <section className="relative overflow-hidden bg-gray-900 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black" />
+        <div className="relative max-w-lg mx-auto px-6 pt-20 pb-24 text-center">
+          <div className="inline-block border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium text-white/70 mb-6">
             三日坊主を卒業する習慣化アプリ
           </div>
           <h1 className="text-4xl font-black leading-tight mb-4">
             一人じゃ続かない。<br />
-            <span className="text-yellow-200">仲間となら</span>変われる。
+            <span className="text-orange-400">仲間となら</span>変われる。
           </h1>
-          <p className="text-white/90 text-base leading-relaxed mb-8">
+          <p className="text-white/60 text-base leading-relaxed mb-10">
             「また続かなかった…」を終わりにしよう。<br />
             お金を預けて、仲間と一緒にチャレンジ。<br />
             達成すれば全額返金。サボったら没収。<br />
@@ -28,13 +23,13 @@ export default function LandingPage() {
           <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <Link
               href="/signup"
-              className="block w-full py-4 bg-white text-orange-500 font-bold text-lg rounded-2xl hover:bg-gray-50 transition-colors shadow-lg"
+              className="block w-full py-4 bg-orange-500 text-white font-bold text-lg rounded-2xl hover:bg-orange-600 transition-colors shadow-lg"
             >
               無料で始める
             </Link>
             <Link
               href="/login"
-              className="block w-full py-3 text-white/80 font-medium text-sm hover:text-white transition-colors"
+              className="block w-full py-3 text-white/50 font-medium text-sm hover:text-white transition-colors"
             >
               すでにアカウントをお持ちの方
             </Link>
@@ -91,7 +86,7 @@ export default function LandingPage() {
               📸
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 mb-1">証拠写真でチェックイン</h3>
+              <h3 className="font-bold text-gray-900 mb-1">証拠写真で記録</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
                 毎日の習慣を写真で記録。「やったフリ」はできない。写真を撮る行為自体が習慣のスイッチになる。
               </p>
@@ -160,8 +155,8 @@ export default function LandingPage() {
       {/* デポジットの仕組み */}
       <section className="bg-gray-50 py-12">
         <div className="max-w-lg mx-auto px-6">
-        <h2 className="text-center text-2xl font-black text-gray-900 mb-2">お金の仕組み</h2>
-        <p className="text-center text-sm text-gray-400 mb-8">安心・安全な設計</p>
+        <h2 className="text-center text-2xl font-black text-gray-900 mb-2">安心のデポジット設計</h2>
+        <p className="text-center text-sm text-gray-400 mb-8">シンプルで透明な料金体系</p>
 
         <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-6 space-y-4">
           <div className="flex items-start gap-3">
@@ -188,7 +183,7 @@ export default function LandingPage() {
 
           <div className="border-t border-orange-200 pt-4 mt-4">
             <p className="text-xs text-gray-500 leading-relaxed">
-              ※ 未達成者のデポジットが達成者に分配されることはありません。<br />
+              ※ チャレンジ参加時にシステム利用料（10%）がかかります。<br />
               ※ 決済はStripeを利用。カード情報はサービス側で保持しません。
             </p>
           </div>
@@ -257,20 +252,20 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-gradient-to-br from-orange-500 via-rose-500 to-pink-500 py-16">
+      <section className="bg-gray-900 py-16">
         <div className="max-w-lg mx-auto px-6 text-center text-white">
           <h2 className="text-3xl font-black mb-3">さあ、始めよう</h2>
-          <p className="text-white/80 text-sm mb-8">
+          <p className="text-white/60 text-sm mb-8">
             一人じゃ続かなかったことも、<br />
             仲間とデポジットがあれば変われる。
           </p>
           <Link
             href="/signup"
-            className="inline-block w-full max-w-xs py-4 bg-white text-orange-500 font-bold text-lg rounded-2xl hover:bg-gray-50 transition-colors shadow-lg"
+            className="inline-block w-full max-w-xs py-4 bg-orange-500 text-white font-bold text-lg rounded-2xl hover:bg-orange-600 transition-colors shadow-lg"
           >
             無料でアカウント作成
           </Link>
-          <p className="text-white/50 text-xs mt-4">
+          <p className="text-white/40 text-xs mt-4">
             ※ アカウント作成は無料です。デポジットはチャレンジ参加時のみ発生します。
           </p>
         </div>
