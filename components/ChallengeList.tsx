@@ -241,7 +241,6 @@ export default function ChallengeList({ challenges }: Props) {
                   </div>
                 )}
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">毎日</span>
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{durationLabel(challenge.duration_days)}</span>
                   {challenge.schedule_type === 'fixed' && challenge.start_date && (
                     <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-medium">
