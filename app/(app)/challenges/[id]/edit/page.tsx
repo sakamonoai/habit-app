@@ -186,13 +186,6 @@ export default function ChallengeEditPage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-center">
-            <p className="text-green-700 font-semibold">保存しました！</p>
-          </div>
-        )}
-
         {/* サムネイル画像 */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
           <label className="block text-sm font-semibold text-gray-900 mb-2">サムネイル画像</label>
@@ -373,6 +366,18 @@ export default function ChallengeEditPage() {
             ※ 期間・デポジット金額・カテゴリなどは変更できません。
           </p>
         </div>
+
+        {/* エラー・成功メッセージ */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-center">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-center">
+            <p className="text-green-700 font-semibold">保存しました！</p>
+          </div>
+        )}
 
         {/* 保存ボタン */}
         <button
