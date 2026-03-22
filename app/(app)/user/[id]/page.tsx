@@ -118,7 +118,7 @@ export default async function UserProfilePage({ params }: Props) {
                   <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
                     <Image
                       src={checkin.photo_url}
-                      alt="チェックイン"
+                      alt="記録"
                       width={500}
                       height={500}
                       className="w-full object-cover"

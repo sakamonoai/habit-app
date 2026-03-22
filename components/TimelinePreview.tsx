@@ -43,7 +43,7 @@ export default function TimelinePreview({ checkins }: { checkins: Checkin[] }) {
                 <div className="rounded-xl overflow-hidden mb-1" style={{ maxHeight: '160px' }}>
                   <Image
                     src={checkin.photo_url}
-                    alt="チェックイン写真"
+                    alt="記録写真"
                     width={400}
                     height={160}
                     className="w-full object-cover"

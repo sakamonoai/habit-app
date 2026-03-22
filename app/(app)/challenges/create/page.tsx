@@ -813,7 +813,7 @@ export default function CreateChallengePage() {
         {/* 記録成功条件 */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">記録成功条件 <span className="text-red-400">*</span></label>
-          <p className="text-xs text-gray-400 mb-2">チェックインが認められる条件を書いてください</p>
+          <p className="text-xs text-gray-400 mb-2">記録達成と認められる条件を書いてください</p>
           <textarea
             value={checkinCondition}
             onChange={(e) => setCheckinCondition(e.target.value)}

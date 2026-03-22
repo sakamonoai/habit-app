@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     icon: '3️⃣',
-    title: '毎日チェックイン',
+    title: '毎日記録',
     desc: '毎日、証拠写真を撮影して投稿するだけ。下のナビバーの「認証」ボタンからカメラを起動して写真を撮り、チャレンジを選んで投稿します。',
   },
   {
@@ -26,7 +26,7 @@ const STEPS = [
   {
     icon: '5️⃣',
     title: '達成率をチェック',
-    desc: 'マイページから自分の達成率を確認できます。達成率 = チェックインした日数 ÷ チャレンジ期間の日数。85%以上を目指しましょう。',
+    desc: 'マイページから自分の達成率を確認できます。達成率 = 記録した日数 ÷ チャレンジ期間の日数。85%以上を目指しましょう。',
   },
 ]
 
@@ -53,7 +53,7 @@ const RESULTS = [
 
 const FAQ = [
   {
-    q: 'チェックインは1日何回できますか？',
+    q: '記録は1日何回できますか？',
     a: '1つのチャレンジにつき1日1回です。日付が変わればまた投稿できます。',
   },
   {
@@ -111,7 +111,7 @@ export default function HowToUseGuide() {
               <p className="text-4xl mb-3">💪</p>
               <h2 className="text-xl font-bold text-gray-900 mb-2">チャレンジの進め方</h2>
               <p className="text-sm text-gray-500">
-                デポジットを預けて、毎日チェックインするだけ。<br />
+                デポジットを預けて、毎日記録するだけ。<br />
                 達成すればお金が戻ってくる、シンプルな仕組みです。
               </p>
             </div>
@@ -155,22 +155,22 @@ export default function HowToUseGuide() {
                 <div className="text-center mb-3">
                   <p className="text-sm text-gray-500">達成率の計算式</p>
                   <p className="text-lg font-bold text-gray-900 mt-1">
-                    チェックインした日数 ÷ チャレンジ期間 × 100
+                    記録した日数 ÷ チャレンジ期間 × 100
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-3">
                   <p className="text-xs text-gray-500 mb-2">例: 21日間チャレンジの場合</p>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">21日中 18日チェックイン</span>
+                      <span className="text-gray-600">21日中 18日記録</span>
                       <span className="font-semibold text-green-500">→ 86% (返金)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">21日中 21日チェックイン</span>
+                      <span className="text-gray-600">21日中 21日記録</span>
                       <span className="font-semibold text-yellow-500">→ 100% (返金+特典の可能性)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">21日中 14日チェックイン</span>
+                      <span className="text-gray-600">21日中 14日記録</span>
                       <span className="font-semibold text-red-500">→ 67% (没収)</span>
                     </div>
                   </div>

@@ -74,7 +74,7 @@ export default function ReportButton({ checkinId, alreadyReported }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-            <h3 className="font-bold text-gray-900 text-center mb-1">不正チェックインを報告</h3>
+            <h3 className="font-bold text-gray-900 text-center mb-1">不正な記録を報告</h3>
             <p className="text-xs text-gray-400 text-center mb-4">運営チームが確認します</p>
 
             <div className="space-y-2 mb-4">

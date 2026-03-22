@@ -141,7 +141,7 @@ export default async function DashboardPage() {
             </div>
             <div className="text-center px-2">
               <p className="text-2xl font-bold text-gray-900">{totalCheckins}</p>
-              <p className="text-xs text-gray-400 mt-0.5">総チェックイン</p>
+              <p className="text-xs text-gray-400 mt-0.5">総記録数</p>
             </div>
             <div className="text-center px-2">
               <p className="text-2xl font-bold text-orange-500">¥{totalDeposit.toLocaleString()}</p>

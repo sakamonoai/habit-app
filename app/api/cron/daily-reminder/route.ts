@@ -63,9 +63,9 @@ export async function GET(req: NextRequest) {
     const now = new Date()
     const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
-    let body = `「${challenge.title}」の今日のチェックインをお忘れなく！`
+    let body = `「${challenge.title}」の今日の記録をお忘れなく！`
     if (daysLeft <= 3 && daysLeft > 0) {
-      body = `⚡ 残り${daysLeft}日！「${challenge.title}」のチェックインをお忘れなく！`
+      body = `⚡ 残り${daysLeft}日！「${challenge.title}」の記録をお忘れなく！`
     }
 
     // このユーザーのpush subscriptionを取得して通知送信

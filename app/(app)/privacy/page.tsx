@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               <li>メールアドレス（アカウント登録・ログインのため）</li>
               <li>ニックネーム（サービス内での表示のため）</li>
               <li>プロフィール画像（任意、サービス内での表示のため）</li>
-              <li>チェックイン写真（習慣の達成記録のため）</li>
+              <li>記録（チェックイン）写真（習慣の達成記録のため）</li>
               <li>決済情報（Stripe経由で処理、当社サーバーには保存しません）</li>
               <li>利用端末・ブラウザ情報（サービス改善のため）</li>
             </ul>
@@ -45,8 +45,8 @@ export default function PrivacyPage() {
               <li>本サービスの提供・運営</li>
               <li>ユーザー認証・アカウント管理</li>
               <li>チャレンジの達成率計算・デポジットの返金処理</li>
-              <li>グループ内でのチェックイン共有（参加メンバー間のみ）</li>
-              <li>プッシュ通知の送信（チェックインリマインダー等）</li>
+              <li>グループ内での記録（チェックイン）共有（参加メンバー間のみ）</li>
+              <li>プッシュ通知の送信（記録リマインダー等）</li>
               <li>サービスの改善・新機能の開発</li>
               <li>利用規約違反の調査・対応</li>
             </ul>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3">
               <p className="font-medium text-blue-800 mb-2">写真データの取り扱いについて</p>
               <p className="text-blue-700">
-                ユーザーが投稿したチェックイン写真を、ユーザーの明示的な同意なく
+                ユーザーが投稿した記録（チェックイン）写真を、ユーザーの明示的な同意なく
                 スポンサー企業その他の第三者に提供することはありません。
               </p>
             </div>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
             <h2 className="text-base font-semibold text-gray-900 mb-3">4. データの保管</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>ユーザーデータは Supabase（クラウドデータベース）に保管されます。</li>
-              <li>チェックイン写真は Supabase Storage に保管されます。</li>
+              <li>記録（チェックイン）写真は Supabase Storage に保管されます。</li>
               <li>決済情報は Stripe のサーバーで安全に管理され、当社のサーバーには保存されません。</li>
               <li>通信はすべて SSL/TLS で暗号化されています。</li>
             </ul>
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc pl-5 space-y-1">
               <li>プロフィール情報（ニックネーム、プロフィール画像）</li>
-              <li>チェックイン写真</li>
+              <li>記録（チェックイン）写真</li>
               <li>チャレンジ参加履歴</li>
             </ul>
             <p className="mt-2">

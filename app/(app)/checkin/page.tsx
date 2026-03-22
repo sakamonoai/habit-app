@@ -106,7 +106,7 @@ export default async function CheckinPage() {
       <header className="sticky top-0 z-10 bg-white">
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
           <h1 className="text-2xl font-bold text-gray-900">記録</h1>
-          <p className="text-sm text-gray-400 mt-0.5">今日のチェックインを記録しよう</p>
+          <p className="text-sm text-gray-400 mt-0.5">今日の達成記録を残そう</p>
         </div>
       </header>
 

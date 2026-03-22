@@ -87,7 +87,7 @@ export default function PushNotificationPrompt() {
           <div className="flex-1">
             <p className="font-bold text-gray-900 text-sm">通知を受け取りますか？</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              チェックインのリマインドやチャレンジ結果をお知らせします
+              記録のリマインドやチャレンジ結果をお知らせします
             </p>
             <div className="flex gap-2 mt-3">
               <button

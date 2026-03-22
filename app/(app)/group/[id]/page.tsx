@@ -134,8 +134,8 @@ export default async function GroupTimelinePage({ params }: Props) {
               <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
                 <p className="text-sm text-red-600 font-semibold">
                   {remainingMisses < 0
-                    ? '⛔ 達成率85%を下回っています。今日から毎日チェックインしましょう！'
-                    : '🚨 あと1日でもサボるとアウト！今日も必ずチェックインしよう！'}
+                    ? '⛔ 達成率85%を下回っています。今日から毎日記録しましょう！'
+                    : '🚨 あと1日でもサボるとアウト！今日も必ず記録しよう！'}
                 </p>
               </div>
             )}
@@ -236,7 +236,7 @@ export default async function GroupTimelinePage({ params }: Props) {
           <div className="text-center py-12 text-gray-400">
             <p className="text-4xl mb-3">📷</p>
             <p className="text-sm">まだ投稿がありません</p>
-            <p className="text-xs mt-1">最初のチェックインをしてみよう！</p>
+            <p className="text-xs mt-1">最初の記録をしてみよう！</p>
           </div>
         )}
       </main>

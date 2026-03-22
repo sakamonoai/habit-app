@@ -158,7 +158,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
       })
 
     if (checkinError) {
-      setError('チェックインに失敗しました')
+      setError('記録に失敗しました')
       setLoading(false)
       return
     }
