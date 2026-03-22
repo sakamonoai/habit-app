@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // チャレンジ存在確認
     const { data: challenge } = await supabase
       .from('challenges')
-      .select('id, max_group_size')
+      .select('id, max_group_size, schedule_type, checkin_deadline')
       .eq('id', challengeId)
       .neq('status', 'suspended')
       .single()
@@ -65,6 +65,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '定員に達しています' }, { status: 400 })
     }
 
+    // いつでも参加 + 締め切りありの場合、締め切り過ぎなら翌日開始
+    let joinedAt: string | undefined
+    if (challenge.schedule_type === 'flexible' && challenge.checkin_deadline) {
+      const now = new Date()
+      const [h, m] = challenge.checkin_deadline.split(':').map(Number)
+      const deadlineToday = new Date(now)
+      deadlineToday.setHours(h, m, 0, 0)
+      if (now > deadlineToday) {
+        const tomorrow = new Date(now)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        tomorrow.setHours(0, 0, 0, 0)
+        joinedAt = tomorrow.toISOString()
+      }
+    }
+
     // group_membersにinsert（デポジット0、Stripe情報なし）
     const { error: joinError } = await supabase
       .from('group_members')
@@ -76,6 +91,7 @@ export async function POST(req: NextRequest) {
         deposit_payment_intent_id: null,
         fee_payment_intent_id: null,
         status: 'active',
+        ...(joinedAt ? { joined_at: joinedAt } : {}),
       })
 
     if (joinError) {
