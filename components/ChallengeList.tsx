@@ -190,7 +190,7 @@ export default function ChallengeList({ challenges }: Props) {
         <div className="px-4 grid grid-cols-2 gap-3 max-w-lg mx-auto">
           {filtered.map((challenge) => {
             // 公式朝活チャレンジ: タイトルから時刻を抽出してオーバーレイ表示
-            const morningTimeMatch = challenge.is_official && challenge.title.match(/朝(\d{1,2}:\d{2})/)
+            const morningTimeMatch = challenge.is_official && challenge.title.match(/朝(\d{1,2}[：:]\d{2})/)
             const morningTime = morningTimeMatch ? morningTimeMatch[1] : null
             const thumbnailSrc = morningTime
               ? '/defaults/morning-challenge.jpg'
