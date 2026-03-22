@@ -9,14 +9,17 @@ import ReportButton from '@/components/ReportButton'
 
 type Props = {
   params: Promise<{ id: string }>
+  searchParams?: Promise<{ from?: string }>
 }
 
-export default async function GroupTimelinePage({ params }: Props) {
+export default async function GroupTimelinePage({ params, searchParams }: Props) {
   const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const backHref = resolvedSearchParams?.from === 'checkin' ? '/checkin' : '/challenges'
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
 
   // 全クエリを並列実行（1段階で全て取得）
   const [
@@ -96,7 +99,7 @@ export default async function GroupTimelinePage({ params }: Props) {
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href="/challenges" className="text-gray-400 hover:text-gray-600 shrink-0">
+          <Link href={backHref} className="text-gray-400 hover:text-gray-600 shrink-0">
             ← 戻る
           </Link>
           <div className="flex-1 min-w-0">

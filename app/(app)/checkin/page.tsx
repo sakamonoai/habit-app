@@ -6,7 +6,7 @@ export default async function CheckinPage() {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
 
   // メンバーシップ（チャレンジ情報join）を1クエリで取得
   const { data: memberships } = await supabase
@@ -84,7 +84,7 @@ export default async function CheckinPage() {
 
     // まだ開始していないか判定（fixed: start_date未到来, flexible: joined_atが未来）
     const notStartedYet = challenge?.schedule_type === 'fixed' && challenge.start_date
-      ? new Date(challenge.start_date) > new Date(today)
+      ? challenge.start_date > today
       : joinedAt > now
     const startDateLabel = challenge?.schedule_type === 'fixed' && challenge.start_date
       ? challenge.start_date
@@ -127,7 +127,7 @@ export default async function CheckinPage() {
             {activeGroups.map((g) => (
               <Link
                 key={g.groupId}
-                href={`/group/${g.groupId}`}
+                href={`/group/${g.groupId}?from=checkin`}
                 className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
               >
                 {g.notStartedYet ? (
@@ -207,7 +207,7 @@ export default async function CheckinPage() {
               {archivedGroups.map((g) => (
                 <Link
                   key={g.groupId}
-                  href={`/group/${g.groupId}`}
+                  href={`/group/${g.groupId}?from=checkin`}
                   className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center justify-between">

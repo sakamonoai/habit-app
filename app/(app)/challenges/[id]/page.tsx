@@ -79,7 +79,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
   const canManage = challenge.created_by === user.id || (challenge.is_official && profile?.role === 'admin')
 
   // 開催中（固定期間で開始日を過ぎている）→ 新規参加不可
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
   const isAlreadyStarted = challenge.schedule_type === 'fixed' && challenge.start_date && challenge.start_date <= todayStr
 
   // レビュー平均計算

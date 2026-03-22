@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   // プロフィール・メンバーシップ・バッジ・作成チャレンジを並列取得
   const [{ data: profile }, { data: memberships }, { data: badges }, { data: createdChallenges }] = await Promise.all([
     supabase.from('profiles').select('nickname, avatar_url, bio, sns_links').eq('id', user.id).single(),
-    supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id).eq('status', 'active'),
+    supabase.from('group_members').select('*, challenges(title, duration_days, schedule_type, start_date)').eq('user_id', user.id).eq('status', 'active'),
     supabase.from('badges').select('*, challenges(title, thumbnail_url, category)').eq('user_id', user.id).eq('badge_type', 'perfect'),
     supabase.from('challenges').select('id, title, category, status, schedule_type, duration_days, created_at').eq('created_by', user.id).order('created_at', { ascending: false }),
   ])
@@ -47,8 +47,9 @@ export default async function DashboardPage() {
     }
   }
 
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
   const challengeStats = (memberships ?? []).map((m) => {
-    const challenge = m.challenges as { title: string; duration_days: number } | null
+    const challenge = m.challenges as { title: string; duration_days: number; schedule_type: string | null; start_date: string | null } | null
     const durationDays = challenge?.duration_days ?? 1
     const checkinCount = checkinCounts[m.id] ?? 0
     const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
@@ -64,6 +65,14 @@ export default async function DashboardPage() {
     const remainingDays = durationDays - elapsedDays
     const isOngoing = remainingDays >= 0
 
+    // まだ開始していないか判定（checkin/page.tsxと同じロジック）
+    const notStartedYet = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date > today
+      : joinedAt > now
+    const startDateLabel = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date
+      : m.joined_at ? m.joined_at.split('T')[0] : null
+
     return {
       membershipId: m.id,
       groupId: m.group_id,
@@ -75,6 +84,8 @@ export default async function DashboardPage() {
       status: m.status,
       remainingMisses,
       isOngoing,
+      notStartedYet,
+      startDateLabel,
     }
   })
 
@@ -160,35 +171,57 @@ export default async function DashboardPage() {
                 href={`/group/${s.groupId}`}
                 className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
-                  <span className={`text-sm font-bold ${s.rate >= 85 ? 'text-green-500' : s.rate >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
-                    {s.rate}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                  <div
-                    className={`h-2 rounded-full transition-all ${s.rate >= 85 ? 'bg-green-500' : s.rate >= 50 ? 'bg-orange-400' : 'bg-red-400'}`}
-                    style={{ width: `${Math.max(s.rate, 2)}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>{s.checkinCount} / {s.durationDays}日</span>
-                  <span>¥{s.depositAmount.toLocaleString()}</span>
-                </div>
-                {s.isOngoing && s.remainingMisses <= 0 && (
-                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                    <p className="text-xs text-red-600 font-semibold">
-                      {s.remainingMisses < 0
-                        ? '⛔ 達成率85%を下回っています…'
-                        : '🚨 あと1日でもサボるとアウトです！'}
-                    </p>
-                  </div>
-                )}
-                {s.isOngoing && s.remainingMisses === 1 && (
-                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                    <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
-                  </div>
+                {s.notStartedYet ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
+                      </div>
+                      <div className="ml-4">
+                        <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
+                          <span className="text-xl">⏳</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                      <p className="text-xs text-blue-600 font-semibold">
+                        📅 {s.startDateLabel ? `${new Date(s.startDateLabel).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}から開始` : 'まもなく開始'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
+                      <span className={`text-sm font-bold ${s.rate >= 85 ? 'text-green-500' : s.rate >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+                        {s.rate}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${s.rate >= 85 ? 'bg-green-500' : s.rate >= 50 ? 'bg-orange-400' : 'bg-red-400'}`}
+                        style={{ width: `${Math.max(s.rate, 2)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>{s.checkinCount} / {s.durationDays}日</span>
+                      <span>¥{s.depositAmount.toLocaleString()}</span>
+                    </div>
+                    {s.isOngoing && s.remainingMisses <= 0 && (
+                      <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <p className="text-xs text-red-600 font-semibold">
+                          {s.remainingMisses < 0
+                            ? '⛔ 達成率85%を下回っています…'
+                            : '🚨 あと1日でもサボるとアウトです！'}
+                        </p>
+                      </div>
+                    )}
+                    {s.isOngoing && s.remainingMisses === 1 && (
+                      <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                        <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </Link>
             ))}

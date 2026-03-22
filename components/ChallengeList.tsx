@@ -102,7 +102,7 @@ export default function ChallengeList({ challenges }: Props) {
     }
   }
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
   if (schedule === 'upcoming') {
     filtered = filtered
       .filter(c => c.schedule_type === 'fixed' && c.start_date && c.start_date > today)
