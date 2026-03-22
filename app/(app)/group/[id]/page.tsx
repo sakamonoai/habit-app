@@ -7,7 +7,7 @@ import CheckinShareCard from '@/components/CheckinShareCard'
 import ReactionButton from '@/components/ReactionButton'
 import ReportButton from '@/components/ReportButton'
 import PhotoViewer from '@/components/PhotoViewer'
-import { getTodayBoundsUTC, getTimezoneShortName } from '@/lib/timezone'
+import { getTodayBoundsUTC, getTimezoneShortName, getJstDiffLabel } from '@/lib/timezone'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -206,7 +206,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
                         {checkin.profiles?.nickname ?? '匿名'}
                       </Link>
                       {(checkin.profiles?.timezone && checkin.profiles.timezone !== 'Asia/Tokyo') && (
-                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">🌐 時差あり</span>
+                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">🌐 {getJstDiffLabel(checkin.profiles.timezone)}時差あり</span>
                       )}
                     </div>
                     <p className="text-xs text-gray-400">

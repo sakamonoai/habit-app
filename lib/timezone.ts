@@ -62,3 +62,16 @@ export function getTimezoneOffsetHours(timezone: string): number {
   const [h, m] = offset.slice(1).split(':').map(Number)
   return sign * (h + m / 60)
 }
+
+/**
+ * JSTとの時差を表示用文字列で返す（例: "1時間", "3時間半"）
+ */
+export function getJstDiffLabel(timezone: string): string {
+  const jstOffset = 9
+  const userOffset = getTimezoneOffsetHours(timezone)
+  const diff = Math.abs(userOffset - jstOffset)
+  if (diff === 0) return ''
+  const hours = Math.floor(diff)
+  const hasHalf = diff % 1 !== 0
+  return hasHalf ? `${hours}時間半` : `${hours}時間`
+}

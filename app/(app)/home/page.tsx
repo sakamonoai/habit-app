@@ -6,7 +6,7 @@ import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
 import PullToRefresh from '@/components/PullToRefresh'
 import PhotoViewer from '@/components/PhotoViewer'
-import { getTimezoneShortName } from '@/lib/timezone'
+import { getTimezoneShortName, getJstDiffLabel } from '@/lib/timezone'
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -160,7 +160,7 @@ export default async function HomePage({ searchParams }: Props) {
                           {checkin.profiles?.nickname ?? '匿名'}
                         </Link>
                         {(checkin.profiles?.timezone && checkin.profiles.timezone !== 'Asia/Tokyo') && (
-                          <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">🌐 時差あり</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">🌐 {getJstDiffLabel(checkin.profiles.timezone)}時差あり</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-400">
