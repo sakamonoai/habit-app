@@ -53,7 +53,7 @@ type DraftData = {
   endDate: string
   depositType: 'choosable' | 'fixed'
   fixedDeposit: number
-  maxMembers: number
+  maxMembers: number | null
   hasDeadline: boolean
   deadlineTime: string
   checkinCondition: string
@@ -90,7 +90,7 @@ export default function CreateChallengePage() {
   const [endDate, setEndDate] = useState('')
   const [depositType, setDepositType] = useState<'choosable' | 'fixed'>('choosable')
   const [fixedDeposit, setFixedDeposit] = useState(1000)
-  const [maxMembers, setMaxMembers] = useState(10)
+  const [maxMembers, setMaxMembers] = useState<number | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [hasDeadline, setHasDeadline] = useState(false)
@@ -255,7 +255,10 @@ export default function CreateChallengePage() {
 
   const handlePreSubmit = () => {
     if (!title.trim()) { setError('タイトルを入力してください'); return }
+    if (!description.trim()) { setError('説明を入力してください'); return }
+    if (!checkinCondition.trim()) { setError('記録成功条件を入力してください'); return }
     if (!category) { setError('カテゴリを選択してください'); return }
+    if (!maxMembers) { setError('最大参加人数を選択してください'); return }
     if (scheduleType === 'fixed') {
       if (!startDate || !endDate) { setError('開始日と終了日を選択してください'); return }
       if (new Date(startDate) < new Date(new Date().toISOString().split('T')[0])) { setError('開始日は今日以降を選択してください'); return }
@@ -296,7 +299,7 @@ export default function CreateChallengePage() {
       end_date: scheduleType === 'fixed' ? endDate : null,
       deposit_type: depositType,
       deposit_amount: depositType === 'fixed' ? fixedDeposit : 1000,
-      max_group_size: maxMembers,
+      max_group_size: maxMembers!,
       thumbnail_url: thumbnailUrl,
       checkin_deadline: hasDeadline ? deadlineTime : null,
       checkin_condition: checkinCondition.trim() || null,
@@ -578,7 +581,7 @@ export default function CreateChallengePage() {
 
         {/* 説明 */}
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">説明（任意）</label>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">説明 <span className="text-red-400">*</span></label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -809,7 +812,7 @@ export default function CreateChallengePage() {
 
         {/* 記録成功条件 */}
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">記録成功条件（任意）</label>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">記録成功条件 <span className="text-red-400">*</span></label>
           <p className="text-xs text-gray-400 mb-2">チェックインが認められる条件を書いてください</p>
           <textarea
             value={checkinCondition}
@@ -850,7 +853,7 @@ export default function CreateChallengePage() {
                   </span>
                 )}
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                  {maxMembers >= 9999 ? '無制限' : `${maxMembers}人`}
+                  {maxMembers ? (maxMembers >= 9999 ? '無制限' : `${maxMembers}人`) : '未選択'}
                 </span>
               </div>
             </div>
