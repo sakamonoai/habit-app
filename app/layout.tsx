@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   metadataBase: new URL("https://habit-app-sand.vercel.app"),
   openGraph: {
-    title: "ハビチャレ | お金が没収される習慣化アプリ",
+    title: "ハビチャレ｜サボるとお金を没収されるアプリ",
     description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。だから続く。",
     images: [{ url: "/icons/icon-512.png", width: 512, height: 512 }],
     type: "website",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "ハビチャレ | お金が没収される習慣化アプリ",
+    title: "ハビチャレ｜サボるとお金を没収されるアプリ",
     description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金。",
     images: ["/icons/icon-512.png"],
   },

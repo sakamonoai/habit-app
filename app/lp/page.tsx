@@ -3,17 +3,17 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'ハビチャレ | お金が没収される習慣化アプリ',
+  title: 'ハビチャレ｜サボるとお金を没収されるアプリ',
   description: '一人じゃ続かない。仲間となら変われる。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。だから今度こそ続く。',
   openGraph: {
-    title: 'ハビチャレ | お金が没収される習慣化アプリ',
+    title: 'ハビチャレ｜サボるとお金を没収されるアプリ',
     description: '一人じゃ続かない。仲間となら変われる。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。',
     images: [{ url: '/icons/icon-512.png', width: 512, height: 512 }],
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'ハビチャレ | お金が没収される習慣化アプリ',
+    title: 'ハビチャレ｜サボるとお金を没収されるアプリ',
     description: '一人じゃ続かない。仲間となら変われる。デポジットを預けて仲間とチャレンジ。達成すれば全額返金。',
     images: ['/icons/icon-512.png'],
   },
