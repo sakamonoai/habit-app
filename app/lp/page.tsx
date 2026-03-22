@@ -449,14 +449,18 @@ export default function LandingPage() {
             お金を預ける覚悟がある人だけが集まる場所。<br />
             だから、ここでは「続けられる自分」に出会える。
           </p>
+          <div className="max-w-xs mx-auto mb-6 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/40 rounded-2xl px-5 py-4">
+            <p className="text-amber-400 font-black text-sm mb-1">🎉 期間限定キャンペーン中！</p>
+            <p className="text-white text-sm font-bold">クレカ登録なし・デポジット無料で<br />今すぐお試しできます</p>
+          </div>
           <Link
             href="/signup"
             className="inline-block w-full max-w-xs py-4 bg-orange-500 text-white font-bold text-lg rounded-2xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/30"
           >
-            無料でアカウント作成
+            無料で始める
           </Link>
           <p className="text-white/30 text-xs mt-4">
-            ※ アカウント作成は無料。費用が発生するのは継続できなかった場合のみ。
+            ※ キャンペーン終了後は通常のデポジット制になります
           </p>
         </div>
       </section>
