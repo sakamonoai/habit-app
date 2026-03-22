@@ -21,6 +21,27 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // OAuthユーザーのプロフィールをGoogleアカウント情報で補完
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const meta = user.user_metadata
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single()
+
+        // nicknameが未設定の場合のみ更新（既存ユーザーは上書きしない）
+        if (profile && !profile.nickname) {
+          await supabase
+            .from('profiles')
+            .update({
+              nickname: meta?.full_name || meta?.name || null,
+              avatar_url: meta?.avatar_url || meta?.picture || null,
+            })
+            .eq('id', user.id)
+        }
+      }
       return NextResponse.redirect(new URL(next, request.url))
     }
   }
