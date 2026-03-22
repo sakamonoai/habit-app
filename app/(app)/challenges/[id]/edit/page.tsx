@@ -121,9 +121,14 @@ export default function ChallengeEditPage() {
     // サムネイルが新しく選択された場合アップロード
     let newThumbnailUrl = thumbnailUrl
     if (thumbnailFile) {
-      const url = await uploadPhoto(thumbnailFile)
-      if (!url) { setError('サムネイルのアップロードに失敗しました'); setSaving(false); return }
-      newThumbnailUrl = url
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setError('認証が必要です'); setSaving(false); return }
+      const ext = thumbnailFile.name.split('.').pop() ?? 'jpg'
+      const path = `${user.id}/thumb-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
+      const { error: uploadErr } = await supabase.storage.from('challenge-images').upload(path, thumbnailFile, { upsert: true })
+      if (uploadErr) { setError('サムネイルのアップロードに失敗しました'); setSaving(false); return }
+      const { data: urlData } = supabase.storage.from('challenge-images').getPublicUrl(path)
+      newThumbnailUrl = urlData.publicUrl
     }
 
     const { error: updateError } = await supabase
