@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "ハビチャレ",
@@ -53,6 +54,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         {children}
+        <Analytics />
         <ServiceWorkerRegister />
       </body>
     </html>
