@@ -65,6 +65,13 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* キャンペーンバナー */}
+          <div className="max-w-xs mx-auto mb-6 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/40 rounded-2xl px-5 py-4">
+            <p className="text-amber-400 font-black text-sm mb-1">🎉 期間限定キャンペーン中！</p>
+            <p className="text-white text-sm font-bold">クレカ登録なし・デポジット無料で<br />今すぐお試しできます</p>
+            <p className="text-white/50 text-xs mt-2">※ キャンペーン終了後は通常のデポジット制になります</p>
+          </div>
+
           <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <Link
               href="/signup"
