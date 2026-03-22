@@ -186,7 +186,15 @@ export default function ChallengeList({ challenges }: Props) {
       {/* カードグリッド */}
       {filtered.length > 0 ? (
         <div className="px-4 grid grid-cols-2 gap-3 max-w-lg mx-auto">
-          {filtered.map((challenge) => (
+          {filtered.map((challenge) => {
+            // 公式朝活チャレンジ: タイトルから時刻を抽出してオーバーレイ表示
+            const morningTimeMatch = challenge.is_official && challenge.title.match(/朝(\d{1,2}:\d{2})/)
+            const morningTime = morningTimeMatch ? morningTimeMatch[1] : null
+            const thumbnailSrc = morningTime
+              ? '/defaults/morning-challenge.jpg'
+              : (challenge.thumbnail_url || DEFAULT_THUMBNAILS[challenge.category ?? ''] || DEFAULT_THUMBNAIL_FALLBACK)
+
+            return (
             <Link
               key={challenge.id}
               href={`/challenges/${challenge.id}`}
@@ -194,14 +202,25 @@ export default function ChallengeList({ challenges }: Props) {
             >
               <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden">
                 <Image
-                  src={challenge.thumbnail_url || DEFAULT_THUMBNAILS[challenge.category ?? ''] || DEFAULT_THUMBNAIL_FALLBACK}
+                  src={thumbnailSrc}
                   alt={challenge.title}
                   fill
-                  className="object-cover object-bottom"
+                  className="object-cover object-center"
                   sizes="(max-width: 512px) 50vw, 256px"
                   quality={90}
                   loading="lazy"
                 />
+                {/* 公式朝活: 時刻オーバーレイ */}
+                {morningTime && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                    <span className="text-white font-black text-4xl tracking-tight drop-shadow-lg" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                      {morningTime}
+                    </span>
+                    <span className="text-white/90 font-bold text-sm mt-1 drop-shadow" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                      朝活チャレンジ
+                    </span>
+                  </div>
+                )}
                 {/* 左上バッジ: 公式 / キャンペーン */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   {challenge.is_official && (
@@ -274,7 +293,8 @@ export default function ChallengeList({ challenges }: Props) {
                 </div>
               </div>
             </Link>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <div className="text-center py-16 text-gray-400 max-w-lg mx-auto">
