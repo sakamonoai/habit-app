@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import CheckinShareCard from '@/components/CheckinShareCard'
 
 type Props = {
   groupId: string
@@ -10,15 +11,17 @@ type Props = {
   challengeId?: string
   durationDays?: number
   checkinDeadline?: string | null
+  challengeTitle?: string
 }
 
-export default function CheckinForm({ groupId, memberId, challengeId, durationDays, checkinDeadline }: Props) {
+export default function CheckinForm({ groupId, memberId, challengeId, durationDays, checkinDeadline, challengeTitle }: Props) {
   const [comment, setComment] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [checkinCount, setCheckinCount] = useState(0)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [timerSeconds, setTimerSeconds] = useState(0)
@@ -169,20 +172,26 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
       }).catch(() => {})
     }
 
+    // チェックイン数を取得
+    if (memberId) {
+      const { count } = await supabase
+        .from('checkins')
+        .select('*', { count: 'exact', head: true })
+        .eq('member_id', memberId)
+      setCheckinCount(count ?? 1)
+    }
+
     setSuccess(true)
     setLoading(false)
-    setTimeout(() => {
-      router.refresh()
-    }, 1500)
   }
 
   if (success) {
     return (
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6 text-center">
-        <div className="text-4xl mb-2">🎉</div>
-        <p className="text-green-800 font-bold text-lg">今日もやりきった！</p>
-        <p className="text-green-600 text-sm mt-1">連続記録を伸ばしていこう</p>
-      </div>
+      <CheckinShareCard
+        checkinCount={checkinCount}
+        durationDays={durationDays ?? 21}
+        challengeTitle={challengeTitle ?? 'チャレンジ'}
+      />
     )
   }
 

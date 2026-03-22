@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { stripePromise } from '@/lib/stripe-client'
+import { TRIAL_MODE } from '@/lib/trial-mode'
 
 const CATEGORIES = [
   { label: '運動', emoji: '🏃' },
@@ -39,9 +42,41 @@ type PhotoEntry = {
   desc: string
 }
 
+type DraftData = {
+  id: string
+  title: string
+  description: string
+  category: string
+  scheduleType: 'flexible' | 'fixed'
+  durationDays: number
+  startDate: string
+  endDate: string
+  depositType: 'choosable' | 'fixed'
+  fixedDeposit: number
+  maxMembers: number
+  hasDeadline: boolean
+  deadlineTime: string
+  checkinCondition: string
+  updatedAt: string
+}
+
+const DRAFTS_KEY = 'challenge_drafts'
+
+function loadDrafts(): DraftData[] {
+  try {
+    const raw = localStorage.getItem(DRAFTS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch { return [] }
+}
+
+function saveDrafts(drafts: DraftData[]) {
+  try { localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts)) } catch {}
+}
+
 export default function CreateChallengePage() {
   const router = useRouter()
-  const supabase = createClient()
   const thumbnailRef = useRef<HTMLInputElement>(null)
   const okRefs = useRef<(HTMLInputElement | null)[]>([])
   const ngRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -66,49 +101,119 @@ export default function CreateChallengePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
-  const [draftLoaded, setDraftLoaded] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [creatorDeposit, setCreatorDeposit] = useState(1000)
   const [draftSaved, setDraftSaved] = useState(false)
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null)
+  const [drafts, setDrafts] = useState<DraftData[]>([])
+  const [showDraftList, setShowDraftList] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
-  const DRAFT_KEY = 'challenge_draft'
-
-  // 下書き復元
+  // 旧形式の下書きを移行 + 下書き一覧を読み込み
   useEffect(() => {
+    // 旧形式 (challenge_draft) があれば新形式に移行
     try {
-      const saved = localStorage.getItem(DRAFT_KEY)
-      if (!saved) { setDraftLoaded(true); return }
-      const d = JSON.parse(saved)
-      if (d.title) setTitle(d.title)
-      if (d.description) setDescription(d.description)
-      if (d.category) setCategory(d.category)
-      if (d.scheduleType) setScheduleType(d.scheduleType)
-      if (d.durationDays) setDurationDays(d.durationDays)
-      if (d.startDate) setStartDate(d.startDate)
-      if (d.endDate) setEndDate(d.endDate)
-      if (d.depositType) setDepositType(d.depositType)
-      if (d.fixedDeposit) setFixedDeposit(d.fixedDeposit)
-      if (d.maxMembers) setMaxMembers(d.maxMembers)
-      if (d.hasDeadline !== undefined) setHasDeadline(d.hasDeadline)
-      if (d.deadlineTime) setDeadlineTime(d.deadlineTime)
-      if (d.checkinCondition) setCheckinCondition(d.checkinCondition)
+      const oldDraft = localStorage.getItem('challenge_draft')
+      if (oldDraft) {
+        const d = JSON.parse(oldDraft)
+        if (d.title) {
+          const migrated: DraftData = {
+            id: crypto.randomUUID(),
+            title: d.title || '',
+            description: d.description || '',
+            category: d.category || '',
+            scheduleType: d.scheduleType || 'flexible',
+            durationDays: d.durationDays || 7,
+            startDate: d.startDate || '',
+            endDate: d.endDate || '',
+            depositType: d.depositType || 'choosable',
+            fixedDeposit: d.fixedDeposit || 1000,
+            maxMembers: d.maxMembers || 10,
+            hasDeadline: d.hasDeadline ?? false,
+            deadlineTime: d.deadlineTime || '23:59',
+            checkinCondition: d.checkinCondition || '',
+            updatedAt: new Date().toISOString(),
+          }
+          const existing = loadDrafts()
+          saveDrafts([migrated, ...existing])
+          localStorage.removeItem('challenge_draft')
+        }
+      }
     } catch {}
-    setDraftLoaded(true)
+
+    const loaded = loadDrafts()
+    setDrafts(loaded)
+    // 下書きがあれば選択画面を表示
+    if (loaded.length > 0) {
+      setShowDraftList(true)
+    }
+    setInitialized(true)
   }, [])
 
-  // 下書き保存
+  const loadDraftIntoForm = (draft: DraftData) => {
+    setTitle(draft.title)
+    setDescription(draft.description)
+    setCategory(draft.category)
+    setScheduleType(draft.scheduleType)
+    setDurationDays(draft.durationDays)
+    setStartDate(draft.startDate)
+    setEndDate(draft.endDate)
+    setDepositType(draft.depositType)
+    setFixedDeposit(draft.fixedDeposit)
+    setMaxMembers(draft.maxMembers)
+    setHasDeadline(draft.hasDeadline)
+    setDeadlineTime(draft.deadlineTime)
+    setCheckinCondition(draft.checkinCondition)
+    setCurrentDraftId(draft.id)
+    setShowDraftList(false)
+  }
+
+  const resetForm = () => {
+    setTitle(''); setDescription(''); setCategory(''); setScheduleType('flexible')
+    setDurationDays(7); setStartDate(''); setEndDate(''); setDepositType('choosable')
+    setFixedDeposit(1000); setMaxMembers(10); setHasDeadline(false)
+    setDeadlineTime('23:59'); setCheckinCondition('')
+    setThumbnailFile(null); setThumbnailPreview(null)
+    setOkPhotos([]); setNgPhotos([])
+    setCurrentDraftId(null)
+  }
+
+  // 下書き保存（新規or上書き）
   const saveDraft = useCallback(() => {
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        title, description, category, scheduleType, durationDays,
-        startDate, endDate, depositType, fixedDeposit, maxMembers,
-        hasDeadline, deadlineTime, checkinCondition,
-      }))
-      setDraftSaved(true)
-      setTimeout(() => setDraftSaved(false), 2000)
-    } catch {}
-  }, [title, description, category, scheduleType, durationDays, startDate, endDate, depositType, fixedDeposit, maxMembers, hasDeadline, deadlineTime, checkinCondition])
+    if (!title.trim()) return
+    const now = new Date().toISOString()
+    const draftData: DraftData = {
+      id: currentDraftId || crypto.randomUUID(),
+      title, description, category, scheduleType, durationDays,
+      startDate, endDate, depositType, fixedDeposit, maxMembers,
+      hasDeadline, deadlineTime, checkinCondition, updatedAt: now,
+    }
+    const existing = loadDrafts()
+    let updated: DraftData[]
+    if (currentDraftId) {
+      updated = existing.map(d => d.id === currentDraftId ? draftData : d)
+    } else {
+      updated = [draftData, ...existing]
+      setCurrentDraftId(draftData.id)
+    }
+    saveDrafts(updated)
+    setDrafts(updated)
+    setDraftSaved(true)
+    setTimeout(() => setDraftSaved(false), 2000)
+  }, [title, description, category, scheduleType, durationDays, startDate, endDate, depositType, fixedDeposit, maxMembers, hasDeadline, deadlineTime, checkinCondition, currentDraftId])
+
+  const deleteDraft = (id: string) => {
+    const updated = loadDrafts().filter(d => d.id !== id)
+    saveDrafts(updated)
+    setDrafts(updated)
+    if (currentDraftId === id) setCurrentDraftId(null)
+    if (updated.length === 0) setShowDraftList(false)
+  }
 
   const clearDraft = () => {
-    try { localStorage.removeItem(DRAFT_KEY) } catch {}
+    if (currentDraftId) {
+      deleteDraft(currentDraftId)
+    }
   }
 
   // 固定期間の場合、開始日・終了日からduration_daysを計算
@@ -139,6 +244,7 @@ export default function CreateChallengePage() {
   }
 
   const uploadImage = async (file: File, userId: string, prefix: string): Promise<string | null> => {
+    const supabase = createClient()
     const ext = file.name.split('.').pop()
     const path = `${userId}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
     const { error } = await supabase.storage.from('challenge-images').upload(path, file, { upsert: true })
@@ -160,67 +266,101 @@ export default function CreateChallengePage() {
     setShowConfirm(true)
   }
 
-  const handleSubmit = async () => {
-    setShowConfirm(false)
-    setLoading(true)
-    setError('')
+  // 画像アップロード + チャレンジデータを構築
+  const buildChallengeData = async (userId: string) => {
+    const thumbnailUrl = thumbnailFile ? await uploadImage(thumbnailFile, userId, 'thumb') : null
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
-
-    // 画像アップロード
-    const thumbnailUrl = thumbnailFile ? await uploadImage(thumbnailFile, user.id, 'thumb') : null
-
-    // OK/NG写真をアップロード
     const okUploaded = await Promise.all(
       okPhotos.filter(p => p.file).map(async (p) => ({
-        url: await uploadImage(p.file!, user.id, 'ok'),
+        url: await uploadImage(p.file!, userId, 'ok'),
         desc: p.desc.trim(),
       }))
     )
     const ngUploaded = await Promise.all(
       ngPhotos.filter(p => p.file).map(async (p) => ({
-        url: await uploadImage(p.file!, user.id, 'ng'),
+        url: await uploadImage(p.file!, userId, 'ng'),
         desc: p.desc.trim(),
       }))
     )
 
-    // OK/NG写真データをJSON化
     const okPhotoData = okUploaded.filter(p => p.url).map(p => ({ url: p.url, desc: p.desc }))
     const ngPhotoData = ngUploaded.filter(p => p.url).map(p => ({ url: p.url, desc: p.desc }))
 
-    const { data: challenge, error: createError } = await supabase
-      .from('challenges')
-      .insert({
-        title: title.trim(),
-        description: description.trim() || null,
-        category,
-        schedule_type: scheduleType,
-        duration_days: computedDurationDays,
-        start_date: scheduleType === 'fixed' ? startDate : null,
-        end_date: scheduleType === 'fixed' ? endDate : null,
-        deposit_type: depositType,
-        deposit_amount: depositType === 'fixed' ? fixedDeposit : 1000,
-        max_group_size: maxMembers,
-        status: 'active',
-        created_by: user.id,
-        thumbnail_url: thumbnailUrl,
-        checkin_deadline: hasDeadline ? deadlineTime : null,
-        checkin_condition: checkinCondition.trim() || null,
-        ok_photo_url: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
-        ng_photo_url: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
-      })
-      .select('id')
-      .single()
-
-    if (createError) {
-      setError(`作成に失敗しました: ${createError.message}`)
-      setLoading(false)
-      return
+    return {
+      title: title.trim(),
+      description: description.trim() || null,
+      category,
+      schedule_type: scheduleType,
+      duration_days: computedDurationDays,
+      start_date: scheduleType === 'fixed' ? startDate : null,
+      end_date: scheduleType === 'fixed' ? endDate : null,
+      deposit_type: depositType,
+      deposit_amount: depositType === 'fixed' ? fixedDeposit : 1000,
+      max_group_size: maxMembers,
+      thumbnail_url: thumbnailUrl,
+      checkin_deadline: hasDeadline ? deadlineTime : null,
+      checkin_condition: checkinCondition.trim() || null,
+      ok_photo_url: okPhotoData.length > 0 ? JSON.stringify(okPhotoData) : null,
+      ng_photo_url: ngPhotoData.length > 0 ? JSON.stringify(ngPhotoData) : null,
     }
+  }
 
-    clearDraft()
-    router.push(`/challenges/${challenge.id}`)
+  // お試しモード: Stripeなしで直接作成+参加
+  const handleTrialCreate = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+
+      // 画像アップロード + データ構築
+      const challengeData = await buildChallengeData(user.id)
+
+      // チャレンジ作成
+      const { data: newChallenge, error: createError } = await supabase
+        .from('challenges')
+        .insert({ ...challengeData, created_by: user.id, status: 'active' })
+        .select('id')
+        .single()
+
+      if (createError) throw new Error(`作成失敗: ${createError.message}`)
+
+      // グループ作成
+      const { data: newGroup, error: groupError } = await supabase
+        .from('groups')
+        .insert({ challenge_id: newChallenge.id })
+        .select('id')
+        .single()
+
+      if (groupError) throw new Error(`グループ作成失敗: ${groupError.message}`)
+
+      // 作成者を参加者として追加（デポジットなし）
+      const { error: joinError } = await supabase
+        .from('group_members')
+        .insert({
+          group_id: newGroup.id,
+          user_id: user.id,
+          challenge_id: newChallenge.id,
+          deposit_amount: 0,
+          deposit_payment_intent_id: null,
+          fee_payment_intent_id: null,
+          status: 'active',
+        })
+
+      if (joinError) throw new Error(`参加失敗: ${joinError.message}`)
+
+      clearDraft()
+      router.push(`/group/${newGroup.id}`)
+      router.refresh()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '不明なエラーが発生しました'
+      setError(message)
+      setShowConfirm(false)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const renderPhotoSection = (type: 'ok' | 'ng', photos: PhotoEntry[], refs: React.MutableRefObject<(HTMLInputElement | null)[]>) => {
@@ -315,26 +455,72 @@ export default function CreateChallengePage() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6 pb-40 space-y-5">
-        {/* 下書き復元バナー */}
-        {draftLoaded && title && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
-            <p className="text-sm text-blue-700">下書きを復元しました</p>
+      {/* 下書き一覧モーダル */}
+      {showDraftList && drafts.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full animate-slide-up max-h-[80vh] flex flex-col">
+            <h3 className="font-bold text-gray-900 text-center mb-1">下書きがあります</h3>
+            <p className="text-xs text-gray-400 text-center mb-4">続きを編集するか、新規作成を選んでください</p>
+            <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+              {drafts.map((draft) => (
+                <div key={draft.id} className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-3">
+                  <button
+                    onClick={() => loadDraftIntoForm(draft)}
+                    className="flex-1 text-left"
+                  >
+                    <p className="font-semibold text-sm text-gray-900 truncate">{draft.title || '無題の下書き'}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {draft.category && (
+                        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded">{draft.category}</span>
+                      )}
+                      <span className="text-xs text-gray-400">
+                        {new Date(draft.updatedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => deleteDraft(draft.id)}
+                    className="text-gray-300 hover:text-red-500 transition-colors shrink-0 p-1"
+                    aria-label="削除"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
             <button
-              onClick={() => {
-                clearDraft()
-                setTitle(''); setDescription(''); setCategory(''); setScheduleType('flexible')
-                setDurationDays(7); setStartDate(''); setEndDate(''); setDepositType('choosable')
-                setFixedDeposit(1000); setMaxMembers(10); setHasDeadline(false)
-                setDeadlineTime('23:59'); setCheckinCondition('')
-                setThumbnailFile(null); setThumbnailPreview(null)
-                setOkPhotos([]); setNgPhotos([])
-              }}
-              className="text-xs text-blue-500 font-medium hover:text-blue-700"
+              onClick={() => { resetForm(); setShowDraftList(false) }}
+              className="w-full py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
             >
-              クリア
+              新規作成
             </button>
           </div>
+        </div>
+      )}
+
+      <main className="max-w-lg mx-auto px-4 py-6 pb-40 space-y-5">
+        {/* 下書き編集中バナー */}
+        {currentDraftId && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+            <p className="text-sm text-blue-700">下書きを編集中</p>
+            <button
+              onClick={() => { resetForm() }}
+              className="text-xs text-blue-500 font-medium hover:text-blue-700"
+            >
+              新規に切り替え
+            </button>
+          </div>
+        )}
+        {/* 下書きがあるとき表示 */}
+        {initialized && !showDraftList && drafts.length > 0 && !currentDraftId && (
+          <button
+            onClick={() => setShowDraftList(true)}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-600 hover:bg-gray-100 transition-colors text-left"
+          >
+            下書き一覧を見る（{drafts.length}件）
+          </button>
         )}
         {/* サムネイル画像 */}
         <div>
@@ -700,37 +886,107 @@ export default function CreateChallengePage() {
             disabled={loading}
             className="w-full py-4 bg-orange-500 text-white font-semibold rounded-2xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
           >
-            {loading ? '作成中...' : 'チャレンジを作成する'}
+            {loading ? '処理中...' : '作成して参加する'}
           </button>
         </div>
       </div>
 
       {/* 確認ポップアップ */}
-      {showConfirm && (
+      {showConfirm && TRIAL_MODE && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-bold text-gray-900">本当に作成しますか？</h3>
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-100 rounded-full mb-3">
+                <span className="text-3xl">🎉</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">作成して参加する</h3>
+              <p className="text-xs text-gray-400 mt-1">作成者も参加者としてチャレンジに挑戦します</p>
             </div>
-            <div className="space-y-2 mb-5">
-              <p className="text-sm text-gray-600">
-                一度チャレンジを作成すると、以下の条件を満たすまで削除できません：
+
+            <div className="space-y-3 mb-5">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500">デポジット</p>
+                <p className="text-xl font-bold text-green-600">¥0（無料）</p>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-3">
+                <p className="text-sm text-gray-600">
+                  お試しキャンペーン中のため、デポジットなし・カード登録不要で作成&参加できます。
+                </p>
+              </div>
+              <p className="text-xs text-gray-400 text-center">
+                ※ 正式リリース後はデポジット制になります
               </p>
-              <ul className="text-sm text-gray-700 space-y-1.5 bg-gray-50 rounded-xl p-3">
-                <li className="flex gap-2">
-                  <span className="text-orange-500 shrink-0">1.</span>
-                  <span>チャレンジ期限が終了している</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-orange-500 shrink-0">2.</span>
-                  <span>誰もそのチャレンジに挑戦していない</span>
-                </li>
-              </ul>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                disabled={loading}
+                className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                戻る
+              </button>
+              <button
+                onClick={handleTrialCreate}
+                disabled={loading}
+                className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                {loading ? '作成中...' : '作成する（無料）'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 通常モード: デポジット選択 + 確認 */}
+      {showConfirm && !TRIAL_MODE && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up max-h-[90vh] overflow-y-auto">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">💪</div>
+              <h3 className="text-lg font-bold text-gray-900">作成して参加する</h3>
+              <p className="text-xs text-gray-400 mt-1">作成者も参加者としてチャレンジに挑戦します</p>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-gray-700 mb-2">あなたのデポジット金額</p>
+              <div className="grid grid-cols-3 gap-2">
+                {FIXED_DEPOSIT_OPTIONS.map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => setCreatorDeposit(amount)}
+                    className={`py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      creatorDeposit === amount
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    ¥{amount.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">デポジット（仮押さえ）</span>
+                <span className="font-semibold text-gray-900">¥{creatorDeposit.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-gray-200 pt-1.5 flex justify-between text-sm">
+                <span className="text-gray-600">今回の引き落とし</span>
+                <span className="font-bold text-green-600">¥0（無料）</span>
+              </div>
               <p className="text-xs text-gray-400">
-                ※ 両方の条件を満たすまで削除できません。内容をよく確認してから作成してください。
+                デポジットはカードに仮押さえされますが、85%以上達成で引き落とされません。
               </p>
             </div>
+
+            <div className="space-y-2 mb-4">
+              <p className="text-xs text-red-500 font-medium">
+                達成率85%未満の場合、デポジット（¥{creatorDeposit.toLocaleString()}）は返金されません。
+              </p>
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={() => setShowConfirm(false)}
@@ -739,15 +995,167 @@ export default function CreateChallengePage() {
                 戻る
               </button>
               <button
-                onClick={handleSubmit}
-                className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
+                onClick={() => { setShowConfirm(false); setShowPayment(true) }}
+                className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all active:scale-[0.98]"
               >
-                作成する
+                次へ（カード入力）
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* 通常モード: カード入力 */}
+      {showPayment && !TRIAL_MODE && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full animate-slide-up">
+            <h3 className="font-bold text-gray-900 text-center mb-1">カード情報を入力</h3>
+            <p className="text-xs text-gray-400 text-center mb-4">決済完了でチャレンジが作成されます</p>
+            <Elements stripe={stripePromise}>
+              <CreatePaymentForm
+                depositAmount={creatorDeposit}
+                buildChallengeData={buildChallengeData}
+                onSuccess={(groupId) => { clearDraft(); router.push(`/group/${groupId}`); router.refresh() }}
+                onCancel={() => setShowPayment(false)}
+                onError={(msg) => { setError(msg); setShowPayment(false) }}
+              />
+            </Elements>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+// --- 通常モード用: カード入力 + 決済 + チャレンジ作成フォーム ---
+function CreatePaymentForm({
+  depositAmount,
+  buildChallengeData,
+  onSuccess,
+  onCancel,
+  onError,
+}: {
+  depositAmount: number
+  buildChallengeData: (userId: string) => Promise<Record<string, unknown>>
+  onSuccess: (groupId: string) => void
+  onCancel: () => void
+  onError: (msg: string) => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [step, setStep] = useState<'input' | 'uploading' | 'processing' | 'done'>('input')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!stripe || !elements) return
+
+    setLoading(true)
+    setError('')
+
+    try {
+      setStep('processing')
+      const setupRes = await fetch('/api/stripe/setup-intent', { method: 'POST' })
+      const setupData = await setupRes.json()
+      if (!setupRes.ok) throw new Error(setupData.error || 'SetupIntentの作成に失敗しました')
+
+      const cardElement = elements.getElement(CardElement)
+      if (!cardElement) throw new Error('カード情報が入力されていません')
+
+      const { error: confirmError, setupIntent } = await stripe.confirmCardSetup(
+        setupData.clientSecret,
+        { payment_method: { card: cardElement } }
+      )
+      if (confirmError) throw new Error(confirmError.message || 'カード認証に失敗しました')
+      if (!setupIntent?.payment_method) throw new Error('支払い方法の保存に失敗しました')
+
+      setStep('uploading')
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('認証が必要です')
+
+      const challengeData = await buildChallengeData(user.id)
+
+      setStep('processing')
+      const res = await fetch('/api/stripe/confirm-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeData, depositAmount, paymentMethodId: setupIntent.payment_method }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'チャレンジ作成に失敗しました')
+
+      setStep('done')
+      onSuccess(data.groupId)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '不明なエラーが発生しました'
+      setError(message)
+      setStep('input')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-4">
+        <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">デポジット（仮押さえ）</span>
+            <span className="font-semibold text-gray-900">¥{depositAmount.toLocaleString()}</span>
+          </div>
+          <div className="border-t border-gray-200 pt-1.5 flex justify-between text-sm">
+            <span className="text-gray-600">今回の引き落とし</span>
+            <span className="font-bold text-green-600">¥0（無料）</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">カード情報</label>
+          <div className="border border-gray-200 rounded-xl p-4 bg-white">
+            <CardElement
+              options={{
+                style: {
+                  base: { fontSize: '16px', color: '#1f2937', '::placeholder': { color: '#9ca3af' } },
+                  invalid: { color: '#ef4444' },
+                },
+                hidePostalCode: true,
+              }}
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        {(step === 'uploading' || step === 'processing') && (
+          <div className="text-center py-2">
+            <div className="inline-block w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gray-500 mt-2">
+              {step === 'uploading' ? '画像アップロード中...' : '決済処理中...'}
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button type="button" onClick={onCancel} disabled={loading}
+            className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50">
+            戻る
+          </button>
+          <button type="submit" disabled={loading || !stripe}
+            className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]">
+            {loading ? '処理中...' : '作成して参加する'}
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-400 text-center">
+          カード情報はStripeにより安全に管理されます。
+        </p>
+      </div>
+    </form>
   )
 }

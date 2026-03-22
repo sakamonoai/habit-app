@@ -101,9 +101,18 @@ export default function PrivacyPage() {
             <h2 className="text-base font-semibold text-gray-900 mb-3">6. お問い合わせ</h2>
             <p>
               個人情報の取り扱いに関するお問い合わせは、
-              以下の連絡先までお願いいたします。
+              以下のお問い合わせページよりお願いいたします。
             </p>
-            <p className="mt-2 text-gray-500">[メールアドレス] ※準備中</p>
+            <p className="mt-2">
+              <a
+                href="https://habit-app-sand.vercel.app/contact"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                https://habit-app-sand.vercel.app/privacy
+              </a>
+            </p>
           </section>
         </div>
 

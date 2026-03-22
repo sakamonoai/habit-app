@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import CheckinForm from '@/components/CheckinForm'
+import CheckinShareCard from '@/components/CheckinShareCard'
 import ReactionButton from '@/components/ReactionButton'
 import ReportButton from '@/components/ReportButton'
 
@@ -166,13 +167,13 @@ export default async function GroupTimelinePage({ params }: Props) {
             <p className="text-gray-500 text-sm mt-1">お疲れさまでした！</p>
           </div>
         ) : hasCheckedInToday ? (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6 text-center">
-            <div className="text-4xl mb-2">🎉</div>
-            <p className="text-green-800 font-bold text-lg">今日もやりきった！</p>
-            <p className="text-green-600 text-sm mt-1">{isExtension ? `延長戦 ${extensionDays}日目！自分に勝ち続けよう` : '連続記録を伸ばしていこう'}</p>
-          </div>
+          <CheckinShareCard
+            checkinCount={myCheckinCount ?? 0}
+            durationDays={durationDays}
+            challengeTitle={group.challenges?.title ?? 'チャレンジ'}
+          />
         ) : (
-          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} checkinDeadline={isExtension ? null : group.challenges?.checkin_deadline} />
+          <CheckinForm groupId={id} memberId={myMember?.id ?? ''} challengeId={group.challenges?.id} durationDays={durationDays} checkinDeadline={isExtension ? null : group.challenges?.checkin_deadline} challengeTitle={group.challenges?.title ?? 'チャレンジ'} />
         )}
 
         {/* タイムライン */}

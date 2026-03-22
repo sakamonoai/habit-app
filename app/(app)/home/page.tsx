@@ -39,12 +39,22 @@ export default async function HomePage({ searchParams }: Props) {
             <h1 className="text-2xl font-bold text-gray-900">タイムライン</h1>
           </div>
         </header>
-        <main className="max-w-lg mx-auto px-4 py-16 text-center">
-          <p className="text-4xl mb-3">🏃</p>
-          <p className="text-gray-500 text-sm mb-4">まだチャレンジに参加していません</p>
+        <main className="max-w-lg mx-auto px-4 py-12 text-center">
+          <p className="text-5xl mb-4">📷</p>
+          <p className="text-lg font-bold text-gray-900 mb-2">タイムラインはまだ空です</p>
+          <p className="text-sm text-gray-500 mb-1">チャレンジに参加すると、</p>
+          <p className="text-sm text-gray-500 mb-6">仲間の投稿がここに表示されます。</p>
           <Link href="/challenges" className="inline-block bg-orange-500 text-white font-semibold px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors">
             チャレンジを探す
           </Link>
+          <div className="mt-8 bg-gray-50 rounded-2xl p-5 text-left max-w-xs mx-auto">
+            <p className="text-xs font-semibold text-gray-700 mb-3">タイムラインとは？</p>
+            <ul className="space-y-2 text-xs text-gray-500">
+              <li className="flex gap-2"><span>📸</span><span>参加中のチャレンジの仲間の投稿が流れてきます</span></li>
+              <li className="flex gap-2"><span>👍</span><span>リアクションで仲間を応援できます</span></li>
+              <li className="flex gap-2"><span>🔥</span><span>みんなの頑張りを見てモチベーションアップ！</span></li>
+            </ul>
+          </div>
         </main>
       </div>
     )

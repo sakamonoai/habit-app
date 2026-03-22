@@ -52,7 +52,6 @@ const CATEGORY_ICONS = [
   { label: '勉強', emoji: '✏️', color: 'bg-purple-50', activeColor: 'bg-purple-200', filters: ['勉強', '学習'] },
 ]
 
-const CATEGORIES = ['全て', '運動', '食習慣', '生活', '勉強', '趣味', 'その他']
 const CATEGORY_MAP: Record<string, string[]> = {
   '運動': ['運動'],
   '食習慣': ['食習慣'],
@@ -122,16 +121,21 @@ export default function ChallengeList({ challenges }: Props) {
     }
   }
 
-  const handleCategoryClick = (tab: string) => {
-    setCategory(tab)
-    setIconFilter(null)
-  }
-
   return (
     <>
       {/* カテゴリアイコン */}
       <div className="max-w-lg mx-auto px-4 py-3">
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+          {/* 全てボタン */}
+          <button
+            onClick={() => { setIconFilter(null); setCategory('全て') }}
+            className="flex flex-col items-center gap-1 shrink-0"
+          >
+            <div className={`w-14 h-14 ${!iconFilter ? 'bg-orange-100 ring-2 ring-orange-400' : 'bg-gray-50'} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
+              🔥
+            </div>
+            <span className={`text-xs ${!iconFilter ? 'text-orange-500 font-bold' : 'text-gray-600'}`}>全て</span>
+          </button>
           {CATEGORY_ICONS.map((cat) => {
             const filterName = cat.filters[0] === '生活' ? '生活' : cat.filters[0] === '趣味' || cat.filters[0] === '読書' ? '趣味' : cat.filters[0]
             const isActive = iconFilter === filterName
@@ -141,10 +145,10 @@ export default function ChallengeList({ challenges }: Props) {
                 onClick={() => handleIconClick(cat)}
                 className="flex flex-col items-center gap-1 shrink-0"
               >
-                <div className={`w-14 h-14 ${isActive ? cat.activeColor : cat.color} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
+                <div className={`w-14 h-14 ${isActive ? cat.activeColor + ' ring-2 ring-gray-300' : cat.color} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
                   {cat.emoji}
                 </div>
-                <span className={`text-xs ${isActive ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>{cat.label}</span>
+                <span className={`text-xs ${isActive ? 'text-gray-900 font-bold' : 'text-gray-600'}`}>{cat.label}</span>
               </button>
             )
           })}
@@ -160,23 +164,8 @@ export default function ChallengeList({ challenges }: Props) {
         <span className="text-sm text-gray-400">全{filtered.length}件</span>
       </div>
 
-      {/* カテゴリタブ + スケジュール */}
-      <div className="px-4 pb-3 max-w-lg mx-auto space-y-2">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-          {CATEGORIES.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleCategoryClick(tab)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                activeCategory === tab
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+      {/* スケジュールフィルター */}
+      <div className="px-4 pb-3 max-w-lg mx-auto">
         <div className="flex gap-2">
           {SCHEDULE_FILTERS.map((f) => (
             <button
@@ -203,13 +192,14 @@ export default function ChallengeList({ challenges }: Props) {
               href={`/challenges/${challenge.id}`}
               className="block group"
             >
-              <div className="relative aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
+              <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden">
                 <Image
                   src={challenge.thumbnail_url || DEFAULT_THUMBNAILS[challenge.category ?? ''] || DEFAULT_THUMBNAIL_FALLBACK}
                   alt={challenge.title}
                   fill
                   className="object-cover"
                   sizes="(max-width: 512px) 50vw, 256px"
+                  quality={90}
                   loading="lazy"
                 />
                 {/* 左上バッジ: 公式 / キャンペーン */}

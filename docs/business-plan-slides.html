@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>習慣化アプリ 事業計画書</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #0a0a0a;
+      color: #333;
+      overflow: hidden;
+    }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      padding: 60px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Cover Slide ===== */
+    .slide-cover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .slide-cover .label {
+      font-size: 16px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 30px;
+    }
+
+    .slide-cover h1 {
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1.3;
+      margin-bottom: 20px;
+    }
+
+    .slide-cover .tagline {
+      font-size: 22px;
+      font-weight: 300;
+      opacity: 0.9;
+      margin-bottom: 50px;
+      max-width: 700px;
+    }
+
+    .slide-cover .meta {
+      font-size: 14px;
+      opacity: 0.6;
+    }
+
+    /* ===== Standard Slides ===== */
+    .slide-std {
+      background: #ffffff;
+    }
+
+    .slide-std .slide-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+    }
+
+    .slide-std .slide-num {
+      background: #667eea;
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .slide-std h2 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .slide-std .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Dark Slides ===== */
+    .slide-dark {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+    }
+
+    .slide-dark .slide-header {
+      border-bottom-color: #667eea;
+    }
+
+    .slide-dark .slide-header h2 {
+      color: #fff;
+    }
+
+    /* ===== Accent Slides ===== */
+    .slide-accent {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: #fff;
+    }
+
+    .slide-accent .slide-header {
+      border-bottom-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .slide-accent .slide-header h2 {
+      color: #fff;
+    }
+
+    .slide-accent .slide-num {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ===== Green Slides ===== */
+    .slide-green {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #fff;
+    }
+
+    .slide-green .slide-header {
+      border-bottom-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .slide-green .slide-header h2 {
+      color: #fff;
+    }
+
+    .slide-green .slide-num {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ===== Layout Helpers ===== */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      flex: 1;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 30px;
+      flex: 1;
+    }
+
+    .four-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .card {
+      background: #f8f9ff;
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid #e8eaff;
+    }
+
+    .card-dark {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .card h3,
+    .card-dark h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #667eea;
+    }
+
+    .card-dark h3 {
+      color: #a8b4ff;
+    }
+
+    .card p,
+    .card-dark p {
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .card ul,
+    .card-dark ul {
+      font-size: 15px;
+      line-height: 1.8;
+      padding-left: 20px;
+    }
+
+    .big-number {
+      font-size: 48px;
+      font-weight: 900;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    .card-dark .big-number {
+      color: #a8b4ff;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      background: #667eea;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 15px;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .flow-arrow {
+      font-size: 28px;
+      color: #667eea;
+    }
+
+    .slide-dark .flow-arrow {
+      color: #a8b4ff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    table th {
+      background: #667eea;
+      color: #fff;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    table tr:nth-child(even) td {
+      background: #f8f9ff;
+    }
+
+    .slide-dark table th {
+      background: rgba(102, 126, 234, 0.4);
+    }
+
+    .slide-dark table td {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #ddd;
+    }
+
+    .slide-dark table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tag {
+      display: inline-block;
+      background: #667eea;
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      margin: 3px 4px;
+    }
+
+    .tag-outline {
+      background: transparent;
+      border: 1.5px solid #667eea;
+      color: #667eea;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #667eea;
+      border-radius: 2px;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -26px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #667eea;
+      border: 3px solid #fff;
+    }
+
+    .timeline-item h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+
+    .timeline-item p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .comparison-table td:first-child {
+      font-weight: 700;
+    }
+
+    .check {
+      color: #38ef7d;
+      font-weight: 700;
+    }
+
+    .cross {
+      color: #f5576c;
+      font-weight: 700;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      bottom: 30px;
+      right: 40px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    .nav button {
+      background: rgba(102, 126, 234, 0.9);
+      color: #fff;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav button:hover {
+      transform: scale(1.1);
+      background: #764ba2;
+    }
+
+    .page-indicator {
+      position: fixed;
+      bottom: 36px;
+      left: 40px;
+      color: #999;
+      font-size: 14px;
+      z-index: 100;
+    }
+
+    /* ===== End Slide ===== */
+    .slide-end {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .slide-end h2 {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+
+    .slide-end p {
+      font-size: 20px;
+      opacity: 0.8;
+    }
+
+    .icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 12px;
+    }
+
+    .icon-purple {
+      background: rgba(102, 126, 234, 0.15);
+    }
+
+    .icon-white {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .slide-dark .subtitle {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .risk-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .risk-badge {
+      background: #f5576c;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .risk-badge.low {
+      background: #38ef7d;
+      color: #1a1a2e;
+    }
+
+    .risk-badge.mid {
+      background: #ffc107;
+      color: #1a1a2e;
+    }
+
+    @media print {
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+      }
+
+      .nav,
+      .page-indicator {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==================== SLIDE 1: Cover ==================== -->
+  <div class="slide slide-cover active" id="slide-1">
+    <div class="label">Business Plan 2026</div>
+    <h1>習慣化チャレンジアプリ</h1>
+    <div class="tagline">仲間と一緒にチャレンジして、達成したらお金が戻ってくる。<br>スポンサーからのご褒美もある。</div>
+    <div class="meta">事業計画書 | 2026年3月</div>
+  </div>
+
+  <!-- ==================== SLIDE 2: エグゼクティブサマリー ==================== -->
+  <div class="slide slide-dark" id="slide-2">
+    <div class="slide-header">
+      <div class="slide-num">01</div>
+      <h2>エグゼクティブサマリー</h2>
+    </div>
+    <div class="content">
+      <p style="font-size:17px; color:rgba(255,255,255,0.7); margin-bottom:30px; max-width:800px; line-height:1.8;">
+        「固定デポジット × 証拠写真投稿 × 少人数グループ × スポンサー報酬」で<br>
+        日本市場に最適化された習慣化プラットフォームを構築する。
+      </p>
+      <div class="three-col">
+        <div class="card-dark">
+          <div class="icon-circle icon-white">🎯</div>
+          <h3>解決する課題</h3>
+          <p style="color:rgba(255,255,255,0.75);">習慣化の挫折率は約90%。<br>一人では続かない、強制力がない、成功体験が得にくい。</p>
+        </div>
+        <div class="card-dark">
+          <div class="icon-circle icon-white">💡</div>
+          <h3>ソリューション</h3>
+          <p style="color:rgba(255,255,255,0.75);">お金の「痛み」と仲間の「つながり」で継続を促進。達成で全額返金＋ご褒美。</p>
+        </div>
+        <div class="card-dark">
+          <div class="icon-circle icon-white">🏆</div>
+          <h3>差別化ポイント</h3>
+          <p style="color:rgba(255,255,255,0.75);">日本の法律に適合した安全設計。山分けなし。スポンサーモデルで持続的収益。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 3: 市場課題 ==================== -->
+  <div class="slide slide-std" id="slide-3">
+    <div class="slide-header">
+      <div class="slide-num">02</div>
+      <h2>解決する市場課題</h2>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:20px; color:#1a1a2e; margin-bottom:20px;">ユーザーの悩み</h3>
+          <div class="card" style="margin-bottom:16px;">
+            <h3>🔴 挫折率90%以上</h3>
+            <p>新しい習慣を始めても、66日以上続けられる人はわずか。</p>
+          </div>
+          <div class="card" style="margin-bottom:16px;">
+            <h3>🔴 一人では続かない</h3>
+            <p>モチベーション維持が難しく、サボっても誰にもバレない。</p>
+          </div>
+          <div class="card">
+            <h3>🔴 既存アプリでは弱い</h3>
+            <p>記録アプリは多いが「強制力」がない。痛みも報酬もない。</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:20px; color:#1a1a2e; margin-bottom:20px;">市場の大きさ</h3>
+          <div class="card" style="margin-bottom:16px; text-align:center;">
+            <div class="big-number">1.5兆円+</div>
+            <p style="font-weight:500;">日本のセルフケア・ウェルネス市場</p>
+          </div>
+          <div class="card" style="text-align:center;">
+            <div class="big-number">7,800万人</div>
+            <p style="font-weight:500;">日本のスマートフォンユーザー</p>
+            <p style="margin-top:8px; font-size:14px; color:#888;">
+              習慣化ニーズ：朝活、運動、勉強、<br>ダイエット、禁酒 etc.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 4: ソリューション ==================== -->
+  <div class="slide slide-std" id="slide-4">
+    <div class="slide-header">
+      <div class="slide-num">03</div>
+      <h2>私たちのソリューション</h2>
+    </div>
+    <div class="content">
+      <p class="subtitle">4つの仕組みで「続けられる」を実現する</p>
+      <div class="four-col">
+        <div class="card" style="text-align:center;">
+          <div class="icon-circle icon-purple" style="margin:0 auto 12px;">💰</div>
+          <h3 style="font-size:16px;">固定デポジット</h3>
+          <p style="font-size:14px;">参加費を事前に預ける。<br>達成で全額返金、<br>未達は没収。<br><strong>「痛み」が本気を生む。</strong></p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="icon-circle icon-purple" style="margin:0 auto 12px;">📸</div>
+          <h3 style="font-size:16px;">証拠写真投稿</h3>
+          <p style="font-size:14px;">毎日の実行を<br>写真で証明。<br>サボれない仕組み。<br><strong>「可視化」が継続を促す。</strong></p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="icon-circle icon-purple" style="margin:0 auto 12px;">👥</div>
+          <h3 style="font-size:16px;">少人数グループ</h3>
+          <p style="font-size:14px;">3〜8人の小チーム。<br>応援・いいねで<br>つながりを実感。<br><strong>「仲間」が支える。</strong></p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="icon-circle icon-purple" style="margin:0 auto 12px;">🎁</div>
+          <h3 style="font-size:16px;">スポンサー報酬</h3>
+          <p style="font-size:14px;">100%達成者には<br>スポンサーからの<br>景品・特典。<br><strong>「ご褒美」で達成感UP。</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 5: サービスの仕組み ==================== -->
+  <div class="slide slide-dark" id="slide-5">
+    <div class="slide-header">
+      <div class="slide-num">04</div>
+      <h2>サービスの仕組み</h2>
+    </div>
+    <div class="content" style="justify-content:center;">
+      <div class="flow-diagram" style="margin-bottom:40px;">
+        <div class="flow-step">チャレンジ選択<br><small>朝活・筋トレ等</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">参加費を支払う<br><small>500〜2,000円</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">毎日証拠投稿<br><small>写真で証明</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="background:#38ef7d; color:#1a1a2e;">85%以上達成<br><small>全額返金!</small></div>
+      </div>
+      <div class="two-col" style="max-width:800px; margin:0 auto;">
+        <div class="card-dark" style="text-align:center;">
+          <h3 style="color:#38ef7d;">100% 達成</h3>
+          <p style="color:rgba(255,255,255,0.8); font-size:22px; font-weight:700; margin:8px 0;">参加費全額返金</p>
+          <p style="color:rgba(255,255,255,0.8);">＋ スポンサー景品・特典</p>
+        </div>
+        <div class="card-dark" style="text-align:center;">
+          <h3 style="color:#f5576c;">84% 以下</h3>
+          <p style="color:rgba(255,255,255,0.8); font-size:22px; font-weight:700; margin:8px 0;">参加費は返金なし</p>
+          <p style="color:rgba(255,255,255,0.8);">→ 運営の収益に</p>
+        </div>
+      </div>
+      <p style="text-align:center; margin-top:24px; color:rgba(255,255,255,0.5); font-size:14px;">
+        ※ 未達者のお金を達成者に分配しない（法律安全設計）
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 6: ビジネスモデル ==================== -->
+  <div class="slide slide-std" id="slide-6">
+    <div class="slide-header">
+      <div class="slide-num">05</div>
+      <h2>ビジネスモデル・収益構造</h2>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">5つの収益源</h3>
+          <table>
+            <tr>
+              <th>収益源</th>
+              <th>内容</th>
+            </tr>
+            <tr>
+              <td style="font-weight:700; color:#667eea;">① システム利用料</td>
+              <td>参加時に固定額を徴収（例:100円）</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700; color:#667eea;">② 未達成参加費</td>
+              <td>返金されなかった参加費</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700; color:#667eea;">③ スポンサー掲載料</td>
+              <td>チャレンジへの協賛費</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700; color:#667eea;">④ 独自チャレンジ費</td>
+              <td>スポンサーが独自チャレンジを開設</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700; color:#667eea;">⑤ コマース手数料</td>
+              <td>完走者クーポン経由の購入手数料</td>
+            </tr>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">参加費の設定（案）</h3>
+          <table>
+            <tr>
+              <th>難易度</th>
+              <th>期間</th>
+              <th>参加費</th>
+              <th>利用料</th>
+            </tr>
+            <tr>
+              <td>ライト</td>
+              <td>7日</td>
+              <td>500円</td>
+              <td>50円</td>
+            </tr>
+            <tr>
+              <td>スタンダード</td>
+              <td>14日</td>
+              <td>1,000円</td>
+              <td>100円</td>
+            </tr>
+            <tr>
+              <td>ガチ</td>
+              <td>30日</td>
+              <td>2,000円</td>
+              <td>200円</td>
+            </tr>
+          </table>
+          <div
+            style="margin-top:20px; padding:16px; background:#f0f4ff; border-radius:12px; border-left:4px solid #667eea;">
+            <p style="font-size:14px; color:#555; line-height:1.7;">
+              <strong style="color:#667eea;">ポイント：</strong>参加費と手数料を別建てで明示。<br>ユーザーの納得感が高く、法的にも透明性を確保。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 7: スポンサーモデル ==================== -->
+  <div class="slide slide-accent" id="slide-7">
+    <div class="slide-header">
+      <div class="slide-num">06</div>
+      <h2>スポンサーモデル</h2>
+    </div>
+    <div class="content">
+      <p style="font-size:16px; opacity:0.85; margin-bottom:24px;">
+        「広告を見てもらう」ではなく「商品を毎日使ってもらう」新しいマーケティング
+      </p>
+      <div class="three-col">
+        <div class="card-dark">
+          <h3 style="color:#fff;">景品協賛</h3>
+          <p style="color:rgba(255,255,255,0.85);">既存チャレンジに景品を提供。<br>費用は現物コストのみ。</p>
+          <p style="margin-top:12px; font-size:13px; opacity:0.7;">最も手軽なエントリープラン</p>
+        </div>
+        <div class="card-dark">
+          <h3 style="color:#fff;">テーマ協賛</h3>
+          <p style="color:rgba(255,255,255,0.85);">チャレンジにブランド名を冠する。<br>月額固定で費用発生。</p>
+          <p style="margin-top:12px; font-size:13px; opacity:0.7;">ブランド認知を高めたい企業向け</p>
+        </div>
+        <div class="card-dark">
+          <h3 style="color:#fff;">独自チャレンジ</h3>
+          <p style="color:rgba(255,255,255,0.85);">自社商品を使うチャレンジを開設。<br>初期費+成果報酬。</p>
+          <p style="margin-top:12px; font-size:13px; opacity:0.7;">最高の商品体験マーケティング</p>
+        </div>
+      </div>
+      <div style="margin-top:30px; display:flex; gap:30px; justify-content:center; flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <p style="font-size:14px; opacity:0.7; margin-bottom:6px;">スポンサーにとっての価値</p>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+            <span class="tag" style="background:rgba(255,255,255,0.25);">継続行動する人へのリーチ</span>
+            <span class="tag" style="background:rgba(255,255,255,0.25);">商品体験の場</span>
+            <span class="tag" style="background:rgba(255,255,255,0.25);">高い購入転換率</span>
+            <span class="tag" style="background:rgba(255,255,255,0.25);">行動データ取得</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 8: 競合比較 ==================== -->
+  <div class="slide slide-std" id="slide-8">
+    <div class="slide-header">
+      <div class="slide-num">07</div>
+      <h2>競合比較・ポジショニング</h2>
+    </div>
+    <div class="content">
+      <table class="comparison-table">
+        <tr>
+          <th>項目</th>
+          <th style="background:#764ba2;">本アプリ（日本版）</th>
+          <th>챌린저스（韓国）</th>
+          <th>stickK</th>
+          <th>Beeminder</th>
+        </tr>
+        <tr>
+          <td>デポジット方式</td>
+          <td class="check">✅ 固定額</td>
+          <td class="check">✅ 自由入力</td>
+          <td class="check">✅</td>
+          <td class="check">✅</td>
+        </tr>
+        <tr>
+          <td>山分け（法的リスク）</td>
+          <td class="check">❌ しない（安全）</td>
+          <td class="cross">✅ する（危険）</td>
+          <td class="check">❌</td>
+          <td class="check">❌</td>
+        </tr>
+        <tr>
+          <td>スポンサー景品</td>
+          <td class="check">✅</td>
+          <td class="check">✅</td>
+          <td class="cross">❌</td>
+          <td class="cross">❌</td>
+        </tr>
+        <tr>
+          <td>グループ機能</td>
+          <td class="check">✅ 少人数</td>
+          <td class="check">✅</td>
+          <td>△</td>
+          <td class="cross">❌</td>
+        </tr>
+        <tr>
+          <td>日本語対応</td>
+          <td class="check">✅ ネイティブ</td>
+          <td class="cross">❌</td>
+          <td class="cross">❌</td>
+          <td class="cross">❌</td>
+        </tr>
+        <tr>
+          <td>日本の法律適合</td>
+          <td class="check">✅ 設計済</td>
+          <td class="cross">❌ 賭博リスク</td>
+          <td>△</td>
+          <td>△</td>
+        </tr>
+      </table>
+      <div style="margin-top:24px; padding:16px 24px; background:#f0f4ff; border-radius:12px; text-align:center;">
+        <p style="font-size:16px; font-weight:700; color:#667eea;">
+          韓国チャレンジャーズ（800万DL超）のモデルを、日本の法律に適合させた唯一のサービス
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 9: ターゲット ==================== -->
+  <div class="slide slide-std" id="slide-9">
+    <div class="slide-header">
+      <div class="slide-num">08</div>
+      <h2>ターゲットユーザー・カテゴリ</h2>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">メインターゲット</h3>
+          <div class="card" style="margin-bottom:12px;">
+            <h3>20〜30代 ビジネスパーソン</h3>
+            <p>自己成長意欲が高い、朝活・運動・勉強に関心。<br>課金への抵抗が少なく、デジタルサービスに慣れている。</p>
+          </div>
+          <div class="card">
+            <h3>20〜30代 女性</h3>
+            <p>美容・ダイエット・ヨガなど健康意識が高い。<br>コミュニティ体験・仲間との共有にモチベーション。</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">初期チャレンジカテゴリ</h3>
+          <div style="margin-bottom:20px;">
+            <p style="font-size:14px; color:#888; margin-bottom:8px;">優先度高（MVP）</p>
+            <span class="tag">🌅 朝活（早起き）</span>
+            <span class="tag">💪 筋トレ・運動</span>
+            <span class="tag">📚 勉強・資格学習</span>
+          </div>
+          <div>
+            <p style="font-size:14px; color:#888; margin-bottom:8px;">将来展開</p>
+            <span class="tag tag-outline">ダイエット・食事管理</span>
+            <span class="tag tag-outline">スキンケア</span>
+            <span class="tag tag-outline">禁酒・減酒</span>
+            <span class="tag tag-outline">SNS発信継続</span>
+            <span class="tag tag-outline">読書習慣</span>
+          </div>
+          <div style="margin-top:20px;">
+            <p style="font-size:14px; color:#888; margin-bottom:8px;">優先スポンサー業種</p>
+            <span class="tag" style="background:#764ba2;">フィットネス・プロテイン</span>
+            <span class="tag" style="background:#764ba2;">オンライン学習</span>
+            <span class="tag" style="background:#764ba2;">スキンケア・美容</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 10: 技術スタック ==================== -->
+  <div class="slide slide-dark" id="slide-10">
+    <div class="slide-header">
+      <div class="slide-num">09</div>
+      <h2>技術スタック・アーキテクチャ</h2>
+    </div>
+    <div class="content">
+      <p class="subtitle">PWA方式でApp Store審査なし、git push即デプロイ</p>
+      <div class="three-col">
+        <div class="card-dark">
+          <h3>フロントエンド</h3>
+          <ul style="color:rgba(255,255,255,0.8);">
+            <li>Next.js (App Router)</li>
+            <li>TypeScript</li>
+            <li>Tailwind CSS</li>
+            <li>PWA（manifest + SW）</li>
+          </ul>
+        </div>
+        <div class="card-dark">
+          <h3>バックエンド</h3>
+          <ul style="color:rgba(255,255,255,0.8);">
+            <li>Supabase（PostgreSQL）</li>
+            <li>Supabase Auth</li>
+            <li>Supabase Storage</li>
+            <li>Stripe（決済・返金）</li>
+          </ul>
+        </div>
+        <div class="card-dark">
+          <h3>インフラ・配信</h3>
+          <ul style="color:rgba(255,255,255,0.8);">
+            <li>Vercel（自動デプロイ）</li>
+            <li>Web Push API</li>
+            <li>Service Worker</li>
+            <li>HTTPS必須</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top:30px; display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <div
+          style="background:rgba(56,239,125,0.15); padding:10px 20px; border-radius:10px; border:1px solid rgba(56,239,125,0.3);">
+          <span style="color:#38ef7d; font-weight:700;">PWA採用理由：</span>
+          <span style="color:rgba(255,255,255,0.8); font-size:14px;">App Store審査不要 / git push即公開 / カメラ・通知・決済すべて対応</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 11: ロードマップ ==================== -->
+  <div class="slide slide-std" id="slide-11">
+    <div class="slide-header">
+      <div class="slide-num">10</div>
+      <h2>開発ロードマップ</h2>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div class="timeline">
+          <div class="timeline-item">
+            <h4>Phase 0: 準備・設計（〜2週間）</h4>
+            <p>技術環境セットアップ / UI/UXワイヤーフレーム<br>利用規約初稿 / 弁護士相談予約</p>
+          </div>
+          <div class="timeline-item">
+            <h4>Phase 1: MVP開発（〜2〜3ヶ月）</h4>
+            <p>「朝活チャレンジ」1カテゴリで検証<br>認証・決済・投稿・タイムライン・通知<br><strong>目標: クローズドベータ 50〜100人</strong></p>
+          </div>
+          <div class="timeline-item">
+            <h4>Phase 2: スポンサー機能（+1〜2ヶ月）</h4>
+            <p>スポンサーアカウント・協賛管理<br>景品・クーポン配信<br><strong>目標: スポンサー 3〜5社契約</strong></p>
+          </div>
+          <div class="timeline-item">
+            <h4>Phase 3: 成長・拡張（+2〜3ヶ月）</h4>
+            <p>カテゴリ拡充 / ソーシャル機能強化<br>不正対策 / データ分析基盤</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">MVPの検証ポイント</h3>
+          <div class="card" style="margin-bottom:12px;">
+            <h3>ユーザー検証</h3>
+            <ul>
+              <li>デポジットで本当に続けられるか？</li>
+              <li>グループの相互作用は機能するか？</li>
+              <li>証拠投稿のUXに問題はないか？</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>ビジネス検証</h3>
+            <ul>
+              <li>有料参加のコンバージョン率は？</li>
+              <li>リピート率（2回以上参加）は？</li>
+              <li>スポンサーへの魅力は証明できるか？</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 12: KPI ==================== -->
+  <div class="slide slide-green" id="slide-12">
+    <div class="slide-header">
+      <div class="slide-num">11</div>
+      <h2>KPI・成功指標</h2>
+    </div>
+    <div class="content">
+      <p style="font-size:16px; opacity:0.85; margin-bottom:24px;">MVP段階（リリース後3ヶ月）の目標値</p>
+      <div class="four-col">
+        <div class="card-dark" style="text-align:center;">
+          <div style="font-size:48px; font-weight:900; margin-bottom:8px;">500</div>
+          <p style="font-size:16px; font-weight:700; color:rgba(255,255,255,0.9);">登録ユーザー数</p>
+        </div>
+        <div class="card-dark" style="text-align:center;">
+          <div style="font-size:48px; font-weight:900; margin-bottom:8px;">200</div>
+          <p style="font-size:16px; font-weight:700; color:rgba(255,255,255,0.9);">チャレンジ参加者数</p>
+        </div>
+        <div class="card-dark" style="text-align:center;">
+          <div style="font-size:48px; font-weight:900; margin-bottom:8px;">70%+</div>
+          <p style="font-size:16px; font-weight:700; color:rgba(255,255,255,0.9);">平均達成率</p>
+        </div>
+        <div class="card-dark" style="text-align:center;">
+          <div style="font-size:48px; font-weight:900; margin-bottom:8px;">40%+</div>
+          <p style="font-size:16px; font-weight:700; color:rgba(255,255,255,0.9);">継続参加率</p>
+          <p style="font-size:12px; opacity:0.7;">（2回目以上参加）</p>
+        </div>
+      </div>
+      <div style="margin-top:30px;">
+        <h3 style="font-size:16px; margin-bottom:12px; opacity:0.9;">収益シミュレーション（月間・Phase 2以降）</h3>
+        <div class="three-col">
+          <div class="card-dark" style="text-align:center;">
+            <p style="font-size:14px; opacity:0.7;">システム利用料</p>
+            <p style="font-size:24px; font-weight:700;">200人 × 100円</p>
+            <p style="font-size:20px; font-weight:700; margin-top:4px;">= 20,000円/月</p>
+          </div>
+          <div class="card-dark" style="text-align:center;">
+            <p style="font-size:14px; opacity:0.7;">未達成参加費（30%未達想定）</p>
+            <p style="font-size:24px; font-weight:700;">60人 × 1,000円</p>
+            <p style="font-size:20px; font-weight:700; margin-top:4px;">= 60,000円/月</p>
+          </div>
+          <div class="card-dark" style="text-align:center;">
+            <p style="font-size:14px; opacity:0.7;">スポンサー収益（3社想定）</p>
+            <p style="font-size:24px; font-weight:700;">3社 × 50,000円</p>
+            <p style="font-size:20px; font-weight:700; margin-top:4px;">= 150,000円/月</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 13: 法律面 ==================== -->
+  <div class="slide slide-std" id="slide-13">
+    <div class="slide-header">
+      <div class="slide-num">12</div>
+      <h2>法律面の考慮事項・安全設計</h2>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">確認が必要な法律</h3>
+          <table>
+            <tr>
+              <th>法律</th>
+              <th>論点</th>
+            </tr>
+            <tr>
+              <td>賭博罪（刑法）</td>
+              <td>デポジット構造が賭博に該当しないか</td>
+            </tr>
+            <tr>
+              <td>景品表示法</td>
+              <td>スポンサー景品の上限・告知義務</td>
+            </tr>
+            <tr>
+              <td>資金決済法</td>
+              <td>参加費の預かり方式の適法性</td>
+            </tr>
+            <tr>
+              <td>消費者契約法</td>
+              <td>返金条件の明示義務</td>
+            </tr>
+            <tr>
+              <td>特定商取引法</td>
+              <td>アプリ内課金の表示義務</td>
+            </tr>
+            <tr>
+              <td>個人情報保護法</td>
+              <td>写真・行動データの取扱い</td>
+            </tr>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:18px; color:#1a1a2e; margin-bottom:16px;">安全サイドの設計原則</h3>
+          <div class="card" style="margin-bottom:12px; border-left:4px solid #38ef7d;">
+            <p style="font-weight:700; color:#38ef7d; margin-bottom:8px;">やること</p>
+            <ul style="font-size:14px; line-height:1.8;">
+              <li>参加費と手数料を参加前に明示・同意取得</li>
+              <li>報酬原資はスポンサー提供のみ</li>
+              <li>高額参加費を避ける（上限設定）</li>
+              <li>弁護士確認後に設計を最終確定</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid #f5576c;">
+            <p style="font-weight:700; color:#f5576c; margin-bottom:8px;">やらないこと</p>
+            <ul style="font-size:14px; line-height:1.8;">
+              <li>未達者の金を達成者に分配（山分け）</li>
+              <li>「稼げる」「増える」の訴求</li>
+              <li>運要素のある賞金設計</li>
+              <li>射幸心を煽るUI・訴求</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 14: リスクと対策 ==================== -->
+  <div class="slide slide-dark" id="slide-14">
+    <div class="slide-header">
+      <div class="slide-num">13</div>
+      <h2>リスクと対策</h2>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <div class="risk-row">
+            <span class="risk-badge">高</span>
+            <div>
+              <p style="font-weight:700; color:#fff; margin-bottom:4px;">法律面でNGが出る</p>
+              <p style="font-size:14px; color:rgba(255,255,255,0.7);">対策: Phase 0で弁護士確認。設計変更の余地を残す。</p>
+            </div>
+          </div>
+          <div class="risk-row">
+            <span class="risk-badge mid">中</span>
+            <div>
+              <p style="font-weight:700; color:#fff; margin-bottom:4px;">不正投稿（写真の使い回し）</p>
+              <p style="font-size:14px; color:rgba(255,255,255,0.7);">対策: 画像ハッシュ検証・投稿時刻検証・EXIF確認。</p>
+            </div>
+          </div>
+          <div class="risk-row">
+            <span class="risk-badge mid">中</span>
+            <div>
+              <p style="font-weight:700; color:#fff; margin-bottom:4px;">返金への不満・クレーム</p>
+              <p style="font-size:14px; color:rgba(255,255,255,0.7);">対策: ルールの透明な明示・充実したサポート体制。</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="risk-row">
+            <span class="risk-badge mid">中</span>
+            <div>
+              <p style="font-weight:700; color:#fff; margin-bottom:4px;">スポンサーが集まらない</p>
+              <p style="font-size:14px; color:rgba(255,255,255,0.7);">対策: MVP段階では運営提供の特典で代替（次回参加割引等）。</p>
+            </div>
+          </div>
+          <div class="risk-row">
+            <span class="risk-badge mid">中</span>
+            <div>
+              <p style="font-weight:700; color:#fff; margin-bottom:4px;">ユーザー獲得コストが高い</p>
+              <p style="font-size:14px; color:rgba(255,255,255,0.7);">対策: 友達招待機能・SNSシェア設計を早期に実装。</p>
+            </div>
+          </div>
+          <div class="risk-row">
+            <span class="risk-badge low">低</span>
+            <div>
+              <p style="font-weight:700; color:#fff; margin-bottom:4px;">グループの熱量低下</p>
+              <p style="font-size:14px; color:rgba(255,255,255,0.7);">対策: 8人以下の少人数設計・毎日リマインド通知。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 15: Next Steps ==================== -->
+  <div class="slide slide-std" id="slide-15">
+    <div class="slide-header">
+      <div class="slide-num">14</div>
+      <h2>直近のアクションプラン</h2>
+    </div>
+    <div class="content">
+      <p class="subtitle">今すぐ着手すべき5つのアクション</p>
+      <div class="three-col" style="grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr;">
+        <div class="card" style="border-left:4px solid #f5576c;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <span
+              style="background:#f5576c; color:#fff; padding:2px 10px; border-radius:6px; font-size:12px; font-weight:700;">最優先</span>
+            <h3 style="margin:0; font-size:16px;">1. 弁護士相談の予約</h3>
+          </div>
+          <p style="font-size:14px;">賭博罪・景品表示法・資金決済法の確認。利用規約のたたき台を持参。</p>
+        </div>
+        <div class="card" style="border-left:4px solid #667eea;">
+          <h3 style="font-size:16px;">2. 競合の最終確認</h3>
+          <p style="font-size:14px;">日本国内の類似サービス再調査。stickK/Beeminderの日本語対応状況。</p>
+        </div>
+        <div class="card" style="border-left:4px solid #667eea;">
+          <h3 style="font-size:16px;">3. 開発環境セットアップ</h3>
+          <p style="font-size:14px;">Next.js + Supabase + Vercel構築。GitHub連携で自動デプロイ設定。</p>
+        </div>
+        <div class="card" style="border-left:4px solid #667eea;">
+          <h3 style="font-size:16px;">4. ワイヤーフレーム作成</h3>
+          <p style="font-size:14px;">主要5画面：一覧 / 参加フロー / 証拠投稿 / タイムライン / ダッシュボード。</p>
+        </div>
+        <div class="card" style="border-left:4px solid #667eea;">
+          <h3 style="font-size:16px;">5. MVP用チャレンジ設計</h3>
+          <p style="font-size:14px;">「7日間朝活チャレンジ」1本で検証。参加費1,000円 / 利用料100円。</p>
+        </div>
+        <div class="card"
+          style="background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; display:flex; align-items:center; justify-content:center; text-align:center;">
+          <div>
+            <p style="font-size:20px; font-weight:700; margin-bottom:8px;">MVP目標</p>
+            <p style="font-size:14px; opacity:0.9;">朝活チャレンジ1本で<br>50〜100人のベータテスト</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SLIDE 16: End ==================== -->
+  <div class="slide slide-end" id="slide-16">
+    <h2>Thank You</h2>
+    <p style="margin-bottom:40px;">仲間と一緒にチャレンジして、達成したらお金が戻ってくる。</p>
+    <p style="font-size:16px; opacity:0.6;">習慣化チャレンジアプリ — 事業計画書 2026</p>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav">
+    <button onclick="prevSlide()" title="前のスライド">←</button>
+    <button onclick="nextSlide()" title="次のスライド">→</button>
+  </div>
+  <div class="page-indicator">
+    <span id="current-page">1</span> / <span id="total-pages">16</span>
+  </div>
+
+  <script>
+    let current = 1;
+    const total = 16;
+
+    function showSlide(n) {
+      document.querySelector('.slide.active')?.classList.remove('active');
+      document.getElementById('slide-' + n)?.classList.add('active');
+      document.getElementById('current-page').textContent = n;
+      current = n;
+    }
+
+    function nextSlide() { if (current < total) showSlide(current + 1); }
+    function prevSlide() { if (current > 1) showSlide(current - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+      if (e.key === 'Home') { e.preventDefault(); showSlide(1); }
+      if (e.key === 'End') { e.preventDefault(); showSlide(total); }
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', (e) => {
+      const diff = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(diff) > 50) { diff < 0 ? nextSlide() : prevSlide(); }
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="40" fill="#F8FAFC"/>
+  <rect x="28" y="28" width="1144" height="844" rx="32" fill="white" stroke="#E5E7EB" stroke-width="4"/>
+  <rect x="68" y="68" width="1064" height="92" rx="24" fill="#111827"/>
+  <circle cx="122" cy="114" r="24" fill="#F97316"/>
+  <text x="114" y="122" fill="white" font-size="24" font-family="Arial, sans-serif">🔥</text>
+  <text x="166" y="108" fill="white" font-size="30" font-weight="700" font-family="Arial, sans-serif">チャレンジを探す</text>
+  <text x="166" y="140" fill="#D1D5DB" font-size="20" font-family="Arial, sans-serif">参加したい習慣を選ぶ / 自分で作る</text>
+
+  <rect x="68" y="188" width="1064" height="64" rx="20" fill="#F3F4F6"/>
+  <text x="96" y="228" fill="#9CA3AF" font-size="22" font-family="Arial, sans-serif">🔍  ランニング・読書・早起き…</text>
+
+  <rect x="68" y="284" width="506" height="220" rx="28" fill="#FFF7ED" stroke="#FDBA74" stroke-width="3"/>
+  <rect x="96" y="314" width="110" height="34" rx="17" fill="#FFEDD5"/>
+  <text x="121" y="337" fill="#EA580C" font-size="18" font-weight="700" font-family="Arial, sans-serif">人気</text>
+  <text x="96" y="388" fill="#111827" font-size="30" font-weight="700" font-family="Arial, sans-serif">朝6時起きチャレンジ</text>
+  <text x="96" y="426" fill="#6B7280" font-size="20" font-family="Arial, sans-serif">7日間 / 参加者 28人</text>
+  <text x="96" y="462" fill="#374151" font-size="22" font-family="Arial, sans-serif">毎朝の投稿でお互いの継続を確認</text>
+  <rect x="96" y="468" width="450" height="1" fill="#FED7AA"/>
+  <circle cx="120" cy="528" r="18" fill="#93C5FD"/>
+  <circle cx="150" cy="528" r="18" fill="#86EFAC"/>
+  <circle cx="180" cy="528" r="18" fill="#FCA5A5"/>
+  <text x="210" y="536" fill="#6B7280" font-size="18" font-family="Arial, sans-serif">仲間と切磋琢磨しながら続ける</text>
+
+  <rect x="626" y="284" width="506" height="220" rx="28" fill="#EFF6FF" stroke="#93C5FD" stroke-width="3"/>
+  <rect x="654" y="314" width="136" height="34" rx="17" fill="#DBEAFE"/>
+  <text x="680" y="337" fill="#2563EB" font-size="18" font-weight="700" font-family="Arial, sans-serif">新着</text>
+  <text x="654" y="388" fill="#111827" font-size="30" font-weight="700" font-family="Arial, sans-serif">毎日読書30分</text>
+  <text x="654" y="426" fill="#6B7280" font-size="20" font-family="Arial, sans-serif">21日間 / 参加者 14人</text>
+  <text x="654" y="462" fill="#374151" font-size="22" font-family="Arial, sans-serif">記録を見せ合って自然とサボれない</text>
+  <rect x="654" y="468" width="450" height="1" fill="#BFDBFE"/>
+  <circle cx="678" cy="528" r="18" fill="#C4B5FD"/>
+  <circle cx="708" cy="528" r="18" fill="#FDE68A"/>
+  <circle cx="738" cy="528" r="18" fill="#F9A8D4"/>
+  <text x="768" y="536" fill="#6B7280" font-size="18" font-family="Arial, sans-serif">タイムラインで継続記録が見える</text>
+
+  <rect x="68" y="536" width="506" height="280" rx="28" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="3"/>
+  <text x="96" y="586" fill="#111827" font-size="28" font-weight="700" font-family="Arial, sans-serif">筋トレ習慣化</text>
+  <text x="96" y="622" fill="#6B7280" font-size="20" font-family="Arial, sans-serif">14日間 / 参加者 19人</text>
+  <rect x="96" y="654" width="450" height="52" rx="18" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="118" y="687" fill="#374151" font-size="20" font-family="Arial, sans-serif">今日のチェックイン写真を投稿</text>
+  <rect x="96" y="726" width="220" height="58" rx="20" fill="#F97316"/>
+  <text x="146" y="763" fill="white" font-size="24" font-weight="700" font-family="Arial, sans-serif">参加する</text>
+
+  <rect x="626" y="536" width="506" height="280" rx="28" fill="#FFF7ED" stroke="#FDBA74" stroke-width="3"/>
+  <text x="654" y="586" fill="#111827" font-size="28" font-weight="700" font-family="Arial, sans-serif">自分でチャレンジを作成</text>
+  <text x="654" y="622" fill="#6B7280" font-size="20" font-family="Arial, sans-serif">テーマ・期間を決めて仲間を集める</text>
+  <rect x="654" y="654" width="450" height="52" rx="18" fill="#FFFFFF" stroke="#FED7AA"/>
+  <text x="676" y="687" fill="#374151" font-size="20" font-family="Arial, sans-serif">例：毎朝5時起き 14日チャレンジ</text>
+  <rect x="654" y="726" width="250" height="58" rx="20" fill="#111827"/>
+  <text x="712" y="763" fill="white" font-size="24" font-weight="700" font-family="Arial, sans-serif">作成する</text>
+</svg>

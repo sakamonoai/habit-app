@@ -20,11 +20,11 @@ export const stripe = new Proxy({} as Stripe, {
 })
 
 /** 手数料率（デポジット金額に対する割合） */
-export const FEE_RATE = 0.1
+export const FEE_RATE = 0
 
-/** 手数料を計算（円、四捨五入） */
-export function calcFee(depositAmount: number): number {
-  return Math.round(depositAmount * FEE_RATE)
+/** 手数料を計算（円） */
+export function calcFee(_depositAmount: number): number {
+  return 0
 }
 
 /** 達成率の返金しきい値（%） */

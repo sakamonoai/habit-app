@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import LegalFooter from '@/components/LegalFooter'
 
 export default function LoginPage() {
@@ -59,7 +60,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🔥</div>
+          <Image src="/logo.png" alt="ハビチャレ" width={80} height={80} className="mx-auto mb-3" />
           <h1 className="text-2xl font-bold text-gray-900">ハビチャレ</h1>
           <p className="mt-1 text-gray-400 text-sm">仲間と一緒に習慣を作ろう</p>
         </div>

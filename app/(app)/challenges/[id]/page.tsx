@@ -8,6 +8,7 @@ import ReviewForm from '@/components/ReviewForm'
 import TimelinePreview from '@/components/TimelinePreview'
 import ChallengeReportButton from '@/components/ChallengeReportButton'
 import CloseRecruitmentButton from '@/components/CloseRecruitmentButton'
+import { TRIAL_MODE } from '@/lib/trial-mode'
 
 const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
 
@@ -106,6 +107,23 @@ export default async function ChallengeDetailPage({ params }: Props) {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 pb-28">
+        {/* お試しキャンペーンバナー */}
+        {TRIAL_MODE && !isJoined && (
+          <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 mb-4 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-bl-full" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-tr-full" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full">期間限定</span>
+                <span className="text-sm font-bold">お試しキャンペーン中！</span>
+              </div>
+              <p className="text-white/90 text-sm mt-1">
+                今だけデポジット無料・カード登録不要で参加できます
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* サムネイル */}
         {challenge.thumbnail_url && (
           <div className="mb-4 -mx-4 -mt-6">
@@ -133,17 +151,25 @@ export default async function ChallengeDetailPage({ params }: Props) {
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-orange-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">デポジット</p>
-              <p className="text-lg font-bold text-orange-500">
-                {challenge.deposit_type === 'fixed'
-                  ? `¥${(challenge.deposit_amount ?? 1000).toLocaleString()}`
-                  : '¥500〜'}
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {challenge.deposit_type === 'fixed' ? '金額固定' : '自分で選べる'}
-              </p>
-            </div>
+            {TRIAL_MODE ? (
+              <div className="bg-green-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500 mb-1">デポジット</p>
+                <p className="text-lg font-bold text-green-600">無料</p>
+                <p className="text-xs text-orange-500 font-medium mt-0.5">お試しキャンペーン中</p>
+              </div>
+            ) : (
+              <div className="bg-orange-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500 mb-1">デポジット</p>
+                <p className="text-lg font-bold text-orange-500">
+                  {challenge.deposit_type === 'fixed'
+                    ? `¥${(challenge.deposit_amount ?? 1000).toLocaleString()}`
+                    : '¥500〜'}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {challenge.deposit_type === 'fixed' ? '金額固定' : '自分で選べる'}
+                </p>
+              </div>
+            )}
             <div className="bg-blue-50 rounded-xl p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">期間</p>
               <p className="text-lg font-bold text-blue-500">{durationLabel(challenge.duration_days)}</p>
@@ -207,18 +233,37 @@ export default async function ChallengeDetailPage({ params }: Props) {
               <span>📸</span>
               <span>毎日、証拠写真を投稿してチェックイン{challenge.checkin_deadline ? `（${challenge.checkin_deadline}まで）` : ''}</span>
             </li>
-            <li className="flex gap-2">
-              <span>🎯</span>
-              <span>85%以上達成でデポジット全額返金</span>
-            </li>
-            <li className="flex gap-2">
-              <span>🏆</span>
-              <span>100%達成で特典がもらえることも</span>
-            </li>
-            <li className="flex gap-2">
-              <span>⚠️</span>
-              <span>85%未満の場合、デポジットは返金されません</span>
-            </li>
+            {TRIAL_MODE ? (
+              <>
+                <li className="flex gap-2">
+                  <span>🆓</span>
+                  <span>お試し期間中はデポジット無料・カード登録不要</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>🏆</span>
+                  <span>100%達成で特典がもらえることも</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>👥</span>
+                  <span>仲間と一緒に習慣を作ろう</span>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="flex gap-2">
+                  <span>🎯</span>
+                  <span>85%以上達成でデポジット全額返金</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>🏆</span>
+                  <span>100%達成で特典がもらえることも</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>⚠️</span>
+                  <span>85%未満の場合、デポジットは返金されません</span>
+                </li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -229,7 +274,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
               href={`/challenges/${id}/edit`}
               className="block w-full text-center py-3 bg-gray-100 text-gray-700 font-medium text-sm rounded-xl hover:bg-gray-200 transition-colors"
             >
-              ✏️ 記録条件・OK/NG例を編集
+              ✏️ チャレンジを編集
             </Link>
             <CloseRecruitmentButton challengeId={id} isClosed={isRecruitmentClosed} />
           </div>

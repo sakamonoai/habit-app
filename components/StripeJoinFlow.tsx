@@ -23,7 +23,7 @@ function CheckoutForm({
   const [error, setError] = useState('')
   const [step, setStep] = useState<'input' | 'processing' | 'done'>('input')
 
-  const feeAmount = Math.round(depositAmount * 0.1)
+  const feeAmount = 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,17 +106,9 @@ function CheckoutForm({
               ¥{depositAmount.toLocaleString()}
             </span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">システム利用料</span>
-            <span className="font-semibold text-gray-900">
-              ¥{feeAmount.toLocaleString()}
-            </span>
-          </div>
           <div className="border-t border-gray-200 pt-2 flex justify-between text-sm">
             <span className="text-gray-600">今回の引き落とし</span>
-            <span className="font-bold text-orange-500">
-              ¥{feeAmount.toLocaleString()}
-            </span>
+            <span className="font-bold text-green-600">¥0（無料）</span>
           </div>
           <p className="text-xs text-gray-400">
             デポジットはカードに仮押さえされますが、85%以上達成で引き落とされません。
@@ -173,7 +165,7 @@ function CheckoutForm({
             disabled={loading || !stripe}
             className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-[0.98]"
           >
-            {loading ? '処理中...' : `¥${feeAmount.toLocaleString()}を支払って参加`}
+            {loading ? '処理中...' : '参加する（無料）'}
           </button>
         </div>
 

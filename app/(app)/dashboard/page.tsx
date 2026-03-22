@@ -11,11 +11,12 @@ export default async function DashboardPage() {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  // プロフィール・メンバーシップ・バッジを並列取得
-  const [{ data: profile }, { data: memberships }, { data: badges }] = await Promise.all([
+  // プロフィール・メンバーシップ・バッジ・作成チャレンジを並列取得
+  const [{ data: profile }, { data: memberships }, { data: badges }, { data: createdChallenges }] = await Promise.all([
     supabase.from('profiles').select('nickname, avatar_url, bio, sns_links').eq('id', user.id).single(),
     supabase.from('group_members').select('*, challenges(title, duration_days)').eq('user_id', user.id).eq('status', 'active'),
     supabase.from('badges').select('*, challenges(title, thumbnail_url, category)').eq('user_id', user.id).eq('badge_type', 'perfect'),
+    supabase.from('challenges').select('id, title, category, status, schedule_type, duration_days, created_at').eq('created_by', user.id).order('created_at', { ascending: false }),
   ])
 
   // メンバーIDリストでチェックイン数を一括取得
@@ -197,6 +198,42 @@ export default async function DashboardPage() {
             <p className="text-4xl mb-3">🏃</p>
             <p className="text-sm">まだチャレンジに参加していません</p>
             <Link href="/challenges" className="text-orange-500 text-sm mt-2 inline-block font-medium">チャレンジを探す →</Link>
+          </div>
+        )}
+
+        {/* 作成したチャレンジ */}
+        {createdChallenges && createdChallenges.length > 0 && (
+          <div className="mt-8">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>📝</span>作成したチャレンジ
+            </h3>
+            <div className="space-y-2">
+              {createdChallenges.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/challenges/${c.id}`}
+                  className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">{c.title}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">{c.category}</span>
+                        <span className="text-xs text-gray-400">{c.duration_days}日間</span>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                          c.status === 'active' ? 'bg-green-100 text-green-700' :
+                          c.status === 'deleted' ? 'bg-red-100 text-red-600' :
+                          'bg-gray-200 text-gray-500'
+                        }`}>
+                          {c.status === 'active' ? '公開中' : c.status === 'deleted' ? '削除済み' : c.status}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-gray-300 ml-2">→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

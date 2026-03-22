@@ -20,6 +20,7 @@ export default function ChallengeEditPage() {
   const [title, setTitle] = useState('')
 
   // 編集可能フィールド
+  const [description, setDescription] = useState('')
   const [checkinCondition, setCheckinCondition] = useState('')
   const [okPhotos, setOkPhotos] = useState<PhotoItem[]>([])
   const [ngPhotos, setNgPhotos] = useState<PhotoItem[]>([])
@@ -35,7 +36,7 @@ export default function ChallengeEditPage() {
       const [{ data: challenge }, { data: profile }] = await Promise.all([
         supabase
           .from('challenges')
-          .select('title, created_by, is_official, checkin_condition, ok_photo_url, ng_photo_url')
+          .select('title, description, created_by, is_official, checkin_condition, ok_photo_url, ng_photo_url')
           .eq('id', id)
           .single(),
         supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -48,7 +49,8 @@ export default function ChallengeEditPage() {
         return
       }
 
-      setTitle(challenge.title)
+      setTitle(challenge.title ?? '')
+      setDescription(challenge.description ?? '')
       setCheckinCondition(challenge.checkin_condition ?? '')
       try { setOkPhotos(challenge.ok_photo_url ? JSON.parse(challenge.ok_photo_url) : []) } catch { setOkPhotos([]) }
       try { setNgPhotos(challenge.ng_photo_url ? JSON.parse(challenge.ng_photo_url) : []) } catch { setNgPhotos([]) }
@@ -109,9 +111,13 @@ export default function ChallengeEditPage() {
     setSaving(true)
     setError('')
 
+    if (!title.trim()) { setError('タイトルを入力してください'); setSaving(false); return }
+
     const { error: updateError } = await supabase
       .from('challenges')
       .update({
+        title: title.trim(),
+        description: description.trim() || null,
         checkin_condition: checkinCondition.trim() || null,
         ok_photo_url: okPhotos.length > 0 ? JSON.stringify(okPhotos) : null,
         ng_photo_url: ngPhotos.length > 0 ? JSON.stringify(ngPhotos) : null,
@@ -144,19 +150,44 @@ export default function ChallengeEditPage() {
           <Link href={`/challenges/${id}`} className="text-gray-400 hover:text-gray-600">
             ← 戻る
           </Link>
-          <h1 className="font-semibold text-gray-900 truncate">条件を編集</h1>
+          <h1 className="font-semibold text-gray-900 truncate">チャレンジを編集</h1>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        <p className="text-sm text-gray-500 mb-6">「{title}」の記録条件を編集</p>
-
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         {success && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-center">
             <p className="text-green-700 font-semibold">保存しました！</p>
           </div>
         )}
+
+        {/* タイトル */}
+        <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">タイトル</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={50}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+          />
+          <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/50</p>
+        </div>
+
+        {/* 説明 */}
+        <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">説明（任意）</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="チャレンジの内容やルールを説明してください"
+            maxLength={200}
+            rows={3}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"
+          />
+          <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/200</p>
+        </div>
 
         {/* 記録成功条件 */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
@@ -267,7 +298,7 @@ export default function ChallengeEditPage() {
         {/* 注意書き */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
           <p className="text-xs text-yellow-700">
-            ※ タイトル・期間・デポジット金額などは変更できません。記録条件とOK/NG例の写真のみ編集可能です。
+            ※ 期間・デポジット金額・カテゴリなどは変更できません。
           </p>
         </div>
 

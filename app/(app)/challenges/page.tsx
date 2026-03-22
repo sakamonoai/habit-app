@@ -3,9 +3,11 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import ChallengeList from '@/components/ChallengeList'
+import { TRIAL_MODE } from '@/lib/trial-mode'
 
 const InstallBanner = dynamic(() => import('@/components/InstallBanner'))
 const HowToUseGuide = dynamic(() => import('@/components/HowToUseGuide'))
+const TrialCampaignPopup = dynamic(() => import('@/components/TrialCampaignPopup'))
 
 const CARD_GRADIENTS = [
   'from-orange-400 to-rose-400',
@@ -71,6 +73,22 @@ export default async function ChallengesPage() {
       </header>
 
       <main className="max-w-lg mx-auto pb-24">
+        {/* お試しキャンペーンバナー */}
+        {TRIAL_MODE && (
+          <div className="px-4 pt-3">
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-bl-full" />
+              <div className="relative flex items-center gap-3">
+                <span className="text-3xl">🎉</span>
+                <div>
+                  <p className="font-bold text-sm">お試しキャンペーン中！</p>
+                  <p className="text-white/90 text-xs">デポジット無料・カード登録不要で参加OK</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="px-4 py-2">
           <HowToUseGuide />
         </div>
@@ -78,6 +96,7 @@ export default async function ChallengesPage() {
         <ChallengeList challenges={allChallenges} />
       </main>
       <InstallBanner />
+      {TRIAL_MODE && <TrialCampaignPopup />}
     </div>
   )
 }

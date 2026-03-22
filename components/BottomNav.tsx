@@ -20,8 +20,14 @@ export default function BottomNav() {
     setOptimisticPath(pathname)
   }, [pathname])
 
-  // 作成・編集ページではナビバーを非表示
-  if (pathname.endsWith('/create') || pathname.endsWith('/edit')) return null
+  const hiddenPaths = ['/privacy', '/terms', '/tokushoho', '/contact']
+  const shouldHide =
+    pathname.endsWith('/create') ||
+    pathname.endsWith('/edit') ||
+    hiddenPaths.some((path) => pathname === path || pathname.startsWith(path + '/'))
+
+  // 作成・編集ページ、および公開ページではナビバーを非表示
+  if (shouldHide) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-20 pb-[max(env(safe-area-inset-bottom),8px)]">
@@ -33,12 +39,17 @@ export default function BottomNav() {
               key={tab.href}
               href={tab.href}
               onClick={() => setOptimisticPath(tab.href)}
-              className={`flex flex-col items-center py-3 text-[10px] ${
-                isActive ? 'text-gray-900' : 'text-gray-400'
+              className={`relative flex flex-col items-center pt-2 pb-2.5 text-[10px] transition-colors ${
+                isActive ? 'text-orange-500' : 'text-gray-400'
               }`}
             >
-              <span className="text-xl mb-0.5">{isActive ? tab.activeIcon : tab.icon}</span>
-              <span className={isActive ? 'font-semibold' : ''}>{tab.label}</span>
+              {isActive && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-orange-500" />
+              )}
+              <span className={`text-xl mb-0.5 transition-transform ${isActive ? 'scale-110' : ''}`}>
+                {isActive ? tab.activeIcon : tab.icon}
+              </span>
+              <span className={isActive ? 'font-bold' : 'font-normal'}>{tab.label}</span>
             </Link>
           )
         })}

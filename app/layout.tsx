@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   metadataBase: new URL("https://habit-app-sand.vercel.app"),
   openGraph: {
-    title: "ハビチャレ | 仲間と一緒に習慣を変えよう",
+    title: "ハビチャレ | お金が没収される習慣化アプリ",
     description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。だから続く。",
     images: [{ url: "/ogp.jpg", width: 1200, height: 630 }],
     type: "website",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ハビチャレ | 仲間と一緒に習慣を変えよう",
+    title: "ハビチャレ | お金が没収される習慣化アプリ",
     description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金。",
     images: ["/ogp.jpg"],
   },
@@ -48,7 +48,8 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className="min-h-full flex flex-col">
         {children}
