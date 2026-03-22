@@ -131,7 +131,7 @@ export default function ChallengeList({ challenges }: Props) {
             onClick={() => { setIconFilter(null); setCategory('全て') }}
             className="flex flex-col items-center gap-1 shrink-0"
           >
-            <div className={`w-14 h-14 ${!iconFilter ? 'bg-orange-100 ring-2 ring-inset ring-orange-400' : 'bg-gray-50'} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
+            <div className={`w-14 h-14 ${!iconFilter ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-2 border-transparent'} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
               🔥
             </div>
             <span className={`text-xs ${!iconFilter ? 'text-orange-500 font-bold' : 'text-gray-600'}`}>全て</span>
@@ -145,7 +145,7 @@ export default function ChallengeList({ challenges }: Props) {
                 onClick={() => handleIconClick(cat)}
                 className="flex flex-col items-center gap-1 shrink-0"
               >
-                <div className={`w-14 h-14 ${isActive ? cat.activeColor + ' ring-2 ring-inset ring-gray-300' : cat.color} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
+                <div className={`w-14 h-14 ${isActive ? cat.activeColor + ' border-2 border-gray-300' : cat.color + ' border-2 border-transparent'} rounded-2xl flex items-center justify-center text-2xl transition-colors`}>
                   {cat.emoji}
                 </div>
                 <span className={`text-xs ${isActive ? 'text-gray-900 font-bold' : 'text-gray-600'}`}>{cat.label}</span>
