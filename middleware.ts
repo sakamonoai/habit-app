@@ -37,7 +37,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // /callback, /lp はログイン済みでもリダイレクトしない
-  if (session && isPublicPath && !pathname.startsWith('/callback') && !pathname.startsWith('/lp')) {
+  // ログイン済みでもリダイレクトしない公開パス
+  const noRedirectPaths = ['/callback', '/lp', '/terms', '/privacy', '/tokushoho', '/contact']
+  const isNoRedirect = noRedirectPaths.some(p => pathname.startsWith(p))
+  if (session && isPublicPath && !isNoRedirect) {
     return NextResponse.redirect(new URL('/challenges', request.url))
   }
 
