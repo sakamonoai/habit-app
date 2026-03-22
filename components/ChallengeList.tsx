@@ -240,10 +240,15 @@ export default function ChallengeList({ challenges }: Props) {
                   <span>👤</span> {challenge.memberCount}人
                 </div>
                 {challenge.schedule_type === 'fixed' && challenge.start_date && (() => {
-                  const daysUntil = Math.ceil((new Date(challenge.start_date!).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                  // JSTの今日の日付と比較（start_dateはYYYY-MM-DD形式）
+                  const todayJST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+                  const startDate = challenge.start_date!
+                  const todayMs = new Date(todayJST + 'T00:00:00').getTime()
+                  const startMs = new Date(startDate + 'T00:00:00').getTime()
+                  const daysUntil = Math.round((startMs - todayMs) / (1000 * 60 * 60 * 24))
                   if (daysUntil > 7) return null
                   return (
-                    <div className={`absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-lg font-bold ${daysUntil <= 1 ? 'bg-red-500' : daysUntil <= 3 ? 'bg-orange-500' : 'bg-yellow-500'}`}>
+                    <div className={`absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-lg font-bold ${daysUntil <= 0 ? 'bg-red-500' : daysUntil <= 3 ? 'bg-orange-500' : 'bg-yellow-500'}`}>
                       {daysUntil <= 0 ? '開催中' : daysUntil === 1 ? '明日開始！' : `あと${daysUntil}日`}
                     </div>
                   )
