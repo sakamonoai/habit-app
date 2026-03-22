@@ -11,7 +11,7 @@ export default async function CheckinPage() {
   // メンバーシップ（チャレンジ情報join）を1クエリで取得
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('id, group_id, challenge_id, joined_at, challenges(title, duration_days, status, schedule_type)')
+    .select('id, group_id, challenge_id, joined_at, challenges(title, duration_days, status, schedule_type, start_date)')
     .eq('user_id', user.id)
 
   if (!memberships || memberships.length === 0) {
@@ -64,7 +64,7 @@ export default async function CheckinPage() {
 
   const now = new Date()
   const groups = memberships.map(m => {
-    const challenge = m.challenges as unknown as { title: string; duration_days: number; status: string | null; schedule_type: string | null } | null
+    const challenge = m.challenges as unknown as { title: string; duration_days: number; status: string | null; schedule_type: string | null; start_date: string | null } | null
     const durationDays = challenge?.duration_days ?? 1
     const checkinCount = countMap[m.id] ?? 0
     const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
@@ -82,6 +82,14 @@ export default async function CheckinPage() {
     const isFixedEnded = challenge?.schedule_type === 'fixed' && !isOngoing
     const isArchived = isDeleted || isFixedEnded
 
+    // まだ開始していないか判定（fixed: start_date未到来, flexible: joined_atが未来）
+    const notStartedYet = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? new Date(challenge.start_date) > new Date(today)
+      : joinedAt > now
+    const startDateLabel = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date
+      : m.joined_at ? m.joined_at.split('T')[0] : null
+
     return {
       groupId: m.group_id,
       memberId: m.id,
@@ -94,6 +102,8 @@ export default async function CheckinPage() {
       isOngoing,
       isArchived,
       isDeleted,
+      notStartedYet,
+      startDateLabel,
     }
   })
 
@@ -120,6 +130,26 @@ export default async function CheckinPage() {
                 href={`/group/${g.groupId}`}
                 className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
               >
+                {g.notStartedYet ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 text-sm">{g.title}</h3>
+                      </div>
+                      <div className="ml-4">
+                        <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
+                          <span className="text-xl">⏳</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                      <p className="text-xs text-blue-600 font-semibold">
+                        📅 {g.startDateLabel ? `${new Date(g.startDateLabel).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}から開始` : 'まもなく開始'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                <>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 text-sm">{g.title}</h3>
@@ -158,6 +188,8 @@ export default async function CheckinPage() {
                   <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
                     <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
                   </div>
+                )}
+                </>
                 )}
               </Link>
             ))}
