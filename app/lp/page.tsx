@@ -518,6 +518,29 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* 相性の良い商品 */}
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 mb-8">
+            <h3 className="font-bold text-gray-900 text-sm mb-3 text-center">こんな商品・サービスと相性抜群です</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { emoji: '🧴', label: 'スキンケア商品' },
+                { emoji: '💪', label: 'プロテイン・サプリ' },
+                { emoji: '🏋️', label: '筋トレ・フィットネス用品' },
+                { emoji: '📖', label: '学習教材・書籍' },
+                { emoji: '🥗', label: '健康食品・ミールキット' },
+                { emoji: '🧘', label: 'ヨガ・瞑想アプリ' },
+                { emoji: '☕', label: 'コーヒー・お茶のサブスク' },
+                { emoji: '🦷', label: 'オーラルケア製品' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5">
+                  <span className="text-lg">{item.emoji}</span>
+                  <span className="text-xs font-semibold text-gray-700">{item.label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-3 text-center">「毎日続ける」と効果が出る商品ほど、ハビチャレとの親和性が高まります</p>
+          </div>
+
           <div className="bg-gray-50 rounded-2xl p-6 text-center">
             <p className="text-sm text-gray-600 mb-4 leading-relaxed">
               スポンサー提携にご興味のある企業様は<br />お気軽にお問い合わせください。
