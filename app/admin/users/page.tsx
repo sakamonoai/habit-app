@@ -10,6 +10,7 @@ type ProfileWithCount = {
   ban_reason: string | null
   created_at: string
   challenge_count: number
+  email: string | null
 }
 
 export default async function AdminUsersPage() {
@@ -47,9 +48,19 @@ export default async function AdminUsersPage() {
     }
   }
 
+  // auth からメールアドレスを取得
+  let emailMap: Record<string, string> = {}
+  const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+  if (authData?.users) {
+    for (const u of authData.users) {
+      if (u.email) emailMap[u.id] = u.email
+    }
+  }
+
   const users: ProfileWithCount[] = (profiles ?? []).map((p) => ({
     ...p,
     challenge_count: countMap[p.id] || 0,
+    email: emailMap[p.id] || null,
   }))
 
   return (
@@ -108,6 +119,9 @@ export default async function AdminUsersPage() {
                         <p className="text-sm font-medium text-gray-900">
                           {user.nickname ?? '名前未設定'}
                         </p>
+                        {user.email && (
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        )}
                         <p className="text-xs text-gray-400">{user.id.slice(0, 8)}...</p>
                       </div>
                     </div>
@@ -181,6 +195,9 @@ export default async function AdminUsersPage() {
                     <p className="text-sm font-medium text-gray-900">
                       {user.nickname ?? '名前未設定'}
                     </p>
+                    {user.email && (
+                      <p className="truncate text-xs text-gray-500">{user.email}</p>
+                    )}
                     <p className="text-xs text-gray-400">{user.id.slice(0, 8)}...</p>
                   </div>
                 </div>
