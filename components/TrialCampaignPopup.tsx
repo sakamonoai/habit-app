@@ -8,23 +8,26 @@ export default function TrialCampaignPopup() {
   const router = useRouter()
 
   useEffect(() => {
-    // 既に表示済みならスキップ
-    const dismissed = sessionStorage.getItem('trial_campaign_dismissed')
-    if (dismissed) return
+    // 今日既に表示済みならスキップ
+    const lastShown = localStorage.getItem('trial_campaign_last_shown')
+    const today = new Date().toISOString().split('T')[0]
+    if (lastShown === today) return
 
     // 少し遅延して表示（ログイン直後のUX向上）
     const timer = setTimeout(() => setShow(true), 800)
     return () => clearTimeout(timer)
   }, [])
 
-  const handleDismiss = () => {
-    sessionStorage.setItem('trial_campaign_dismissed', '1')
+  const dismiss = () => {
+    const today = new Date().toISOString().split('T')[0]
+    localStorage.setItem('trial_campaign_last_shown', today)
     setShow(false)
   }
 
+  const handleDismiss = () => dismiss()
+
   const handleGoToChallenges = () => {
-    sessionStorage.setItem('trial_campaign_dismissed', '1')
-    setShow(false)
+    dismiss()
     router.push('/challenges')
   }
 
