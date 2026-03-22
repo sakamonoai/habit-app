@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/supabase/server'
 import { stripe, calcFee } from '@/lib/stripe'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +9,9 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
     }
+
+    const limited = rateLimit(`stripe-join:${user.id}`, 5, 60_000)
+    if (limited) return limited
 
     const body = await req.json()
     const { challengeId, depositAmount, paymentMethodId } = body as {

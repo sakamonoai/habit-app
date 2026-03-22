@@ -1,9 +1,13 @@
 import { getSessionUser } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   const { supabase, user } = await getSessionUser()
   if (!user) return NextResponse.json({ error: '未認証' }, { status: 401 })
+
+  const limited = rateLimit(`contact:${user.id}`, 5, 60_000)
+  if (limited) return limited
 
   const { category, message, reply_email } = await request.json()
 

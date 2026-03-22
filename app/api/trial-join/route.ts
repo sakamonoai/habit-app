@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,6 +8,9 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
     }
+
+    const limited = rateLimit(`trial-join:${user.id}`, 10, 60_000)
+    if (limited) return limited
 
     const { challengeId } = (await req.json()) as { challengeId: string }
 
