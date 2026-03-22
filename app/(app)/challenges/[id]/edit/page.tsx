@@ -22,9 +22,13 @@ export default function ChallengeEditPage() {
   // 編集可能フィールド
   const [description, setDescription] = useState('')
   const [checkinCondition, setCheckinCondition] = useState('')
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [okPhotos, setOkPhotos] = useState<PhotoItem[]>([])
   const [ngPhotos, setNgPhotos] = useState<PhotoItem[]>([])
 
+  const thumbnailRef = useRef<HTMLInputElement>(null)
   const okFileRef = useRef<HTMLInputElement>(null)
   const ngFileRef = useRef<HTMLInputElement>(null)
 
@@ -36,7 +40,7 @@ export default function ChallengeEditPage() {
       const [{ data: challenge }, { data: profile }] = await Promise.all([
         supabase
           .from('challenges')
-          .select('title, description, created_by, is_official, checkin_condition, ok_photo_url, ng_photo_url')
+          .select('title, description, created_by, is_official, checkin_condition, ok_photo_url, ng_photo_url, thumbnail_url')
           .eq('id', id)
           .single(),
         supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -52,6 +56,7 @@ export default function ChallengeEditPage() {
       setTitle(challenge.title ?? '')
       setDescription(challenge.description ?? '')
       setCheckinCondition(challenge.checkin_condition ?? '')
+      setThumbnailUrl(challenge.thumbnail_url ?? null)
       try { setOkPhotos(challenge.ok_photo_url ? JSON.parse(challenge.ok_photo_url) : []) } catch { setOkPhotos([]) }
       try { setNgPhotos(challenge.ng_photo_url ? JSON.parse(challenge.ng_photo_url) : []) } catch { setNgPhotos([]) }
       setLoading(false)
@@ -113,12 +118,21 @@ export default function ChallengeEditPage() {
 
     if (!title.trim()) { setError('タイトルを入力してください'); setSaving(false); return }
 
+    // サムネイルが新しく選択された場合アップロード
+    let newThumbnailUrl = thumbnailUrl
+    if (thumbnailFile) {
+      const url = await uploadPhoto(thumbnailFile)
+      if (!url) { setError('サムネイルのアップロードに失敗しました'); setSaving(false); return }
+      newThumbnailUrl = url
+    }
+
     const { error: updateError } = await supabase
       .from('challenges')
       .update({
         title: title.trim(),
         description: description.trim() || null,
         checkin_condition: checkinCondition.trim() || null,
+        thumbnail_url: newThumbnailUrl,
         ok_photo_url: okPhotos.length > 0 ? JSON.stringify(okPhotos) : null,
         ng_photo_url: ngPhotos.length > 0 ? JSON.stringify(ngPhotos) : null,
       })
@@ -161,6 +175,47 @@ export default function ChallengeEditPage() {
             <p className="text-green-700 font-semibold">保存しました！</p>
           </div>
         )}
+
+        {/* サムネイル画像 */}
+        <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">サムネイル画像</label>
+          <input
+            ref={thumbnailRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              setThumbnailFile(file)
+              const reader = new FileReader()
+              reader.onload = (ev) => setThumbnailPreview(ev.target?.result as string)
+              reader.readAsDataURL(file)
+              e.target.value = ''
+            }}
+          />
+          <button
+            onClick={() => thumbnailRef.current?.click()}
+            className="w-full aspect-[2/1] bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center overflow-hidden hover:border-orange-300 transition-colors"
+          >
+            {thumbnailPreview || thumbnailUrl ? (
+              <img src={thumbnailPreview || thumbnailUrl!} alt="サムネイル" className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <span className="text-3xl mb-1">📷</span>
+                <span className="text-sm text-gray-400">タップして画像を選択</span>
+              </>
+            )}
+          </button>
+          {(thumbnailPreview || thumbnailUrl) && (
+            <button
+              onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); setThumbnailUrl(null) }}
+              className="text-xs text-red-400 hover:text-red-600 mt-2 transition-colors"
+            >
+              サムネイルを削除
+            </button>
+          )}
+        </div>
 
         {/* タイトル */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
