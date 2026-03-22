@@ -6,6 +6,7 @@ import CheckinForm from '@/components/CheckinForm'
 import CheckinShareCard from '@/components/CheckinShareCard'
 import ReactionButton from '@/components/ReactionButton'
 import ReportButton from '@/components/ReportButton'
+import { getTodayBoundsUTC, getTimezoneShortName } from '@/lib/timezone'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -19,10 +20,10 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
-  // JSTの今日0:00〜23:59:59をUTCに変換（JST = UTC+9）
-  const todayStartUTC = new Date(`${today}T00:00:00+09:00`).toISOString()
-  const todayEndUTC = new Date(`${today}T23:59:59+09:00`).toISOString()
+  // ユーザーのタイムゾーンを取得
+  const { data: myProfile } = await supabase.from('profiles').select('timezone').eq('id', user.id).single()
+  const userTz = myProfile?.timezone || 'Asia/Tokyo'
+  const { today, todayStartUTC, todayEndUTC } = getTodayBoundsUTC(userTz)
 
   // 全クエリを並列実行（1段階で全て取得）
   const [
@@ -35,7 +36,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
     supabase.from('groups').select('*, challenges(*)').eq('id', id).single(),
     supabase.from('group_members').select('id, joined_at').eq('group_id', id).eq('user_id', user.id).single(),
     supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', todayStartUTC).lt('checked_in_at', todayEndUTC).maybeSingle(),
-    supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
+    supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url, timezone)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
     supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', id),
   ])
 
@@ -203,10 +204,15 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
                       {checkin.profiles?.nickname ?? '匿名'}
                     </Link>
                     <p className="text-xs text-gray-400">
-                      {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                        timeZone: 'Asia/Tokyo'
-                      })}
+                      {(() => {
+                        const posterTz = checkin.profiles?.timezone || 'Asia/Tokyo'
+                        const time = new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                          timeZone: posterTz
+                        })
+                        const tzLabel = posterTz !== 'Asia/Tokyo' ? ` (${getTimezoneShortName(posterTz)})` : ''
+                        return `${time}${tzLabel}`
+                      })()}
                     </p>
                   </div>
                   {checkin.user_id !== user.id && (

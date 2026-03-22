@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import TimezoneDetector from "@/components/TimezoneDetector";
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <ServiceWorkerRegister />
+        <TimezoneDetector />
       </body>
     </html>
   );

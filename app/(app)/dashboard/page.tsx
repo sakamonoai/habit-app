@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import LogoutButton from '@/components/LogoutButton'
+import { getTodayBoundsUTC } from '@/lib/timezone'
 
 const ProfileSettings = dynamic(() => import('@/components/ProfileSettings'))
 
@@ -13,7 +14,7 @@ export default async function DashboardPage() {
 
   // プロフィール・メンバーシップ・バッジ・作成チャレンジを並列取得
   const [{ data: profile }, { data: memberships }, { data: badges }, { data: createdChallenges }] = await Promise.all([
-    supabase.from('profiles').select('nickname, avatar_url, bio, sns_links').eq('id', user.id).single(),
+    supabase.from('profiles').select('nickname, avatar_url, bio, sns_links, timezone').eq('id', user.id).single(),
     supabase.from('group_members').select('*, challenges(title, duration_days, schedule_type, start_date)').eq('user_id', user.id).eq('status', 'active'),
     supabase.from('badges').select('*, challenges(title, thumbnail_url, category)').eq('user_id', user.id).eq('badge_type', 'perfect'),
     supabase.from('challenges').select('id, title, category, status, schedule_type, duration_days, created_at').eq('created_by', user.id).order('created_at', { ascending: false }),
@@ -47,7 +48,8 @@ export default async function DashboardPage() {
     }
   }
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+  const userTz = profile?.timezone || 'Asia/Tokyo'
+  const { today } = getTodayBoundsUTC(userTz)
   const challengeStats = (memberships ?? []).map((m) => {
     const challenge = m.challenges as { title: string; duration_days: number; schedule_type: string | null; start_date: string | null } | null
     const durationDays = challenge?.duration_days ?? 1

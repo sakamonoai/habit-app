@@ -1,14 +1,15 @@
 import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getTodayBoundsUTC } from '@/lib/timezone'
 
 export default async function CheckinPage() {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
-  const todayStartUTC = new Date(`${today}T00:00:00+09:00`).toISOString()
-  const todayEndUTC = new Date(`${today}T23:59:59+09:00`).toISOString()
+  const { data: myProfile } = await supabase.from('profiles').select('timezone').eq('id', user.id).single()
+  const userTz = myProfile?.timezone || 'Asia/Tokyo'
+  const { today, todayStartUTC, todayEndUTC } = getTodayBoundsUTC(userTz)
 
   // メンバーシップ（チャレンジ情報join）を1クエリで取得
   const { data: memberships } = await supabase
