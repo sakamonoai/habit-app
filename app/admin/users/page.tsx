@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin-guard'
 import { UserActions } from '@/components/admin/UserActions'
 
@@ -153,11 +154,19 @@ export default async function AdminUsersPage() {
                     {new Date(user.created_at).toLocaleDateString('ja-JP')}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right">
-                    <UserActions
-                      userId={user.id}
-                      nickname={user.nickname ?? '名前未設定'}
-                      isBanned={!!user.banned_at}
-                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                      >
+                        詳細
+                      </Link>
+                      <UserActions
+                        userId={user.id}
+                        nickname={user.nickname ?? '名前未設定'}
+                        isBanned={!!user.banned_at}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -223,11 +232,19 @@ export default async function AdminUsersPage() {
                   <span>参加数: {user.challenge_count}</span>
                   <span>登録: {new Date(user.created_at).toLocaleDateString('ja-JP')}</span>
                 </div>
-                <UserActions
-                  userId={user.id}
-                  nickname={user.nickname ?? '名前未設定'}
-                  isBanned={!!user.banned_at}
-                />
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/admin/users/${user.id}`}
+                    className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  >
+                    詳細
+                  </Link>
+                  <UserActions
+                    userId={user.id}
+                    nickname={user.nickname ?? '名前未設定'}
+                    isBanned={!!user.banned_at}
+                  />
+                </div>
               </div>
             </div>
           ))}
