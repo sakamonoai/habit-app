@@ -10,16 +10,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ハビチャレ | お金が没収される習慣化アプリ",
     description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金、サボったら没収。だから続く。",
-    images: [{ url: "/ogp.jpg", width: 1200, height: 630 }],
+    images: [{ url: "/icons/icon-512.png", width: 512, height: 512 }],
     type: "website",
     locale: "ja_JP",
     siteName: "ハビチャレ",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "ハビチャレ | お金が没収される習慣化アプリ",
     description: "三日坊主を卒業する習慣化アプリ。デポジットを預けて仲間とチャレンジ。達成すれば全額返金。",
-    images: ["/ogp.jpg"],
+    images: ["/icons/icon-512.png"],
   },
   appleWebApp: {
     capable: true,
