@@ -159,7 +159,8 @@ export default async function HomePage({ searchParams }: Props) {
                       </Link>
                       <p className="text-xs text-gray-400">
                         {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                          timeZone: 'Asia/Tokyo'
                         })}
                       </p>
                     </div>
