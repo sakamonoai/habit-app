@@ -446,6 +446,14 @@ export default function CreateChallengePage() {
             ← 戻る
           </Link>
           <h1 className="font-semibold text-gray-900 flex-1">チャレンジを作成</h1>
+          {drafts.length > 0 && (
+            <button
+              onClick={() => setShowDraftList(true)}
+              className="text-sm text-blue-500 font-medium hover:text-blue-600 transition-colors shrink-0"
+            >
+              下書き({drafts.length})
+            </button>
+          )}
           <button
             onClick={saveDraft}
             className="text-sm text-orange-500 font-medium hover:text-orange-600 transition-colors shrink-0"
