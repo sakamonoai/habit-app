@@ -25,7 +25,8 @@ export default function LandingPage() {
       {/* ヒーロー — 恐怖訴求 → Dream Outcome */}
       <section className="relative overflow-hidden bg-gray-900 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black" />
-        <div className="relative max-w-lg mx-auto px-6 pt-12 pb-24 text-center">
+        <div className="relative max-w-lg mx-auto px-6 pt-8 pb-24 text-center">
+          <p className="text-orange-400 font-black text-lg tracking-wide mb-4">サボるとお金を没収されるアプリ</p>
           <Image src="/logo.png" alt="ハビチャレ" width={64} height={64} className="mx-auto mb-5" />
           <div className="inline-block border border-red-400/40 bg-red-500/10 rounded-full px-4 py-1.5 text-sm font-bold text-red-400 mb-6 animate-pulse">
             サボったら、お金没収。
