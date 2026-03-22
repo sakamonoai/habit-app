@@ -87,12 +87,16 @@ export default function ChallengeList({ challenges }: Props) {
   let filtered = challenges
 
   // アイコンフィルタ or カテゴリタブフィルタ
-  const activeCategory = iconFilter ?? category
-  if (activeCategory !== '全て') {
-    const cats = CATEGORY_MAP[activeCategory]
+  if (iconFilter) {
+    const icon = CATEGORY_ICONS.find(c => c.label === iconFilter)
+    if (icon) {
+      filtered = filtered.filter(c => c.category && icon.filters.includes(c.category))
+    }
+  } else if (category !== '全て') {
+    const cats = CATEGORY_MAP[category]
     if (cats) {
       filtered = filtered.filter(c => c.category && cats.includes(c.category))
-    } else if (activeCategory === 'その他') {
+    } else if (category === 'その他') {
       const allMapped = Object.values(CATEGORY_MAP).flat()
       filtered = filtered.filter(c => !c.category || !allMapped.includes(c.category))
     }
@@ -111,13 +115,12 @@ export default function ChallengeList({ challenges }: Props) {
   }
 
   const handleIconClick = (cat: typeof CATEGORY_ICONS[0]) => {
-    const filterName = cat.filters[0] === '生活' ? '生活' : cat.filters[0] === '趣味' || cat.filters[0] === '読書' ? '趣味' : cat.filters[0]
-    if (iconFilter === filterName) {
+    if (iconFilter === cat.label) {
       setIconFilter(null)
       setCategory('全て')
     } else {
-      setIconFilter(filterName)
-      setCategory(filterName)
+      setIconFilter(cat.label)
+      setCategory('全て')
     }
   }
 
@@ -137,8 +140,7 @@ export default function ChallengeList({ challenges }: Props) {
             <span className={`text-xs ${!iconFilter ? 'text-orange-500 font-bold' : 'text-gray-600'}`}>全て</span>
           </button>
           {CATEGORY_ICONS.map((cat) => {
-            const filterName = cat.filters[0] === '生活' ? '生活' : cat.filters[0] === '趣味' || cat.filters[0] === '読書' ? '趣味' : cat.filters[0]
-            const isActive = iconFilter === filterName
+            const isActive = iconFilter === cat.label
             return (
               <button
                 key={cat.label}
@@ -159,7 +161,7 @@ export default function ChallengeList({ challenges }: Props) {
       <div className="px-4 pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto">
         <h2 className="text-lg font-bold text-gray-900">
           {schedule === 'upcoming' ? '📅 開催前の' : schedule === 'ongoing' ? '🔥 開催中の' : schedule === 'flexible' ? '🔄 いつでも参加の' : ''}
-          {activeCategory !== '全て' ? activeCategory : schedule ? '' : '人気'}チャレンジ
+          {iconFilter ? iconFilter : category !== '全て' ? category : schedule ? '' : '人気'}チャレンジ
         </h2>
         <span className="text-sm text-gray-400">全{filtered.length}件</span>
       </div>
