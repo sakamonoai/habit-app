@@ -6,6 +6,7 @@ import CheckinForm from '@/components/CheckinForm'
 import CheckinShareCard from '@/components/CheckinShareCard'
 import ReactionButton from '@/components/ReactionButton'
 import ReportButton from '@/components/ReportButton'
+import PhotoViewer from '@/components/PhotoViewer'
 import { getTodayBoundsUTC, getTimezoneShortName } from '@/lib/timezone'
 
 type Props = {
@@ -99,7 +100,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
   const extensionDays = elapsedDays - durationDays // 延長何日目か
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-4">
+    <div className="min-h-screen bg-gray-50 pb-28">
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
@@ -200,9 +201,14 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
                     )}
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">
-                      {checkin.profiles?.nickname ?? '匿名'}
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">
+                        {checkin.profiles?.nickname ?? '匿名'}
+                      </Link>
+                      {(checkin.profiles?.timezone && checkin.profiles.timezone !== 'Asia/Tokyo') && (
+                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">🌐 時差あり</span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-400">
                       {(() => {
                         const posterTz = checkin.profiles?.timezone || 'Asia/Tokyo'
@@ -223,17 +229,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
                   )}
                 </div>
                 {checkin.photo_url && (
-                  <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
-                    <Image
-                      src={checkin.photo_url}
-                      alt="証拠写真"
-                      width={500}
-                      height={500}
-                      className="w-full object-cover"
-                      loading="lazy"
-                      sizes="(max-width: 512px) 100vw, 512px"
-                    />
-                  </div>
+                  <PhotoViewer src={checkin.photo_url} />
                 )}
                 {checkin.comment && (
                   <p className="text-sm text-gray-600 mb-1">{checkin.comment}</p>
