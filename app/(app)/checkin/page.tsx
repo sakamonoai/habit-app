@@ -7,6 +7,8 @@ export default async function CheckinPage() {
   if (!user) redirect('/login')
 
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+  const todayStartUTC = new Date(`${today}T00:00:00+09:00`).toISOString()
+  const todayEndUTC = new Date(`${today}T23:59:59+09:00`).toISOString()
 
   // メンバーシップ（チャレンジ情報join）を1クエリで取得
   const { data: memberships } = await supabase
@@ -40,8 +42,8 @@ export default async function CheckinPage() {
       .from('checkins')
       .select('member_id')
       .in('member_id', memberIds)
-      .gte('checked_in_at', `${today}T00:00:00`)
-      .lt('checked_in_at', `${today}T23:59:59`),
+      .gte('checked_in_at', todayStartUTC)
+      .lt('checked_in_at', todayEndUTC),
     (async () => {
       const res = await supabase.rpc('get_checkin_counts', { member_ids: memberIds })
       if (res.data) return { data: res.data as { member_id: string; count: number }[] }

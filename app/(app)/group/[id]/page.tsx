@@ -20,6 +20,9 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
   if (!user) redirect('/login')
 
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+  // JSTの今日0:00〜23:59:59をUTCに変換（JST = UTC+9）
+  const todayStartUTC = new Date(`${today}T00:00:00+09:00`).toISOString()
+  const todayEndUTC = new Date(`${today}T23:59:59+09:00`).toISOString()
 
   // 全クエリを並列実行（1段階で全て取得）
   const [
@@ -31,7 +34,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
   ] = await Promise.all([
     supabase.from('groups').select('*, challenges(*)').eq('id', id).single(),
     supabase.from('group_members').select('id, joined_at').eq('group_id', id).eq('user_id', user.id).single(),
-    supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', `${today}T00:00:00`).lt('checked_in_at', `${today}T23:59:59`).maybeSingle(),
+    supabase.from('checkins').select('id').eq('group_id', id).eq('user_id', user.id).gte('checked_in_at', todayStartUTC).lt('checked_in_at', todayEndUTC).maybeSingle(),
     supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url)').eq('group_id', id).order('checked_in_at', { ascending: false }).limit(20),
     supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('group_id', id),
   ])
