@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハビチャレの仕組み</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: #fafafa;
+    color: #1a1a1a;
+    line-height: 1.7;
+  }
+
+  .header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 15px;
+    opacity: 0.9;
+  }
+
+  .flow {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+  }
+
+  /* 中央の縦線 */
+  .flow::before {
+    content: '';
+    position: absolute;
+    left: 56px;
+    top: 0;
+    bottom: 60px;
+    width: 3px;
+    background: linear-gradient(to bottom, #ff6b35, #f7931e, #fbbf24, #34d399, #6366f1);
+    border-radius: 2px;
+  }
+
+  .step {
+    position: relative;
+    padding-left: 96px;
+    margin-top: 40px;
+  }
+
+  /* ステップ番号の丸 */
+  .step-number {
+    position: absolute;
+    left: 36px;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 18px;
+    color: white;
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .step:nth-child(1) .step-number { background: #ff6b35; }
+  .step:nth-child(2) .step-number { background: #f59e0b; }
+  .step:nth-child(3) .step-number { background: #10b981; }
+  .step:nth-child(4) .step-number { background: #3b82f6; }
+  .step:nth-child(5) .step-number { background: #8b5cf6; }
+
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  }
+
+  .card-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .emoji {
+    font-size: 24px;
+  }
+
+  .card-desc {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 16px;
+  }
+
+  /* ステップ1: チャレンジカード */
+  .challenge-cards {
+    display: flex;
+    gap: 10px;
+  }
+  .challenge-card {
+    flex: 1;
+    border-radius: 14px;
+    padding: 14px;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    position: relative;
+    overflow: hidden;
+  }
+  .challenge-card::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+  }
+  .challenge-card.morning { background: linear-gradient(135deg, #f97316, #f59e0b); }
+  .challenge-card.muscle { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .challenge-card .card-emoji { font-size: 22px; display: block; margin-bottom: 6px; }
+  .challenge-card .card-name { display: block; line-height: 1.4; }
+
+  .deposit-bar {
+    margin-top: 12px;
+    background: #fff7ed;
+    border: 1.5px dashed #f97316;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ea580c;
+  }
+
+  /* ステップ2: カメラUI */
+  .camera-mock {
+    background: #111;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .camera-viewfinder {
+    background: #222;
+    border-radius: 10px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .camera-corners {
+    position: absolute;
+    inset: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+  }
+  .camera-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #ccc;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .camera-btn-inner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f3f3f3;
+  }
+  .no-album {
+    margin-top: 12px;
+    background: #fef2f2;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #dc2626;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ステップ3: タイムライン */
+  .timeline-mock {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tl-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .tl-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .tl-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .tl-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #333;
+  }
+  .tl-text {
+    font-size: 11px;
+    color: #888;
+  }
+  .tl-reactions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .tl-reactions span {
+    font-size: 16px;
+  }
+  .tension-note {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    background: #f0fdf4;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 600;
+  }
+
+  /* ステップ4: 達成率バー */
+  .achievement-visual {
+    margin-bottom: 12px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 28px;
+    background: #e5e7eb;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    color: white;
+  }
+  .progress-fill.pass { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .threshold {
+    position: absolute;
+    left: 85%;
+    top: -20px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #dc2626;
+    transform: translateX(-50%);
+  }
+  .threshold::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 28px;
+    background: #dc2626;
+  }
+  .refund-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #eff6ff;
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .refund-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+  .refund-text {
+    font-size: 13px;
+    color: #1e40af;
+    font-weight: 700;
+  }
+  .refund-text small {
+    display: block;
+    font-weight: 500;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+
+  /* ステップ5: ご褒美 */
+  .reward-box {
+    text-align: center;
+    background: linear-gradient(135deg, #fdf4ff, #faf5ff, #eef2ff);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1.5px solid #e9d5ff;
+  }
+  .reward-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .reward-gifts {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 12px 0;
+  }
+  .reward-gift {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .reward-gift-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .reward-gift-label {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+  }
+  .reward-note {
+    font-size: 12px;
+    color: #7c3aed;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  /* フロー矢印 */
+  .flow-arrow {
+    text-align: center;
+    padding: 8px 0 0;
+    margin-left: -96px;
+  }
+  .flow-arrow span {
+    display: inline-block;
+    color: #d1d5db;
+    font-size: 20px;
+  }
+
+  /* 下部まとめ */
+  .summary {
+    max-width: 520px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+  .summary-card {
+    background: linear-gradient(135deg, #ff6b35, #f59e0b);
+    border-radius: 20px;
+    padding: 28px 24px;
+    color: white;
+    text-align: center;
+  }
+  .summary-card h2 {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 12px;
+  }
+  .summary-steps {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .summary-chip {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .summary-arrow {
+    font-size: 14px;
+    opacity: 0.7;
+  }
+  .summary-card p {
+    font-size: 14px;
+    opacity: 0.9;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔥 ハビチャレの仕組み</h1>
+  <p>5ステップで習慣が身につく理由</p>
+</div>
+
+<div class="flow">
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-number">1</div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">🎯</span>チャレンジに参加する</div>
+      <p class="card-desc">やりたい習慣のチャレンジを選んで参加。参加時に自分で決めた金額のデポジット（参加費）を預けます。</p>
+      <div class="challenge-cards">
+        <div class="challenge-card morning">
+          <span class="card-emoji">☀️</span>
+          <span class="card-name">朝5時起き<br>7日間チャレンジ</span>
+        </div>
+        <div class="challenge-card muscle">
+          <span class="card-emoji">💪</span>
+          <span class="card-name">筋トレ<br>14日間チャレンジ</span>
+        </div>
+      </div>
+      <div class="deposit-bar">
+        <span>💰</span>
+        デポジットを預ける（例：1,000円）
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-number">2</div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">📸</span>毎日、証拠写真を投稿</div>
+      <p class="card-desc">チャレンジ期間中、毎日アプリ内カメラで証拠写真を撮影して投稿。アルバムからの投稿はできないので「やったふり」は不可能！</p>
+      <div class="camera-mock">
+        <div class="camera-viewfinder">
+          📷
+          <div class="camera-corners"></div>
+        </div>
+        <div class="camera-btn"><div class="camera-btn-inner"></div></div>
+      </div>
+      <div class="no-album">
+        <span>🚫</span>
+        アルバムからの投稿不可 →「やったふり」防止
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-number">3</div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">👥</span>グループで励まし合う</div>
+      <p class="card-desc">同じチャレンジの仲間の投稿がタイムラインに。スタンプや応援で励まし合えます。</p>
+      <div class="timeline-mock">
+        <div class="tl-item">
+          <div class="tl-avatar" style="background:linear-gradient(135deg,#f97316,#f59e0b);">M</div>
+          <div class="tl-content">
+            <div class="tl-name">まさき</div>
+            <div class="tl-text">朝5時に起きれた！🏃‍♂️</div>
+          </div>
+          <div class="tl-reactions"><span>🔥</span><span>👏</span></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-avatar" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);">Y</div>
+          <div class="tl-content">
+            <div class="tl-name">ゆき</div>
+            <div class="tl-text">ジムで筋トレ完了💪</div>
+          </div>
+          <div class="tl-reactions"><span>💪</span><span>⭐</span></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">A</div>
+          <div class="tl-content">
+            <div class="tl-name">あかね</div>
+            <div class="tl-text">読書30分クリア📖</div>
+          </div>
+          <div class="tl-reactions"><span>👍</span><span>🎉</span></div>
+        </div>
+      </div>
+      <div class="tension-note">
+        👀 「見られている」適度な緊張感が継続の原動力に
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-number">4</div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">💰</span>85%以上達成で全額返金</div>
+      <p class="card-desc">チャレンジ期間の85%以上の日数で投稿できれば、デポジットは全額戻ってきます。</p>
+      <div class="achievement-visual">
+        <div class="progress-label">
+          <span>0%</span>
+          <span>100%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="threshold">85%ライン</div>
+          <div class="progress-fill pass" style="width:92%;">92%達成！</div>
+        </div>
+      </div>
+      <div class="refund-result">
+        <div class="refund-icon">🎊</div>
+        <div class="refund-text">
+          ちゃんとやれば1円も損しない！
+          <small>85%以上達成 → デポジット全額返金</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step">
+    <div class="step-number">5</div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">🎁</span>100%達成でご褒美</div>
+      <p class="card-desc">全日程クリアした人には、スポンサー企業からの景品や特典が届きます。頑張った自分へのご褒美が外部から用意されている仕組みです。</p>
+      <div class="reward-box">
+        <div class="reward-badge">🏆 100% COMPLETE</div>
+        <div class="reward-gifts">
+          <div class="reward-gift">
+            <div class="reward-gift-icon">☕</div>
+            <div class="reward-gift-label">ドリンク券</div>
+          </div>
+          <div class="reward-gift">
+            <div class="reward-gift-icon">🎫</div>
+            <div class="reward-gift-label">クーポン</div>
+          </div>
+          <div class="reward-gift">
+            <div class="reward-gift-icon">🏋️</div>
+            <div class="reward-gift-label">体験チケット</div>
+          </div>
+        </div>
+        <div class="reward-note">スポンサー企業からのご褒美 🎉</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- まとめ -->
+<div class="summary">
+  <div class="summary-card">
+    <h2>だから、続けられる。</h2>
+    <div class="summary-steps">
+      <span class="summary-chip">💰 お金</span>
+      <span class="summary-arrow">×</span>
+      <span class="summary-chip">👥 仲間</span>
+      <span class="summary-arrow">×</span>
+      <span class="summary-chip">🎁 ご褒美</span>
+    </div>
+    <p>お金を預ける緊張感、仲間の存在、<br>達成のご褒美。3つの力で三日坊主を卒業。</p>
+  </div>
+</div>
+
+</body>
+</html>
