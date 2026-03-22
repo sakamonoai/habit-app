@@ -197,7 +197,7 @@ export default function ChallengeList({ challenges }: Props) {
                   src={challenge.thumbnail_url || DEFAULT_THUMBNAILS[challenge.category ?? ''] || DEFAULT_THUMBNAIL_FALLBACK}
                   alt={challenge.title}
                   fill
-                  className="object-cover"
+                  className="object-cover object-bottom"
                   sizes="(max-width: 512px) 50vw, 256px"
                   quality={90}
                   loading="lazy"
