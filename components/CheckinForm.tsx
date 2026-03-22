@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import CheckinShareCard from '@/components/CheckinShareCard'
@@ -24,6 +24,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   const [checkinCount, setCheckinCount] = useState(0)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [permissionDenied, setPermissionDenied] = useState(false)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [countdown, setCountdown] = useState<number | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -33,23 +34,74 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   const supabase = createClient()
   const router = useRouter()
 
+  // コンポーネントのアンマウント時にのみストリームを完全停止
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop())
+        streamRef.current = null
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
   const startCamera = useCallback(async () => {
     setCameraError('')
     setCameraOpen(true)
+
+    // 既存のストリームが生きていれば再利用（getUserMedia を呼ばない）
+    if (streamRef.current && streamRef.current.active) {
+      if (videoRef.current) {
+        videoRef.current.srcObject = streamRef.current
+      }
+      return
+    }
+
+    // Permissions API で事前に権限状態を確認（対応ブラウザのみ）
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const result = await navigator.permissions.query({ name: 'camera' as PermissionName })
+        if (result.state === 'denied') {
+          setPermissionDenied(true)
+          setCameraError('カメラの権限が拒否されています。端末の設定からカメラへのアクセスを許可してください。')
+          return
+        }
+      }
+    } catch {
+      // permissions.query 非対応（iOS Safari など）— そのまま続行
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } },
         audio: false,
       })
       streamRef.current = stream
+      setPermissionDenied(false)
       if (videoRef.current) {
         videoRef.current.srcObject = stream
       }
-    } catch {
-      setCameraError('カメラにアクセスできません。カメラの権限を許可してください。')
+    } catch (err) {
+      const name = (err as DOMException)?.name
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        setPermissionDenied(true)
+        setCameraError('カメラの権限が拒否されています。端末の設定アプリからカメラへのアクセスを許可してください。')
+      } else {
+        setCameraError('カメラにアクセスできません。デバイスにカメラが接続されているか確認してください。')
+      }
     }
   }, [])
 
+  // カメラUIを閉じる（ストリームは維持）
+  const hideCamera = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    setCountdown(null)
+    setCameraOpen(false)
+  }, [])
+
+  // ストリームを完全に停止してカメラを閉じる
   const stopCamera = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
     setCountdown(null)
@@ -76,9 +128,9 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
       const file = new File([blob], `checkin_${Date.now()}.jpg`, { type: 'image/jpeg' })
       setImageFile(file)
       setPreview(URL.createObjectURL(blob))
-      stopCamera()
+      hideCamera()
     }, 'image/jpeg', 0.85)
-  }, [stopCamera])
+  }, [hideCamera])
 
   const handleShutter = useCallback(() => {
     if (timerSeconds === 0) {
@@ -218,6 +270,12 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
           {cameraError ? (
             <div className="py-16 text-center">
               <p className="text-white text-sm mb-3">{cameraError}</p>
+              {permissionDenied && (
+                <p className="text-white/60 text-xs mb-3 px-4">
+                  iOS: 設定 &gt; Safari &gt; カメラ で許可<br />
+                  Android: 設定 &gt; アプリ &gt; ブラウザ &gt; 権限 で許可
+                </p>
+              )}
               <button
                 onClick={stopCamera}
                 className="px-4 py-2 bg-white/20 text-white text-sm rounded-lg"
@@ -260,7 +318,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
               </div>
               <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-6">
                 <button
-                  onClick={stopCamera}
+                  onClick={hideCamera}
                   className="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white text-lg"
                 >
                   ✕
@@ -286,7 +344,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
         <div className="relative mb-3">
           <img src={preview} alt="プレビュー" className="w-full rounded-xl object-cover max-h-48" />
           <button
-            onClick={() => { setImageFile(null); setPreview(null) }}
+            onClick={() => { setImageFile(null); setPreview(null); startCamera() }}
             className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full text-sm flex items-center justify-center hover:bg-black/70 transition-colors"
           >
             ✕
