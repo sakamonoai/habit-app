@@ -6,6 +6,7 @@ import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
 import PullToRefresh from '@/components/PullToRefresh'
 import PhotoViewer from '@/components/PhotoViewer'
+import { getTimezoneShortName } from '@/lib/timezone'
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -87,7 +88,7 @@ export default async function HomePage({ searchParams }: Props) {
   // 2段目: チェックイン + profiles + reactions を全てjoinで1クエリ
   const { data: checkins } = await supabase
     .from('checkins')
-    .select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url), reactions(emoji, user_id)')
+    .select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url, timezone), reactions(emoji, user_id)')
     .in('group_id', targetGroupIds)
     .order('checked_in_at', { ascending: false })
     .limit(30)
@@ -154,14 +155,24 @@ export default async function HomePage({ searchParams }: Props) {
                       )}
                     </Link>
                     <div className="flex-1 min-w-0">
-                      <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">
-                        {checkin.profiles?.nickname ?? '匿名'}
-                      </Link>
+                      <div className="flex items-center gap-1.5">
+                        <Link href={`/user/${checkin.user_id}`} className="font-medium text-gray-900 text-sm hover:underline">
+                          {checkin.profiles?.nickname ?? '匿名'}
+                        </Link>
+                        {(checkin.profiles?.timezone && checkin.profiles.timezone !== 'Asia/Tokyo') && (
+                          <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">🌐 時差あり</span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-400">
-                        {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                          timeZone: 'Asia/Tokyo'
-                        })}
+                        {(() => {
+                          const posterTz = checkin.profiles?.timezone || 'Asia/Tokyo'
+                          const time = new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                            timeZone: posterTz
+                          })
+                          const tzLabel = posterTz !== 'Asia/Tokyo' ? ` (${getTimezoneShortName(posterTz)})` : ''
+                          return `${time}${tzLabel}`
+                        })()}
                       </p>
                     </div>
                   </div>
