@@ -131,27 +131,39 @@ export default function ChallengeEditPage() {
       newThumbnailUrl = urlData.publicUrl
     }
 
-    const { error: updateError } = await supabase
+    const updatePayload = {
+      title: title.trim(),
+      description: description.trim() || null,
+      checkin_condition: checkinCondition.trim() || null,
+      thumbnail_url: newThumbnailUrl,
+      ok_photo_url: okPhotos.length > 0 ? JSON.stringify(okPhotos) : null,
+      ng_photo_url: ngPhotos.length > 0 ? JSON.stringify(ngPhotos) : null,
+    }
+
+    const { data: updateData, error: updateError } = await supabase
       .from('challenges')
-      .update({
-        title: title.trim(),
-        description: description.trim() || null,
-        checkin_condition: checkinCondition.trim() || null,
-        thumbnail_url: newThumbnailUrl,
-        ok_photo_url: okPhotos.length > 0 ? JSON.stringify(okPhotos) : null,
-        ng_photo_url: ngPhotos.length > 0 ? JSON.stringify(ngPhotos) : null,
-      })
+      .update(updatePayload)
       .eq('id', id)
+      .select()
 
     if (updateError) {
-      setError('保存に失敗しました')
+      setError(`保存に失敗しました: ${updateError.message}`)
+      setSaving(false)
+      return
+    }
+
+    if (!updateData || updateData.length === 0) {
+      setError('更新権限がないか、データが見つかりませんでした。ページを再読み込みしてください。')
       setSaving(false)
       return
     }
 
     setSuccess(true)
     setSaving(false)
-    setTimeout(() => router.push(`/challenges/${id}`), 1500)
+    setTimeout(() => {
+      router.push(`/challenges/${id}`)
+      router.refresh()
+    }, 1500)
   }
 
   if (loading) {
