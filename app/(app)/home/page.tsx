@@ -5,6 +5,7 @@ import Image from 'next/image'
 import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
 import PullToRefresh from '@/components/PullToRefresh'
+import PhotoViewer from '@/components/PhotoViewer'
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -165,17 +166,7 @@ export default async function HomePage({ searchParams }: Props) {
                   </div>
 
                   {checkin.photo_url && (
-                    <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
-                      <Image
-                        src={checkin.photo_url}
-                        alt="証拠写真"
-                        width={500}
-                        height={500}
-                        className="w-full object-cover"
-                        loading="lazy"
-                        sizes="(max-width: 512px) 100vw, 512px"
-                      />
-                    </div>
+                    <PhotoViewer src={checkin.photo_url} />
                   )}
 
                   {checkin.comment && (
