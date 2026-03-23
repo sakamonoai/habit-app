@@ -157,19 +157,14 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 bg-blue-50 rounded-xl p-4">
-              <p className="text-xs font-bold text-blue-700 mb-2">📋 グループタイムライン</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-blue-200 rounded-full" />
-                  <p className="text-xs text-gray-600"><span className="font-semibold">Aさん</span>が朝ランの写真を投稿 — <span className="text-blue-600">連続12日目</span></p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-green-200 rounded-full" />
-                  <p className="text-xs text-gray-600"><span className="font-semibold">Bさん</span>が読書記録を投稿 — <span className="text-blue-600">連続8日目</span></p>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">仲間の継続記録が見えるから、切磋琢磨できる。しかもお互いの進捗が可視化されるので、自然と「見られている」「自分もやらなきゃ」が生まれる。</p>
+            <div className="mt-4 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              <Image
+                src="/lp/timeline-preview.png"
+                alt="タイムライン画面。仲間の投稿が見えるから自然とサボれなくなる"
+                width={1170}
+                height={2532}
+                className="w-full h-auto"
+              />
             </div>
           </div>
 
@@ -246,10 +241,10 @@ export default function LandingPage() {
                 </p>
                 <div className="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm">
                   <Image
-                    src="/lp/challenge-page-preview.svg"
-                    alt="チャレンジ一覧ページのイメージ。既存のチャレンジに参加したり、自分でチャレンジを作って仲間を集めたりできる画面"
-                    width={1200}
-                    height={900}
+                    src="/lp/step1-challenges.png"
+                    alt="チャレンジ一覧ページ。運動・早起き・読書など多彩なチャレンジから選べる"
+                    width={1170}
+                    height={2532}
                     className="w-full h-auto"
                   />
                 </div>
@@ -260,11 +255,20 @@ export default function LandingPage() {
               <div className="shrink-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-lg">
                 2
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-gray-900 mb-1">毎日、写真を1枚撮るだけ</h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 mb-4">
                   習慣を実行したら証拠写真をパシャリ。仲間の投稿も見える。「みんなやってる」から自分もやる。
                 </p>
+                <div className="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm">
+                  <Image
+                    src="/lp/step2-checkin.png"
+                    alt="記録投稿画面。カメラで証拠写真を撮って投稿するだけ"
+                    width={1170}
+                    height={2532}
+                    className="w-full h-auto"
+                  />
+                </div>
               </div>
             </div>
 
