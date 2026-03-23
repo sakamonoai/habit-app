@@ -23,6 +23,10 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // ミドルウェアではWebSocketが使えないためrealtime接続を無効化
+  supabase.realtime.connect = () => {}
+  supabase.realtime.disconnect = () => {}
+
   // getSession()はJWTをローカル検証するだけ（API往復なし = 高速）
   const { data: { session } } = await supabase.auth.getSession()
 
