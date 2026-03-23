@@ -101,7 +101,7 @@ export default async function HistoryPage() {
 
     const notStartedYet = challenge?.schedule_type === 'fixed' && challenge.start_date
       ? challenge.start_date > today
-      : joinedAt > now
+      : (m.joined_at ? new Date(m.joined_at) > new Date() : false)
     const startDateLabel = challenge?.schedule_type === 'fixed' && challenge.start_date
       ? challenge.start_date
       : m.joined_at ? m.joined_at.split('T')[0] : null
