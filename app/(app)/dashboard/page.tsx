@@ -5,6 +5,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import LogoutButton from '@/components/LogoutButton'
 import { getTodayBoundsUTC } from '@/lib/timezone'
+import { getDepositTier } from '@/lib/deposit-tier'
 
 const ProfileSettings = dynamic(() => import('@/components/ProfileSettings'))
 
@@ -93,6 +94,7 @@ export default async function DashboardPage() {
 
   const totalCheckins = challengeStats.reduce((sum, s) => sum + s.checkinCount, 0)
   const totalDeposit = challengeStats.reduce((sum, s) => sum + s.depositAmount, 0)
+  const depositTier = getDepositTier(totalDeposit)
 
   return (
     <div className="min-h-screen bg-white">
@@ -156,10 +158,11 @@ export default async function DashboardPage() {
               <p className="text-2xl font-bold text-gray-900">{totalCheckins}</p>
               <p className="text-xs text-gray-400 mt-0.5">総記録数</p>
             </div>
-            <div className="text-center px-2">
-              <p className="text-2xl font-bold text-orange-500">¥{totalDeposit.toLocaleString()}</p>
+            <Link href="/history" className="text-center px-2 block">
+              {depositTier.icon && <span className="text-sm">{depositTier.icon}</span>}
+              <p className={`text-2xl font-bold ${depositTier.textColor}`}>¥{totalDeposit.toLocaleString()}</p>
               <p className="text-xs text-gray-400 mt-0.5">預けた金額</p>
-            </div>
+            </Link>
           </div>
         </div>
 

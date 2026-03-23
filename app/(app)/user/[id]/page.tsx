@@ -1,5 +1,5 @@
 import { getSessionUser } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -27,7 +27,68 @@ export default async function UserProfilePage({ params }: Props) {
     supabase.from('checkins').select('*, profiles!checkins_user_id_profiles_fkey(nickname)').eq('user_id', id).order('checked_in_at', { ascending: false }).limit(20),
   ])
 
-  if (!profile) notFound()
+  if (!profile) {
+    // profilesテーブルにレコードがないユーザー → 匿名プロフィールを表示
+    return (
+      <div className="min-h-screen bg-gray-50 pb-8">
+        <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+            <Link href="/home" className="text-gray-400">← 戻る</Link>
+            <h1 className="font-semibold text-gray-900">プロフィール</h1>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-6">
+          <div className="bg-white rounded-2xl shadow-sm p-5 mb-4 text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+              ?
+            </div>
+            <h2 className="text-lg font-bold text-gray-900">匿名</h2>
+            <p className="text-sm text-gray-500 mt-1">プロフィールが設定されていません</p>
+          </div>
+
+          {/* 投稿一覧 */}
+          <h3 className="font-bold text-gray-900 mb-3">投稿一覧</h3>
+          {checkins && checkins.length > 0 ? (
+            <div className="space-y-3">
+              {checkins.map((checkin) => (
+                <div key={checkin.id} className="bg-white rounded-2xl shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-xs text-gray-400">
+                      {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        timeZone: 'Asia/Tokyo'
+                      })}
+                    </p>
+                  </div>
+                  {checkin.photo_url && (
+                    <div className="relative w-full rounded-xl mb-2 overflow-hidden" style={{ maxHeight: '288px' }}>
+                      <Image
+                        src={checkin.photo_url}
+                        alt="記録"
+                        width={500}
+                        height={500}
+                        className="w-full object-cover"
+                        loading="lazy"
+                        sizes="(max-width: 512px) 100vw, 512px"
+                      />
+                    </div>
+                  )}
+                  {checkin.comment && (
+                    <p className="text-sm text-gray-600">{checkin.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-4xl mb-2">📷</p>
+              <p className="text-sm">まだ投稿がありません</p>
+            </div>
+          )}
+        </main>
+      </div>
+    )
+  }
 
   const snsLinks = (profile.sns_links ?? {}) as Record<string, string>
   const hasSns = Object.values(snsLinks).some(v => v && v.trim())

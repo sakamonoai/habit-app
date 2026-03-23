@@ -147,7 +147,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </div>
           )}
           {challenge.description && (
-            <p className="text-gray-600 text-sm mb-4">{challenge.description}</p>
+            <p className="text-gray-600 text-sm mb-4 whitespace-pre-line">{challenge.description}</p>
           )}
 
           <div className="grid grid-cols-2 gap-3">

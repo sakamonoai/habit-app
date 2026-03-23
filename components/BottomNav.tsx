@@ -8,6 +8,7 @@ const tabs = [
   { href: '/home', label: 'タイムライン', icon: '📋', activeIcon: '📋' },
   { href: '/challenges', label: 'チャレンジ', icon: '✨', activeIcon: '✨' },
   { href: '/checkin', label: '記録', icon: '📷', activeIcon: '📷' },
+  { href: '/history', label: '振り返り', icon: '🏦', activeIcon: '🏦' },
   { href: '/dashboard', label: 'マイページ', icon: '👤', activeIcon: '👤' },
 ]
 
@@ -31,7 +32,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-20 pb-[max(env(safe-area-inset-bottom),8px)]">
-      <div className="max-w-lg mx-auto grid grid-cols-4">
+      <div className="max-w-lg mx-auto grid grid-cols-5">
         {tabs.map((tab) => {
           const isActive = optimisticPath === tab.href || optimisticPath.startsWith(tab.href + '/')
           return (
