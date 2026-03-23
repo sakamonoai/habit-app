@@ -1,10 +1,35 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// サーバーサイドではWebSocketが使えないため、ダミーのtransportを提供
+class NoopWebSocket {
+  static CONNECTING = 0; static OPEN = 1; static CLOSING = 2; static CLOSED = 3
+  readyState = 3
+  onopen: (() => void) | null = null
+  onclose: (() => void) | null = null
+  onmessage: (() => void) | null = null
+  onerror: (() => void) | null = null
+  close() {}
+  send() {}
+  addEventListener() {}
+  removeEventListener() {}
+  dispatchEvent() { return false }
+  get binaryType(): BinaryType { return 'blob' }
+  set binaryType(_v: BinaryType) {}
+  get bufferedAmount() { return 0 }
+  get extensions() { return '' }
+  get protocol() { return '' }
+  get url() { return '' }
+  get CONNECTING() { return 0 }
+  get OPEN() { return 1 }
+  get CLOSING() { return 2 }
+  get CLOSED() { return 3 }
+}
+
 export async function createClient() {
   const cookieStore = await cookies()
 
-  const client = createServerClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -20,12 +45,11 @@ export async function createClient() {
           } catch {}
         },
       },
+      realtime: {
+        transport: NoopWebSocket as unknown as typeof WebSocket,
+      },
     }
   )
-  // サーバーサイドではWebSocketが使えないためrealtimeを無効化
-  client.realtime.setAuth(null)
-  try { client.realtime.disconnect() } catch {}
-  return client
 }
 
 /** セッションからユーザーIDを高速取得（JWTローカル検証のみ、API往復なし） */
