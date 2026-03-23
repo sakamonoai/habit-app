@@ -1,6 +1,8 @@
 import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { getDepositTier } from '@/lib/deposit-tier'
+import { getTodayBoundsUTC } from '@/lib/timezone'
 
 const QUOTES = [
   '預けた金額の分だけ、強くなれる。',
@@ -15,18 +17,36 @@ const QUOTES = [
   'お金を預けた瞬間、言い訳はできなくなる。',
   '未来の自分に投資しろ。リターンは習慣だ。',
   '逃げ道を断った人間だけが、本当に前に進める。',
+  'チャレンジ参加の数だけ強くなれるよ。',
 ]
 
 export default async function HistoryPage() {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
-  // 全チャレンジ参加履歴を取得（active/completed/forfeited）
-  const { data: memberships } = await supabase
-    .from('group_members')
-    .select('*, challenges(title, duration_days)')
-    .eq('user_id', user.id)
-    .order('joined_at', { ascending: false })
+  // 全履歴・バッジ・作成チャレンジを並列取得
+  const [{ data: memberships }, { data: badges }, { data: createdChallenges }, { data: profile }] = await Promise.all([
+    supabase
+      .from('group_members')
+      .select('*, challenges(title, duration_days, schedule_type, start_date)')
+      .eq('user_id', user.id)
+      .order('joined_at', { ascending: false }),
+    supabase
+      .from('badges')
+      .select('*, challenges(title, thumbnail_url, category)')
+      .eq('user_id', user.id)
+      .eq('badge_type', 'perfect'),
+    supabase
+      .from('challenges')
+      .select('id, title, category, status, schedule_type, duration_days, created_at')
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', user.id)
+      .single(),
+  ])
 
   const allMemberships = memberships ?? []
 
@@ -57,14 +77,62 @@ export default async function HistoryPage() {
     }
   }
 
+  const userTz = profile?.timezone || 'Asia/Tokyo'
+  const { today } = getTodayBoundsUTC(userTz)
+
+  // チャレンジ統計を計算
+  const challengeStats = allMemberships.map((m) => {
+    const challenge = m.challenges as { title: string; duration_days: number; schedule_type: string | null; start_date: string | null } | null
+    const durationDays = challenge?.duration_days ?? 1
+    const checkinCount = checkinCounts[m.id] ?? 0
+    const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
+    const depositAmount = m.deposit_amount ?? 0
+
+    const joinedAt = m.joined_at ? new Date(m.joined_at) : new Date()
+    const now = new Date()
+    const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+    const requiredDays = Math.ceil(durationDays * 0.85)
+    const allowedMisses = durationDays - requiredDays
+    const missedDays = elapsedDays - checkinCount
+    const remainingMisses = allowedMisses - missedDays
+    const remainingDays = durationDays - elapsedDays
+    const isOngoing = remainingDays >= 0
+
+    const notStartedYet = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date > today
+      : joinedAt > now
+    const startDateLabel = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date
+      : m.joined_at ? m.joined_at.split('T')[0] : null
+
+    return {
+      membershipId: m.id,
+      groupId: m.group_id,
+      title: challenge?.title ?? '不明',
+      durationDays,
+      checkinCount,
+      rate,
+      depositAmount,
+      status: m.status as string,
+      remainingMisses,
+      isOngoing,
+      notStartedYet,
+      startDateLabel,
+      joinedAt: m.joined_at,
+    }
+  })
+
+  const activeChallenges = challengeStats.filter(s => s.status === 'active')
+  const pastChallenges = challengeStats.filter(s => s.status !== 'active')
+
   const totalDeposit = allMemberships.reduce((sum, m) => sum + (m.deposit_amount ?? 0), 0)
   const completedCount = allMemberships.filter(m => m.status === 'completed').length
+  const totalCheckins = challengeStats.reduce((sum, s) => sum + s.checkinCount, 0)
   const tier = getDepositTier(totalDeposit)
 
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)]
 
   const statusConfig = {
-    active: { label: '🔥 挑戦中', bg: 'bg-orange-100', text: 'text-orange-700' },
     completed: { label: '✅ 返金済み', bg: 'bg-green-100', text: 'text-green-700' },
     forfeited: { label: '❌ 没収', bg: 'bg-red-100', text: 'text-red-700' },
   } as const
@@ -96,73 +164,198 @@ export default async function HistoryPage() {
       <main className="max-w-lg mx-auto px-4 py-6">
         {/* サマリー統計 */}
         <div className="bg-white rounded-2xl shadow-sm p-4 -mt-4 mb-6">
-          <div className="grid grid-cols-3 divide-x divide-gray-100">
-            <div className="text-center px-2">
-              <p className="text-xl font-bold text-gray-900">¥{totalDeposit.toLocaleString()}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">累計デポジット</p>
+          <div className="grid grid-cols-4 divide-x divide-gray-100">
+            <div className="text-center px-1">
+              <p className="text-lg font-bold text-gray-900">¥{totalDeposit.toLocaleString()}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">累計額</p>
             </div>
-            <div className="text-center px-2">
-              <p className="text-xl font-bold text-gray-900">{allMemberships.length}</p>
+            <div className="text-center px-1">
+              <p className="text-lg font-bold text-gray-900">{allMemberships.length}</p>
               <p className="text-[10px] text-gray-400 mt-0.5">参加回数</p>
             </div>
-            <div className="text-center px-2">
-              <p className="text-xl font-bold text-green-500">{completedCount}</p>
+            <div className="text-center px-1">
+              <p className="text-lg font-bold text-gray-900">{totalCheckins}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">総記録数</p>
+            </div>
+            <div className="text-center px-1">
+              <p className="text-lg font-bold text-green-500">{completedCount}</p>
               <p className="text-[10px] text-gray-400 mt-0.5">返金成功</p>
             </div>
           </div>
         </div>
 
-        {/* チャレンジ履歴 */}
-        <h3 className="font-bold text-gray-900 mb-3">チャレンジ履歴</h3>
-        {allMemberships.length > 0 ? (
-          <div className="space-y-3">
-            {allMemberships.map((m) => {
-              const challenge = m.challenges as { title: string; duration_days: number } | null
-              const durationDays = challenge?.duration_days ?? 1
-              const checkinCount = checkinCounts[m.id] ?? 0
-              const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
-              const depositAmount = m.deposit_amount ?? 0
-              const status = statusConfig[m.status as keyof typeof statusConfig] ?? statusConfig.active
+        {/* 100%達成バッジ */}
+        {badges && badges.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>🏆</span>100%達成バッジ
+            </h3>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {badges.map((badge) => {
+                const challenge = badge.challenges as unknown as { title: string; thumbnail_url: string | null; category: string | null } | null
+                return (
+                  <div key={badge.id} className="shrink-0 w-20 text-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-400 p-0.5 shadow-md">
+                      <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center">
+                        <span className="text-3xl">🏆</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-gray-600 font-medium mt-1.5 line-clamp-2 leading-tight">
+                      {challenge?.title ?? '不明'}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
+        {/* 参加中のチャレンジ */}
+        {activeChallenges.length > 0 && (
+          <>
+            <h3 className="font-bold text-gray-900 mb-3">参加中のチャレンジ</h3>
+            <div className="space-y-3 mb-6">
+              {activeChallenges.map((s) => (
+                <Link
+                  key={s.membershipId}
+                  href={`/group/${s.groupId}`}
+                  className="block bg-white rounded-2xl shadow-sm p-4 hover:bg-gray-50 transition-colors"
+                >
+                  {s.notStartedYet ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
+                        </div>
+                        <div className="ml-4">
+                          <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <span className="text-xl">⏳</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                        <p className="text-xs text-blue-600 font-semibold">
+                          📅 {s.startDateLabel ? `${new Date(s.startDateLabel).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}から開始` : 'まもなく開始'}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
+                        <span className={`text-sm font-bold ${s.rate >= 85 ? 'text-green-500' : s.rate >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+                          {s.rate}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${s.rate >= 85 ? 'bg-green-500' : s.rate >= 50 ? 'bg-orange-400' : 'bg-red-400'}`}
+                          style={{ width: `${Math.max(s.rate, 2)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <span>{s.checkinCount} / {s.durationDays}日</span>
+                        <span>¥{s.depositAmount.toLocaleString()}</span>
+                      </div>
+                      {s.isOngoing && s.remainingMisses <= 0 && (
+                        <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                          <p className="text-xs text-red-600 font-semibold">
+                            {s.remainingMisses < 0
+                              ? '⛔ 達成率85%を下回っています…'
+                              : '🚨 あと1日でもサボるとアウトです！'}
+                          </p>
+                        </div>
+                      )}
+                      {s.isOngoing && s.remainingMisses === 1 && (
+                        <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                          <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* チャレンジ履歴（過去） */}
+        <h3 className="font-bold text-gray-900 mb-3">チャレンジ履歴</h3>
+        {pastChallenges.length > 0 ? (
+          <div className="space-y-3">
+            {pastChallenges.map((s) => {
+              const status = statusConfig[s.status as keyof typeof statusConfig]
               return (
-                <div key={m.id} className="bg-white rounded-2xl shadow-sm p-4">
+                <div key={s.membershipId} className="bg-white rounded-2xl shadow-sm p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-gray-900 text-sm flex-1 mr-2 truncate">
-                      {challenge?.title ?? '不明'}
+                      {s.title}
                     </h4>
-                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${status.bg} ${status.text}`}>
-                      {status.label}
-                    </span>
+                    {status && (
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${status.bg} ${status.text}`}>
+                        {status.label}
+                      </span>
+                    )}
                   </div>
-
-                  {/* 達成率バー */}
                   <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
                     <div
-                      className={`h-2 rounded-full transition-all ${rate >= 85 ? 'bg-green-500' : rate >= 50 ? 'bg-orange-400' : 'bg-red-400'}`}
-                      style={{ width: `${Math.max(rate, 2)}%` }}
+                      className={`h-2 rounded-full transition-all ${s.rate >= 85 ? 'bg-green-500' : s.rate >= 50 ? 'bg-orange-400' : 'bg-red-400'}`}
+                      style={{ width: `${Math.max(s.rate, 2)}%` }}
                     />
                   </div>
-
                   <div className="flex justify-between text-xs text-gray-400">
-                    <span>{checkinCount} / {durationDays}日（{rate}%）</span>
-                    <span className={`font-medium ${depositAmount > 0 ? 'text-orange-500' : 'text-gray-300'}`}>
-                      ¥{depositAmount.toLocaleString()}
+                    <span>{s.checkinCount} / {s.durationDays}日（{s.rate}%）</span>
+                    <span className={`font-medium ${s.depositAmount > 0 ? 'text-orange-500' : 'text-gray-300'}`}>
+                      ¥{s.depositAmount.toLocaleString()}
                     </span>
                   </div>
-
-                  {depositAmount > 0 && (
-                    <div className="mt-2 text-[10px] text-gray-400">
-                      {new Date(m.joined_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })} 参加
-                    </div>
-                  )}
+                  <div className="mt-2 text-[10px] text-gray-400">
+                    {new Date(s.joinedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })} 参加
+                  </div>
                 </div>
               )
             })}
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-4xl mb-3">🏦</p>
-            <p className="text-sm">まだチャレンジ履歴がありません</p>
+          <div className="text-center py-8 text-gray-400">
+            <p className="text-3xl mb-2">📋</p>
+            <p className="text-sm">まだ完了したチャレンジはありません</p>
+          </div>
+        )}
+
+        {/* 作成したチャレンジ */}
+        {createdChallenges && createdChallenges.length > 0 && (
+          <div className="mt-8">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>📝</span>作成したチャレンジ
+            </h3>
+            <div className="space-y-2">
+              {createdChallenges.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/challenges/${c.id}`}
+                  className="block bg-white rounded-2xl shadow-sm p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">{c.title}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">{c.category}</span>
+                        <span className="text-xs text-gray-400">{c.duration_days}日間</span>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                          c.status === 'active' ? 'bg-green-100 text-green-700' :
+                          c.status === 'deleted' ? 'bg-red-100 text-red-600' :
+                          'bg-gray-200 text-gray-500'
+                        }`}>
+                          {c.status === 'active' ? '公開中' : c.status === 'deleted' ? '削除済み' : c.status}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-gray-300 ml-2">→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </main>
