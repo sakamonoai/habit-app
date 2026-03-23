@@ -243,13 +243,12 @@ export default async function HomePage({ searchParams }: Props) {
     const err = e instanceof Error ? e : new Error(String(e))
     console.error('[HOME] FATAL:', err.message, err.stack)
     return (
-      <div className="min-h-screen bg-white p-8">
-        <h1 className="text-xl font-bold text-red-600 mb-4">Timeline Debug Error</h1>
-        <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto whitespace-pre-wrap">
-          {err.message}
-          {'\n\n'}
-          {err.stack}
-        </pre>
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <p className="text-4xl mb-4">😵</p>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">タイムラインを読み込めませんでした</h2>
+          <p className="text-sm text-gray-500 mb-6">一時的なエラーが発生しました。ページを再読み込みしてください。</p>
+        </div>
       </div>
     )
   }
