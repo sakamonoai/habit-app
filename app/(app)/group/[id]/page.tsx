@@ -87,9 +87,10 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
   const myRate = Math.min(Math.round(((myCheckinCount ?? 0) / durationDays) * 100), 100)
 
   // リーチ判定
-  const joinedAt = myMember?.joined_at ? new Date(myMember.joined_at) : new Date()
-  const now = new Date()
-  const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+  const startDate = group.challenges?.schedule_type === 'fixed' && group.challenges?.start_date
+    ? group.challenges.start_date
+    : (myMember?.joined_at ? myMember.joined_at.split('T')[0] : today)
+  const elapsedDays = Math.max(1, Math.floor((new Date(today + 'T00:00:00').getTime() - new Date(startDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1)
   const requiredDays = Math.ceil(durationDays * 0.85)
   const allowedMisses = durationDays - requiredDays
   const missedDays = elapsedDays - (myCheckinCount ?? 0)

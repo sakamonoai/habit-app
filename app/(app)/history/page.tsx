@@ -88,9 +88,10 @@ export default async function HistoryPage() {
     const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
     const depositAmount = m.deposit_amount ?? 0
 
-    const joinedAt = m.joined_at ? new Date(m.joined_at) : new Date()
-    const now = new Date()
-    const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+    const startDate = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date
+      : (m.joined_at ? m.joined_at.split('T')[0] : today)
+    const elapsedDays = Math.max(1, Math.floor((new Date(today + 'T00:00:00').getTime() - new Date(startDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1)
     const requiredDays = Math.ceil(durationDays * 0.85)
     const allowedMisses = durationDays - requiredDays
     const missedDays = elapsedDays - checkinCount

@@ -2,6 +2,7 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getTodayBoundsUTC } from '@/lib/timezone'
+import DeadlineWarning from '@/components/DeadlineWarning'
 
 export default async function CheckinPage() {
   const { supabase, user } = await getSessionUser()
@@ -14,7 +15,7 @@ export default async function CheckinPage() {
   // メンバーシップ（チャレンジ情報join）を1クエリで取得
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('id, group_id, challenge_id, joined_at, challenges(title, duration_days, status, schedule_type, start_date)')
+    .select('id, group_id, challenge_id, joined_at, challenges(title, duration_days, status, schedule_type, start_date, checkin_deadline)')
     .eq('user_id', user.id)
 
   if (!memberships || memberships.length === 0) {
@@ -67,13 +68,15 @@ export default async function CheckinPage() {
 
   const now = new Date()
   const groups = memberships.map(m => {
-    const challenge = m.challenges as unknown as { title: string; duration_days: number; status: string | null; schedule_type: string | null; start_date: string | null } | null
+    const challenge = m.challenges as unknown as { title: string; duration_days: number; status: string | null; schedule_type: string | null; start_date: string | null; checkin_deadline: string | null } | null
     const durationDays = challenge?.duration_days ?? 1
     const checkinCount = countMap[m.id] ?? 0
     const rate = Math.min(Math.round((checkinCount / durationDays) * 100), 100)
 
-    const joinedAt = m.joined_at ? new Date(m.joined_at) : now
-    const elapsedDays = Math.max(1, Math.floor((now.getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+    const startDate = challenge?.schedule_type === 'fixed' && challenge.start_date
+      ? challenge.start_date
+      : (m.joined_at ? m.joined_at.split('T')[0] : today)
+    const elapsedDays = Math.max(1, Math.floor((new Date(today + 'T00:00:00').getTime() - new Date(startDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1)
     const requiredDays = Math.ceil(durationDays * 0.85)
     const allowedMisses = durationDays - requiredDays
     const missedDays = elapsedDays - checkinCount
@@ -107,6 +110,7 @@ export default async function CheckinPage() {
       isDeleted,
       notStartedYet,
       startDateLabel,
+      checkinDeadline: challenge?.checkin_deadline ?? null,
     }
   })
 
@@ -189,6 +193,9 @@ export default async function CheckinPage() {
                   <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
                     <p className="text-xs text-yellow-700 font-semibold">⚠️ あと1回だけサボれます。油断禁物！</p>
                   </div>
+                )}
+                {g.isOngoing && !g.checkedInToday && g.checkinDeadline && (
+                  <DeadlineWarning deadline={g.checkinDeadline} />
                 )}
                 </>
                 )}
