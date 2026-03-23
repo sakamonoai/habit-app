@@ -25,6 +25,7 @@ type Props = {
 }
 
 export default async function HomePage({ searchParams }: Props) {
+  try {
   const { challenge: filterChallengeId } = await searchParams
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
@@ -238,4 +239,18 @@ export default async function HomePage({ searchParams }: Props) {
       </main>
     </div>
   )
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    console.error('[HOME] FATAL:', err.message, err.stack)
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <h1 className="text-xl font-bold text-red-600 mb-4">Timeline Debug Error</h1>
+        <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto whitespace-pre-wrap">
+          {err.message}
+          {'\n\n'}
+          {err.stack}
+        </pre>
+      </div>
+    )
+  }
 }
