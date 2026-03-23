@@ -30,14 +30,16 @@ export default async function HomePage({ searchParams }: Props) {
   if (!user) redirect('/login')
 
   // 閲覧ユーザーのタイムゾーンを取得
-  const { data: myProfile } = await supabase.from('profiles').select('timezone').eq('id', user.id).single()
+  const { data: myProfile, error: profileError } = await supabase.from('profiles').select('timezone').eq('id', user.id).single()
+  if (profileError) console.error('[HOME] profile error:', profileError.message)
   const viewerTz = myProfile?.timezone || 'Asia/Tokyo'
 
   // 1段目: メンバーシップ + チャレンジ情報をjoinで一括取得
-  const { data: memberships } = await supabase
+  const { data: memberships, error: memberError } = await supabase
     .from('group_members')
     .select('group_id, challenge_id, challenges(id, title)')
     .eq('user_id', user.id)
+  if (memberError) console.error('[HOME] membership error:', memberError.message)
 
   if (!memberships || memberships.length === 0) {
     return (
@@ -91,30 +93,43 @@ export default async function HomePage({ searchParams }: Props) {
     ? memberships.filter(m => m.challenge_id === filterChallengeId).map(m => m.group_id)
     : groupIds
 
-  // 2段目: チェックイン + profiles + reactions を全てjoinで1クエリ
-  const { data: checkins } = await supabase
+  // 2段目: チェックイン + profiles を取得（reactionsは別クエリで取得）
+  const { data: checkins, error: checkinError } = await supabase
     .from('checkins')
-    .select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url, timezone), reactions(emoji, user_id)')
+    .select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url, timezone)')
     .in('group_id', targetGroupIds)
     .order('checked_in_at', { ascending: false })
     .limit(30)
+  if (checkinError) console.error('[HOME] checkin error:', checkinError.message, checkinError.code)
 
-  // 自分が報告済みのチェックインを取得
+  // リアクション・報告を並列取得
   const checkinIds = checkins?.map(c => c.id) ?? []
-  const { data: myReports } = checkinIds.length > 0
-    ? await supabase.from('reports').select('checkin_id').in('checkin_id', checkinIds)
-    : { data: [] as { checkin_id: string }[] }
+  const [{ data: allReactions }, { data: myReports }] = await Promise.all([
+    checkinIds.length > 0
+      ? supabase.from('reactions').select('checkin_id, emoji, user_id').in('checkin_id', checkinIds)
+      : Promise.resolve({ data: [] as { checkin_id: string; emoji: string; user_id: string }[] }),
+    checkinIds.length > 0
+      ? supabase.from('reports').select('checkin_id').in('checkin_id', checkinIds)
+      : Promise.resolve({ data: [] as { checkin_id: string }[] }),
+  ])
   const reportedCheckinIds = new Set((myReports ?? []).map(r => r.checkin_id))
 
-  // リアクションをcheckin_idでグループ化
-  const getReactionsForCheckin = (checkin: { reactions?: { emoji: string; user_id: string }[] }) => {
-    const emojiMap = new Map<string, { count: number; hasReacted: boolean }>()
-    for (const r of checkin.reactions ?? []) {
-      const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
-      existing.count++
-      if (r.user_id === user!.id) existing.hasReacted = true
-      emojiMap.set(r.emoji, existing)
+  // リアクションをcheckin_idでグループ化（O(n)で一括処理）
+  const reactionsByCheckin = new Map<string, Map<string, { count: number; hasReacted: boolean }>>()
+  for (const r of allReactions ?? []) {
+    let emojiMap = reactionsByCheckin.get(r.checkin_id)
+    if (!emojiMap) {
+      emojiMap = new Map()
+      reactionsByCheckin.set(r.checkin_id, emojiMap)
     }
+    const existing = emojiMap.get(r.emoji) ?? { count: 0, hasReacted: false }
+    existing.count++
+    if (r.user_id === user!.id) existing.hasReacted = true
+    emojiMap.set(r.emoji, existing)
+  }
+  const getReactionsForCheckin = (checkinId: string) => {
+    const emojiMap = reactionsByCheckin.get(checkinId)
+    if (!emojiMap) return []
     return Array.from(emojiMap.entries()).map(([emoji, data]) => ({
       emoji,
       count: data.count,
@@ -200,7 +215,7 @@ export default async function HomePage({ searchParams }: Props) {
                     <ReactionButton
                       checkinId={checkin.id}
                       checkinUserId={checkin.user_id}
-                      initialReactions={getReactionsForCheckin(checkin)}
+                      initialReactions={getReactionsForCheckin(checkin.id)}
                     />
                     {checkin.user_id !== user.id && (
                       <ReportButton
