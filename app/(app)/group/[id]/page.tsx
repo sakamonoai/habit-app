@@ -231,6 +231,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
                 )}
                 <ReactionButton
                   checkinId={checkin.id}
+                  checkinUserId={checkin.user_id}
                   initialReactions={getReactionsForCheckin(checkin.id)}
                 />
               </div>

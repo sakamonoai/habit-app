@@ -7,10 +7,11 @@ const EMOJIS = ['👍', '🔥', '💪', '👏', '❤️']
 
 type Props = {
   checkinId: string
+  checkinUserId: string
   initialReactions: { emoji: string; count: number; hasReacted: boolean }[]
 }
 
-export default function ReactionButton({ checkinId, initialReactions }: Props) {
+export default function ReactionButton({ checkinId, checkinUserId, initialReactions }: Props) {
   const [reactions, setReactions] = useState(initialReactions)
   const [showPicker, setShowPicker] = useState(false)
   const supabase = createClient()
@@ -42,6 +43,23 @@ export default function ReactionButton({ checkinId, initialReactions }: Props) {
       await supabase
         .from('reactions')
         .insert({ checkin_id: checkinId, user_id: user.id, emoji })
+
+      // 自分以外の投稿にリアクションした場合、通知を送る
+      if (checkinUserId !== user.id) {
+        const { data: myProfile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single()
+        const name = myProfile?.nickname || '誰か'
+        supabase.from('notifications').insert({
+          user_id: checkinUserId,
+          title: `${name}さんが${emoji}をつけました`,
+          body: 'あなたの投稿にリアクションがありました',
+          url: '/home',
+          read: false,
+        }).then(() => {})
+      }
 
       setReactions(prev => {
         const exists = prev.find(r => r.emoji === emoji)

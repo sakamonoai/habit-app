@@ -7,6 +7,7 @@ import TimelineFilter from '@/components/TimelineFilter'
 import PullToRefresh from '@/components/PullToRefresh'
 import PhotoViewer from '@/components/PhotoViewer'
 import { getJstDiffLabel } from '@/lib/timezone'
+import NotificationBell from '@/components/NotificationBell'
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -124,7 +125,10 @@ export default async function HomePage({ searchParams }: Props) {
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">タイムライン</h1>
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl font-bold text-gray-900">タイムライン</h1>
+            <NotificationBell />
+          </div>
           <TimelineFilter challenges={filterOptions} />
         </div>
       </header>
@@ -186,6 +190,7 @@ export default async function HomePage({ searchParams }: Props) {
 
                   <ReactionButton
                     checkinId={checkin.id}
+                    checkinUserId={checkin.user_id}
                     initialReactions={getReactionsForCheckin(checkin)}
                   />
                 </div>
