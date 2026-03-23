@@ -2,6 +2,21 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getDepositTier } from '@/lib/deposit-tier'
 
+const QUOTES = [
+  '預けた金額の分だけ、強くなれる。',
+  '累計デポジット額＝あなたがこれまで積み上げてきたものの価値だ。',
+  'お金を預ける覚悟が、習慣を本物にする。',
+  '「やります」は無料。デポジットは本気の証。',
+  'リスクを取った回数だけ、自分を信じられるようになる。',
+  '自分に賭けた金額が、そのまま自分への信頼になる。',
+  '安全圏にいたままでは、何も変わらない。',
+  '覚悟の重さは、デポジットの重さで測れる。',
+  '今日の一歩が、明日のデポジットを守る。',
+  'お金を預けた瞬間、言い訳はできなくなる。',
+  '未来の自分に投資しろ。リターンは習慣だ。',
+  '逃げ道を断った人間だけが、本当に前に進める。',
+]
+
 export default async function HistoryPage() {
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
@@ -46,6 +61,8 @@ export default async function HistoryPage() {
   const completedCount = allMemberships.filter(m => m.status === 'completed').length
   const tier = getDepositTier(totalDeposit)
 
+  const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)]
+
   const statusConfig = {
     active: { label: '🔥 挑戦中', bg: 'bg-orange-100', text: 'text-orange-700' },
     completed: { label: '✅ 返金済み', bg: 'bg-green-100', text: 'text-green-700' },
@@ -70,6 +87,7 @@ export default async function HistoryPage() {
           {!tier.name && (
             <p className="text-white/60 text-xs mt-2">チャレンジに参加してデポジットを預けよう</p>
           )}
+          <p className="text-white/70 text-xs mt-4 italic leading-relaxed">「{quote}」</p>
         </div>
       </div>
 
