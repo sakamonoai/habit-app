@@ -1,4 +1,4 @@
-const CACHE_NAME = 'habichalle-v3'
+const CACHE_NAME = 'habichalle-v5'
 
 // インストール時に即座にアクティブ化
 self.addEventListener('install', () => {
