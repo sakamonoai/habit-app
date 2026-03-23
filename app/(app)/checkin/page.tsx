@@ -110,9 +110,7 @@ export default async function CheckinPage() {
     }
   })
 
-  // アクティブなものを先、アーカイブを後に並べる
   const activeGroups = groups.filter(g => !g.isArchived)
-  const archivedGroups = groups.filter(g => g.isArchived)
 
   return (
     <div className="min-h-screen bg-white">
@@ -199,52 +197,6 @@ export default async function CheckinPage() {
           </div>
         )}
 
-        {/* アーカイブ（終了・削除済み） */}
-        {archivedGroups.length > 0 && (
-          <>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-semibold text-gray-400">アーカイブ</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-            <div className="space-y-3 opacity-60">
-              {archivedGroups.map((g) => (
-                <Link
-                  key={g.groupId}
-                  href={`/group/${g.groupId}?from=checkin`}
-                  className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-500 text-sm">{g.title}</h3>
-                        <span className="text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">
-                          {g.isDeleted ? '削除済み' : '終了'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full ${g.rate >= 85 ? 'bg-green-400' : 'bg-gray-300'}`}
-                            style={{ width: `${Math.max(g.rate, 2)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-400">{g.checkinCount}/{g.durationDays}日</span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                        <span className="text-xl">🏁</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-400">
-                    達成率 {g.rate}% — お疲れさまでした！
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
       </main>
     </div>
   )
