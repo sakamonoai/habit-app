@@ -9,6 +9,9 @@ export default function NotificationBell() {
   const supabase = createClient()
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let pollTimer: ReturnType<typeof setInterval> | null = null
+
     const fetchUnread = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -24,20 +27,33 @@ export default function NotificationBell() {
 
     fetchUnread()
 
-    // リアルタイム更新
-    const channel = supabase
-      .channel('notifications')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-      }, () => {
-        fetchUnread()
-      })
-      .subscribe()
+    // リアルタイム更新（WebSocket不可の環境ではポーリングにフォールバック）
+    try {
+      channel = supabase
+        .channel('notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        }, () => {
+          fetchUnread()
+        })
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            // WebSocket失敗時: 30秒ポーリングにフォールバック
+            if (!pollTimer) {
+              pollTimer = setInterval(fetchUnread, 30_000)
+            }
+          }
+        })
+    } catch {
+      // WebSocket自体が使えない環境（iOS Safari CSP制限等）: ポーリング
+      pollTimer = setInterval(fetchUnread, 30_000)
+    }
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) supabase.removeChannel(channel)
+      if (pollTimer) clearInterval(pollTimer)
     }
   }, [supabase])
 
