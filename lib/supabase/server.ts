@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
-  return createServerClient(
+  const client = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -22,6 +22,10 @@ export async function createClient() {
       },
     }
   )
+  // サーバーサイドではWebSocketが使えないためrealtimeを無効化
+  client.realtime.setAuth(null)
+  try { client.realtime.disconnect() } catch {}
+  return client
 }
 
 /** セッションからユーザーIDを高速取得（JWTローカル検証のみ、API往復なし） */
