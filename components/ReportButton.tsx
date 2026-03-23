@@ -58,11 +58,11 @@ export default function ReportButton({ checkinId, alreadyReported }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-gray-300 hover:text-gray-500 transition-colors"
+        className="text-gray-400 hover:text-red-400 transition-colors p-1"
         title="不正を報告"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-          <path fillRule="evenodd" d="M3 2a1 1 0 0 0-1 1v10.586l.293-.293A1 1 0 0 1 3 13h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H3Zm1 3a1 1 0 0 1 1-1h10a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z" clipRule="evenodd" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+          <path d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.524l2.078-.64A.75.75 0 0 0 18 12.25v-8.5a.75.75 0 0 0-.904-.734l-2.38.501a7.25 7.25 0 0 1-4.186-.363l-.502-.2a8.75 8.75 0 0 0-5.053-.439l-1.475.31V2.75Z" />
         </svg>
       </button>
 

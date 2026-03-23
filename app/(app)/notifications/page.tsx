@@ -35,34 +35,50 @@ export default async function NotificationsPage() {
 
         {items.length > 0 ? (
           <div className="space-y-3">
-            {items.map((n) => (
-              <Link
-                key={n.id}
-                href={n.url || '/home'}
-                className={`block rounded-2xl p-4 ${n.read ? 'bg-gray-50' : 'bg-orange-50 border border-orange-100'}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${n.read ? 'bg-gray-100' : 'bg-orange-100'}`}>
-                    <span className="text-lg">{n.title?.includes('🔥') ? '🔥' : n.title?.includes('👍') ? '👍' : n.title?.includes('💪') ? '💪' : n.title?.includes('👏') ? '👏' : n.title?.includes('❤️') ? '❤️' : '🔔'}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${n.read ? 'text-gray-600' : 'text-gray-900'}`}>{n.title}</p>
-                    {n.body && (
-                      <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>
+            {items.map((n) => {
+              const isAnnouncement = n.type === 'announcement'
+              const emoji = isAnnouncement
+                ? '📢'
+                : n.title?.includes('🔥') ? '🔥' : n.title?.includes('👍') ? '👍' : n.title?.includes('💪') ? '💪' : n.title?.includes('👏') ? '👏' : n.title?.includes('❤️') ? '❤️' : '🔔'
+              const unreadBg = isAnnouncement ? 'bg-blue-50 border border-blue-100' : 'bg-orange-50 border border-orange-100'
+              const iconBg = isAnnouncement
+                ? (n.read ? 'bg-blue-50' : 'bg-blue-100')
+                : (n.read ? 'bg-gray-100' : 'bg-orange-100')
+
+              return (
+                <Link
+                  key={n.id}
+                  href={n.url || '/home'}
+                  className={`block rounded-2xl p-4 ${n.read ? 'bg-gray-50' : unreadBg}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${iconBg}`}>
+                      <span className="text-lg">{emoji}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {isAnnouncement && (
+                        <span className="inline-block text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded mb-1">
+                          運営からのお知らせ
+                        </span>
+                      )}
+                      <p className={`text-sm font-semibold ${n.read ? 'text-gray-600' : 'text-gray-900'}`}>{n.title}</p>
+                      {n.body && (
+                        <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>
+                      )}
+                      <p className="text-xs text-gray-300 mt-1.5">
+                        {new Date(n.created_at).toLocaleString('ja-JP', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                          timeZone: 'Asia/Tokyo',
+                        })}
+                      </p>
+                    </div>
+                    {!n.read && (
+                      <span className={`w-2 h-2 rounded-full shrink-0 mt-2 ${isAnnouncement ? 'bg-blue-500' : 'bg-orange-500'}`} />
                     )}
-                    <p className="text-xs text-gray-300 mt-1.5">
-                      {new Date(n.created_at).toLocaleString('ja-JP', {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                        timeZone: 'Asia/Tokyo',
-                      })}
-                    </p>
                   </div>
-                  {!n.read && (
-                    <span className="w-2 h-2 bg-orange-500 rounded-full shrink-0 mt-2" />
-                  )}
-                </div>
-              </Link>
-            ))}
+                </Link>
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-16 text-gray-400">

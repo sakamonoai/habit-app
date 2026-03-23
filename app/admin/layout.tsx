@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: 'ユーザー管理', icon: '👥' },
   { href: '/admin/challenges', label: 'チャレンジ管理', icon: '🎯' },
   { href: '/admin/payments', label: '決済・売上', icon: '💰' },
+  { href: '/admin/announcements', label: 'お知らせ配信', icon: '📢' },
   { href: '/admin/reports', label: '不正報告', icon: '🚨' },
   { href: '/admin/contacts', label: 'お問い合わせ', icon: '✉️' },
 ]
