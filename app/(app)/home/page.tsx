@@ -6,7 +6,7 @@ import ReactionButton from '@/components/ReactionButton'
 import TimelineFilter from '@/components/TimelineFilter'
 import PullToRefresh from '@/components/PullToRefresh'
 import PhotoViewer from '@/components/PhotoViewer'
-import { getTimezoneShortName, getJstDiffLabel } from '@/lib/timezone'
+import { getJstDiffLabel } from '@/lib/timezone'
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -26,6 +26,10 @@ export default async function HomePage({ searchParams }: Props) {
   const { challenge: filterChallengeId } = await searchParams
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
+
+  // 閲覧ユーザーのタイムゾーンを取得
+  const { data: myProfile } = await supabase.from('profiles').select('timezone').eq('id', user.id).single()
+  const viewerTz = myProfile?.timezone || 'Asia/Tokyo'
 
   // 1段目: メンバーシップ + チャレンジ情報をjoinで一括取得
   const { data: memberships } = await supabase
@@ -164,15 +168,10 @@ export default async function HomePage({ searchParams }: Props) {
                         )}
                       </div>
                       <p className="text-xs text-gray-400">
-                        {(() => {
-                          const posterTz = checkin.profiles?.timezone || 'Asia/Tokyo'
-                          const time = new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
-                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                            timeZone: posterTz
-                          })
-                          const tzLabel = posterTz !== 'Asia/Tokyo' ? ` (${getTimezoneShortName(posterTz)})` : ''
-                          return `${time}${tzLabel}`
-                        })()}
+                        {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                          timeZone: viewerTz
+                        })}
                       </p>
                     </div>
                   </div>

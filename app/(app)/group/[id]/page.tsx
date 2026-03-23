@@ -7,7 +7,7 @@ import CheckinShareCard from '@/components/CheckinShareCard'
 import ReactionButton from '@/components/ReactionButton'
 import ReportButton from '@/components/ReportButton'
 import PhotoViewer from '@/components/PhotoViewer'
-import { getTodayBoundsUTC, getTimezoneShortName, getJstDiffLabel } from '@/lib/timezone'
+import { getTodayBoundsUTC, getJstDiffLabel } from '@/lib/timezone'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -210,15 +210,10 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
                       )}
                     </div>
                     <p className="text-xs text-gray-400">
-                      {(() => {
-                        const posterTz = checkin.profiles?.timezone || 'Asia/Tokyo'
-                        const time = new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                          timeZone: posterTz
-                        })
-                        const tzLabel = posterTz !== 'Asia/Tokyo' ? ` (${getTimezoneShortName(posterTz)})` : ''
-                        return `${time}${tzLabel}`
-                      })()}
+                      {new Date(checkin.checked_in_at).toLocaleString('ja-JP', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        timeZone: userTz
+                      })}
                     </p>
                   </div>
                   {checkin.user_id !== user.id && (
