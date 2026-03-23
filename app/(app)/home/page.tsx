@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import ReactionButton from '@/components/ReactionButton'
+import ReportButton from '@/components/ReportButton'
 import TimelineFilter from '@/components/TimelineFilter'
 import PullToRefresh from '@/components/PullToRefresh'
 import PhotoViewer from '@/components/PhotoViewer'
@@ -98,6 +99,13 @@ export default async function HomePage({ searchParams }: Props) {
     .order('checked_in_at', { ascending: false })
     .limit(30)
 
+  // 自分が報告済みのチェックインを取得
+  const checkinIds = checkins?.map(c => c.id) ?? []
+  const { data: myReports } = checkinIds.length > 0
+    ? await supabase.from('reports').select('checkin_id').in('checkin_id', checkinIds)
+    : { data: [] as { checkin_id: string }[] }
+  const reportedCheckinIds = new Set((myReports ?? []).map(r => r.checkin_id))
+
   // リアクションをcheckin_idでグループ化
   const getReactionsForCheckin = (checkin: { reactions?: { emoji: string; user_id: string }[] }) => {
     const emojiMap = new Map<string, { count: number; hasReacted: boolean }>()
@@ -188,11 +196,19 @@ export default async function HomePage({ searchParams }: Props) {
                     <p className="text-sm text-gray-600 mb-1">{checkin.comment}</p>
                   )}
 
-                  <ReactionButton
-                    checkinId={checkin.id}
-                    checkinUserId={checkin.user_id}
-                    initialReactions={getReactionsForCheckin(checkin)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <ReactionButton
+                      checkinId={checkin.id}
+                      checkinUserId={checkin.user_id}
+                      initialReactions={getReactionsForCheckin(checkin)}
+                    />
+                    {checkin.user_id !== user.id && (
+                      <ReportButton
+                        checkinId={checkin.id}
+                        alreadyReported={reportedCheckinIds.has(checkin.id)}
+                      />
+                    )}
+                  </div>
                 </div>
               )
             })}
