@@ -87,7 +87,9 @@ export default async function HistoryPage() {
           {!tier.name && (
             <p className="text-white/60 text-xs mt-2">チャレンジに参加してデポジットを預けよう</p>
           )}
-          <p className="text-white/70 text-xs mt-4 italic leading-relaxed">「{quote}」</p>
+          <div className="mt-5 bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-4">
+            <p className="text-white text-sm font-medium italic leading-relaxed">「{quote}」</p>
+          </div>
         </div>
       </div>
 
