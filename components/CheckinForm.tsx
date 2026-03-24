@@ -53,10 +53,13 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     setCameraError('')
     setCameraOpen(true)
 
-    // カメラ切替時は既存ストリームを停止
+    // 既存ストリームを完全停止してからリセット
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop())
       streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
     }
 
     // Permissions API で事前に権限状態を確認（対応ブラウザのみ）
@@ -74,14 +77,16 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: targetMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+      const constraints: MediaStreamConstraints = {
+        video: { facingMode: { ideal: targetMode }, width: { ideal: 1280 }, height: { ideal: 960 } },
         audio: false,
-      })
+      }
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       streamRef.current = stream
       setPermissionDenied(false)
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        await videoRef.current.play().catch(() => {})
       }
     } catch (err) {
       const name = (err as DOMException)?.name
@@ -275,14 +280,14 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
         <p className="text-red-500 text-sm mb-2">{error}</p>
       )}
 
-      {/* カメラUI */}
+      {/* カメラUI（全画面オーバーレイ） */}
       {cameraOpen ? (
-        <div className="relative mb-3 rounded-xl overflow-hidden bg-black">
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
           {cameraError ? (
-            <div className="py-16 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center">
               <p className="text-white text-sm mb-3">{cameraError}</p>
               {permissionDenied && (
-                <p className="text-white/60 text-xs mb-3 px-4">
+                <p className="text-white/60 text-xs mb-3 px-4 text-center">
                   iOS: 設定 &gt; Safari &gt; カメラ で許可<br />
                   Android: 設定 &gt; アプリ &gt; ブラウザ &gt; 権限 で許可
                 </p>
@@ -296,39 +301,41 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
             </div>
           ) : (
             <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full rounded-xl"
-                style={facingMode === 'user' ? { transform: 'scaleX(-1)' } : undefined}
-              />
-              {/* カウントダウン表示 */}
-              {countdown !== null && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 bg-black/50 backdrop-blur rounded-full flex items-center justify-center">
-                    <span className="text-white text-5xl font-bold">{countdown}</span>
+              <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={facingMode === 'user' ? { transform: 'scaleX(-1)' } : undefined}
+                />
+                {/* カウントダウン表示 */}
+                {countdown !== null && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-24 h-24 bg-black/50 backdrop-blur rounded-full flex items-center justify-center">
+                      <span className="text-white text-5xl font-bold">{countdown}</span>
+                    </div>
                   </div>
+                )}
+                {/* タイマー選択（上部） */}
+                <div className="absolute top-[env(safe-area-inset-top,12px)] pt-3 inset-x-0 flex items-center justify-center gap-2">
+                  {[0, 3, 5, 10].map((sec) => (
+                    <button
+                      key={sec}
+                      onClick={() => setTimerSeconds(sec)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur transition-colors ${
+                        timerSeconds === sec
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-white/20 text-white'
+                      }`}
+                    >
+                      {sec === 0 ? 'OFF' : `${sec}秒`}
+                    </button>
+                  ))}
                 </div>
-              )}
-              {/* タイマー選択（上部） */}
-              <div className="absolute top-3 inset-x-0 flex items-center justify-center gap-2">
-                {[0, 3, 5, 10].map((sec) => (
-                  <button
-                    key={sec}
-                    onClick={() => setTimerSeconds(sec)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur transition-colors ${
-                      timerSeconds === sec
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    {sec === 0 ? 'OFF' : `${sec}秒`}
-                  </button>
-                ))}
               </div>
-              <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-6">
+              <div className="pb-[env(safe-area-inset-bottom,20px)] pt-4 pb-6 flex items-center justify-center gap-6 bg-black/80">
                 <button
                   onClick={hideCamera}
                   className="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white text-lg"
