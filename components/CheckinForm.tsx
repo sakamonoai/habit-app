@@ -27,6 +27,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -47,16 +48,15 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     }
   }, [])
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode?: 'environment' | 'user') => {
+    const targetMode = mode ?? facingMode
     setCameraError('')
     setCameraOpen(true)
 
-    // 既存のストリームが生きていれば再利用（getUserMedia を呼ばない）
-    if (streamRef.current && streamRef.current.active) {
-      if (videoRef.current) {
-        videoRef.current.srcObject = streamRef.current
-      }
-      return
+    // カメラ切替時は既存ストリームを停止
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop())
+      streamRef.current = null
     }
 
     // Permissions API で事前に権限状態を確認（対応ブラウザのみ）
@@ -75,7 +75,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } },
+        video: { facingMode: targetMode, width: { ideal: 1280 }, height: { ideal: 960 } },
         audio: false,
       })
       streamRef.current = stream
@@ -92,7 +92,13 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
         setCameraError('カメラにアクセスできません。デバイスにカメラが接続されているか確認してください。')
       }
     }
-  }, [])
+  }, [facingMode])
+
+  const toggleCamera = useCallback(() => {
+    const newMode = facingMode === 'environment' ? 'user' : 'environment'
+    setFacingMode(newMode)
+    startCamera(newMode)
+  }, [facingMode, startCamera])
 
   // カメラUIを閉じる（ストリームは維持）
   const hideCamera = useCallback(() => {
@@ -122,6 +128,11 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // インカメ時はミラー反転して撮影（プレビューの見た目と一致させる）
+    if (facingMode === 'user') {
+      ctx.translate(canvas.width, 0)
+      ctx.scale(-1, 1)
+    }
     ctx.drawImage(video, 0, 0)
     canvas.toBlob((blob) => {
       if (!blob) return
@@ -291,6 +302,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
                 playsInline
                 muted
                 className="w-full rounded-xl"
+                style={facingMode === 'user' ? { transform: 'scaleX(-1)' } : undefined}
               />
               {/* カウントダウン表示 */}
               {countdown !== null && (
@@ -334,7 +346,13 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
                     )}
                   </div>
                 </button>
-                <div className="w-12 h-12" />
+                <button
+                  onClick={toggleCamera}
+                  className="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white text-lg"
+                  title={facingMode === 'environment' ? 'インカメに切替' : '外カメに切替'}
+                >
+                  🔄
+                </button>
               </div>
             </>
           )}
@@ -352,7 +370,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
         </div>
       ) : (
         <button
-          onClick={startCamera}
+          onClick={() => startCamera()}
           className="w-full py-10 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-orange-300 hover:text-orange-400 transition-all mb-3 active:scale-[0.98]"
         >
           <p className="text-4xl mb-2">📸</p>
