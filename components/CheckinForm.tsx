@@ -77,11 +77,19 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
     }
 
     try {
-      const constraints: MediaStreamConstraints = {
-        video: { facingMode: { ideal: targetMode }, width: { ideal: 1280 }, height: { ideal: 960 } },
-        audio: false,
+      // exact で強制指定し、失敗時は ideal にフォールバック（iOS Safari対策）
+      let stream: MediaStream | null = null
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: targetMode }, width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false,
+        })
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: targetMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false,
+        })
       }
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       streamRef.current = stream
       setPermissionDenied(false)
       if (videoRef.current) {
