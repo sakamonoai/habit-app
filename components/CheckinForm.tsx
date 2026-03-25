@@ -155,7 +155,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
       setPreview(URL.createObjectURL(blob))
       hideCamera()
     }, 'image/jpeg', 0.85)
-  }, [hideCamera])
+  }, [facingMode, hideCamera])
 
   const handleShutter = useCallback(() => {
     if (timerSeconds === 0) {
