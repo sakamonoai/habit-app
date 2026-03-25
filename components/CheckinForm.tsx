@@ -28,6 +28,7 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
+  const [previewExpanded, setPreviewExpanded] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -374,15 +375,62 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
           <canvas ref={canvasRef} className="hidden" />
         </div>
       ) : preview ? (
-        <div className="relative mb-3">
-          <img src={preview} alt="プレビュー" className="w-full rounded-xl object-cover max-h-48" />
-          <button
-            onClick={() => { setImageFile(null); setPreview(null); startCamera() }}
-            className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full text-sm flex items-center justify-center hover:bg-black/70 transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+        <>
+          <div className="relative mb-3">
+            <img
+              src={preview}
+              alt="プレビュー"
+              className="w-full rounded-xl object-cover max-h-48 cursor-pointer active:opacity-80 transition-opacity"
+              onClick={() => setPreviewExpanded(true)}
+            />
+            <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+              タップで拡大
+            </div>
+            <button
+              onClick={() => { setImageFile(null); setPreview(null); startCamera() }}
+              className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full text-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          {/* 拡大プレビュー */}
+          {previewExpanded && (
+            <div
+              className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center"
+              onClick={() => setPreviewExpanded(false)}
+            >
+              <img
+                src={preview}
+                alt="拡大プレビュー"
+                className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPreviewExpanded(false)
+                    setImageFile(null)
+                    setPreview(null)
+                    startCamera()
+                  }}
+                  className="px-6 py-3 bg-white/15 text-white text-sm font-medium rounded-full backdrop-blur active:scale-95 transition-transform"
+                >
+                  撮り直す
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPreviewExpanded(false)
+                  }}
+                  className="px-6 py-3 bg-orange-500 text-white text-sm font-medium rounded-full active:scale-95 transition-transform"
+                >
+                  この写真を使う
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <button
           onClick={() => startCamera()}
