@@ -16,6 +16,7 @@ export default function TimelineFilter({ challenges }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const activeId = searchParams.get('challenge') ?? ''
+  const scope = searchParams.get('scope') ?? ''
 
   const handleFilter = (id: string) => {
     if (id === activeId) {
@@ -25,21 +26,29 @@ export default function TimelineFilter({ challenges }: Props) {
     }
   }
 
-  if (challenges.length <= 1) return null
-
   return (
     <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
       <button
         onClick={() => router.push('/home')}
         className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-          !activeId
+          !activeId && !scope
             ? 'bg-gray-900 text-white'
             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
         }`}
       >
-        すべて
+        参加中
       </button>
-      {challenges.map((c) => (
+      <button
+        onClick={() => router.push('/home?scope=all')}
+        className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+          scope === 'all'
+            ? 'bg-gray-900 text-white'
+            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+        }`}
+      >
+        みんなの投稿
+      </button>
+      {!scope && challenges.length > 1 && challenges.map((c) => (
         <button
           key={c.id}
           onClick={() => handleFilter(c.id)}

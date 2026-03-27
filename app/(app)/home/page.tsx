@@ -2,13 +2,15 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import ReactionButton from '@/components/ReactionButton'
-import ReportButton from '@/components/ReportButton'
-import TimelineFilter from '@/components/TimelineFilter'
-import PullToRefresh from '@/components/PullToRefresh'
-import PhotoViewer from '@/components/PhotoViewer'
+import dynamic from 'next/dynamic'
 import { getJstDiffLabel } from '@/lib/timezone'
-import NotificationBell from '@/components/NotificationBell'
+
+const ReactionButton = dynamic(() => import('@/components/ReactionButton'))
+const ReportButton = dynamic(() => import('@/components/ReportButton'))
+const TimelineFilter = dynamic(() => import('@/components/TimelineFilter'))
+const PullToRefresh = dynamic(() => import('@/components/PullToRefresh'))
+const PhotoViewer = dynamic(() => import('@/components/PhotoViewer'))
+const NotificationBell = dynamic(() => import('@/components/NotificationBell'))
 
 const CHALLENGE_COLORS = [
   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-400' },
@@ -21,12 +23,13 @@ const CHALLENGE_COLORS = [
 ]
 
 type Props = {
-  searchParams: Promise<{ challenge?: string }>
+  searchParams: Promise<{ challenge?: string; scope?: string }>
 }
 
 export default async function HomePage({ searchParams }: Props) {
   try {
-  const { challenge: filterChallengeId } = await searchParams
+  const { challenge: filterChallengeId, scope } = await searchParams
+  const isAllScope = scope === 'all'
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/login')
 
@@ -42,7 +45,7 @@ export default async function HomePage({ searchParams }: Props) {
     .eq('user_id', user.id)
   if (memberError) console.error('[HOME] membership error:', memberError.message)
 
-  if (!memberships || memberships.length === 0) {
+  if ((!memberships || memberships.length === 0) && !isAllScope) {
     return (
       <div className="min-h-screen bg-white">
         <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
@@ -76,7 +79,7 @@ export default async function HomePage({ searchParams }: Props) {
   const groupToChallengeMap = new Map<string, string>()
   let colorIdx = 0
   const seenChallenges = new Set<string>()
-  for (const m of memberships) {
+  for (const m of memberships ?? []) {
     groupToChallengeMap.set(m.group_id, m.challenge_id)
     if (!seenChallenges.has(m.challenge_id)) {
       seenChallenges.add(m.challenge_id)
@@ -89,16 +92,40 @@ export default async function HomePage({ searchParams }: Props) {
     }
   }
 
-  const groupIds = memberships.map(m => m.group_id)
+  const groupIds = (memberships ?? []).map(m => m.group_id)
   const targetGroupIds = filterChallengeId
-    ? memberships.filter(m => m.challenge_id === filterChallengeId).map(m => m.group_id)
+    ? (memberships ?? []).filter(m => m.challenge_id === filterChallengeId).map(m => m.group_id)
     : groupIds
 
+  // scope=all の場合: 全アクティブチャレンジの投稿を取得
+  let allChallengeMap: Map<string, { id: string; title: string; groupId: string }> | null = null
+  let allGroupToChallengeId: Map<string, string> | null = null
+  if (isAllScope) {
+    const { data: allGroups } = await supabase
+      .from('groups')
+      .select('id, challenge_id, challenges(id, title, status)')
+    if (allGroups) {
+      allChallengeMap = new Map()
+      allGroupToChallengeId = new Map()
+      for (const g of allGroups) {
+        const c = g.challenges as unknown as { id: string; title: string; status: string | null } | null
+        if (!c || c.status === 'deleted' || c.status === 'suspended') continue
+        allGroupToChallengeId.set(g.id, c.id)
+        if (!allChallengeMap.has(c.id)) {
+          allChallengeMap.set(c.id, { id: c.id, title: c.title, groupId: g.id })
+        }
+      }
+    }
+  }
+
   // 2段目: チェックイン + profiles を取得（reactionsは別クエリで取得）
-  const { data: checkins, error: checkinError } = await supabase
+  const checkinQuery = supabase
     .from('checkins')
     .select('*, profiles!checkins_user_id_profiles_fkey(nickname, avatar_url, timezone)')
-    .in('group_id', targetGroupIds)
+  if (!isAllScope) {
+    checkinQuery.in('group_id', targetGroupIds)
+  }
+  const { data: checkins, error: checkinError } = await checkinQuery
     .order('checked_in_at', { ascending: false })
     .limit(30)
   if (checkinError) console.error('[HOME] checkin error:', checkinError.message, checkinError.code)
@@ -162,11 +189,13 @@ export default async function HomePage({ searchParams }: Props) {
         {checkins && checkins.length > 0 ? (
           <div className="divide-y divide-gray-50">
             {checkins.map((checkin) => {
-              const challengeId = groupToChallengeMap.get(checkin.group_id) ?? ''
+              const challengeId = (isAllScope ? allGroupToChallengeId?.get(checkin.group_id) : null) ?? groupToChallengeMap.get(checkin.group_id) ?? ''
               const challengeInfo = challengeMap.get(challengeId)
+              const allChallengeInfo = isAllScope && !challengeInfo ? allChallengeMap?.get(challengeId) : null
+              const isJoined = groupIds.includes(checkin.group_id)
               return (
                 <div key={checkin.id} className="px-4 py-4">
-                  {challengeInfo && (
+                  {challengeInfo ? (
                     <Link
                       href={`/group/${checkin.group_id}`}
                       className={`inline-flex items-center gap-1.5 ${challengeInfo.color.bg} ${challengeInfo.color.text} text-xs font-medium px-2.5 py-1 rounded-full mb-2`}
@@ -174,7 +203,15 @@ export default async function HomePage({ searchParams }: Props) {
                       <span className={`w-2 h-2 rounded-full ${challengeInfo.color.dot}`} />
                       {challengeInfo.title}
                     </Link>
-                  )}
+                  ) : allChallengeInfo ? (
+                    <Link
+                      href={`/challenges/${allChallengeInfo.id}`}
+                      className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full mb-2"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-gray-400" />
+                      {allChallengeInfo.title}
+                    </Link>
+                  ) : null}
 
                   <div className="flex items-center gap-2 mb-2">
                     <Link href={`/user/${checkin.user_id}`} className="shrink-0">
