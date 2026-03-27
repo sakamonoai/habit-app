@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getTodayBoundsUTC } from '@/lib/timezone'
 import DeadlineWarning from '@/components/DeadlineWarning'
+import ChallengeCardLink from '@/components/ChallengeCardLink'
 
 export default async function CheckinPage() {
   const { supabase, user } = await getSessionUser()
@@ -133,10 +134,11 @@ export default async function CheckinPage() {
         {activeGroups.length > 0 && (
           <div className="space-y-3 mb-6">
             {activeGroups.map((g) => (
-              <Link
+              <ChallengeCardLink
                 key={g.groupId}
                 href={`/group/${g.groupId}?from=checkin`}
-                className="block bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors"
+                checkedInToday={g.checkedInToday}
+                checkinDeadline={g.checkinDeadline}
               >
                 {g.notStartedYet ? (
                   <>
@@ -212,7 +214,7 @@ export default async function CheckinPage() {
                 )}
                 </>
                 )}
-              </Link>
+              </ChallengeCardLink>
             ))}
           </div>
         )}
