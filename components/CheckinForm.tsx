@@ -188,10 +188,6 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
   })()
 
   const handleSubmit = async () => {
-    if (isPassedDeadline) {
-      setError(`本日の投稿締め切り（${checkinDeadline}）を過ぎています`)
-      return
-    }
     setLoading(true)
     setError('')
 
@@ -451,13 +447,21 @@ export default function CheckinForm({ groupId, memberId, challengeId, durationDa
         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent mb-3"
       />
 
+      {/* 締め切り超過の警告 */}
+      {isPassedDeadline && (
+        <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5">
+          <p className="text-sm text-yellow-700 font-semibold">今日は締め切り（{checkinDeadline}）を過ぎてしまいましたね😢</p>
+          <p className="text-xs text-yellow-600 mt-0.5">それでも投稿しようとしているのは偉いです！</p>
+        </div>
+      )}
+
       {/* 送信ボタン */}
       <button
         onClick={handleSubmit}
         disabled={loading || !imageFile}
         className="w-full py-3.5 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-40 transition-all active:scale-[0.98]"
       >
-        {loading ? '投稿中...' : '記録を投稿する'}
+        {loading ? '投稿中...' : isPassedDeadline ? '締切超過で記録を投稿する' : '記録を投稿する'}
       </button>
     </div>
   )
