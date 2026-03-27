@@ -2,12 +2,14 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import CheckinForm from '@/components/CheckinForm'
-import CheckinShareCard from '@/components/CheckinShareCard'
-import ReactionButton from '@/components/ReactionButton'
-import ReportButton from '@/components/ReportButton'
-import PhotoViewer from '@/components/PhotoViewer'
+import dynamic from 'next/dynamic'
 import { getTodayBoundsUTC, getJstDiffLabel } from '@/lib/timezone'
+
+const CheckinForm = dynamic(() => import('@/components/CheckinForm'))
+const CheckinShareCard = dynamic(() => import('@/components/CheckinShareCard'))
+const ReactionButton = dynamic(() => import('@/components/ReactionButton'))
+const ReportButton = dynamic(() => import('@/components/ReportButton'))
+const PhotoViewer = dynamic(() => import('@/components/PhotoViewer'))
 
 type Props = {
   params: Promise<{ id: string }>
@@ -95,6 +97,7 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
   const allowedMisses = durationDays - requiredDays
   const missedDays = elapsedDays - (myCheckinCount ?? 0)
   const remainingMisses = allowedMisses - missedDays
+  const remainingMissesIfCheckinToday = hasCheckedInToday ? remainingMisses : remainingMisses + 1
   const remainingDaysTillEnd = durationDays - elapsedDays
   const isOngoing = remainingDaysTillEnd >= 0
   const isExtension = isFlexible && !isOngoing // 延長戦（いつでも参加の期間超過）
@@ -140,11 +143,21 @@ export default async function GroupTimelinePage({ params, searchParams }: Props)
               )}
             </div>
             {isOngoing && remainingMisses <= 0 && (
-              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
-                <p className="text-sm text-red-600 font-semibold">
-                  {remainingMisses < 0
-                    ? '⛔ 達成率85%を下回っています。今日から毎日記録しましょう！'
-                    : '🚨 あと1日でもサボるとアウト！今日も必ず記録しよう！'}
+              <div className={`mt-3 rounded-xl px-3 py-2.5 ${
+                !hasCheckedInToday && remainingMissesIfCheckinToday >= 0
+                  ? 'bg-orange-50 border border-orange-200'
+                  : 'bg-red-50 border border-red-200'
+              }`}>
+                <p className={`text-sm font-semibold ${
+                  !hasCheckedInToday && remainingMissesIfCheckinToday >= 0
+                    ? 'text-orange-600'
+                    : 'text-red-600'
+                }`}>
+                  {!hasCheckedInToday && remainingMissesIfCheckinToday >= 0
+                    ? '📸 今日チェックインすればまだ間に合います！忘れずに記録しよう'
+                    : remainingMisses < 0
+                      ? '⛔ 達成率85%を下回っています。今日から毎日記録しましょう！'
+                      : '🚨 あと1日でもサボるとアウト！今日も必ず記録しよう！'}
                 </p>
               </div>
             )}

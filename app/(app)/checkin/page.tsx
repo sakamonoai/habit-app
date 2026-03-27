@@ -81,6 +81,8 @@ export default async function CheckinPage() {
     const allowedMisses = durationDays - requiredDays
     const missedDays = elapsedDays - checkinCount
     const remainingMisses = allowedMisses - missedDays
+    const checkedInToday = todaySet.has(m.id)
+    const remainingMissesIfCheckinToday = checkedInToday ? remainingMisses : remainingMisses + 1
     const isOngoing = durationDays - elapsedDays >= 0
 
     // チャレンジが削除/停止、またはfixedで期間終了ならアーカイブ
@@ -105,6 +107,7 @@ export default async function CheckinPage() {
       checkinCount,
       durationDays,
       remainingMisses,
+      remainingMissesIfCheckinToday,
       isOngoing,
       isArchived,
       isDeleted,
@@ -181,11 +184,21 @@ export default async function CheckinPage() {
                   </div>
                 </div>
                 {g.isOngoing && g.remainingMisses <= 0 && (
-                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                    <p className="text-xs text-red-600 font-semibold">
-                      {g.remainingMisses < 0
-                        ? '⛔ 達成率85%を下回っています…'
-                        : '🚨 あと1日でもサボるとアウトです！'}
+                  <div className={`mt-2 rounded-lg px-3 py-2 ${
+                    !g.checkedInToday && g.remainingMissesIfCheckinToday >= 0
+                      ? 'bg-orange-50 border border-orange-200'
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <p className={`text-xs font-semibold ${
+                      !g.checkedInToday && g.remainingMissesIfCheckinToday >= 0
+                        ? 'text-orange-600'
+                        : 'text-red-600'
+                    }`}>
+                      {!g.checkedInToday && g.remainingMissesIfCheckinToday >= 0
+                        ? '📸 今日チェックインすればまだ間に合います！'
+                        : g.remainingMisses < 0
+                          ? '⛔ 達成率85%を下回っています…'
+                          : '🚨 あと1日でもサボるとアウトです！'}
                     </p>
                   </div>
                 )}

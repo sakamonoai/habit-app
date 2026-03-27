@@ -78,7 +78,19 @@ export default async function HistoryPage() {
   }
 
   const userTz = profile?.timezone || 'Asia/Tokyo'
-  const { today } = getTodayBoundsUTC(userTz)
+  const { today, todayStartUTC, todayEndUTC } = getTodayBoundsUTC(userTz)
+
+  // 今日チェックイン済みかを member_id ごとに取得
+  const todayCheckinSet = new Set<string>()
+  if (memberIds.length > 0) {
+    const { data: todayCheckins } = await supabase
+      .from('checkins')
+      .select('member_id')
+      .in('member_id', memberIds)
+      .gte('checked_in_at', todayStartUTC)
+      .lt('checked_in_at', todayEndUTC)
+    todayCheckins?.forEach(c => todayCheckinSet.add(c.member_id))
+  }
 
   // チャレンジ統計を計算
   const challengeStats = allMemberships.map((m) => {
@@ -96,6 +108,8 @@ export default async function HistoryPage() {
     const allowedMisses = durationDays - requiredDays
     const missedDays = elapsedDays - checkinCount
     const remainingMisses = allowedMisses - missedDays
+    const checkedInToday = todayCheckinSet.has(m.id)
+    const remainingMissesIfCheckinToday = checkedInToday ? remainingMisses : remainingMisses + 1
     const remainingDays = durationDays - elapsedDays
     const isOngoing = remainingDays >= 0
 
@@ -116,6 +130,8 @@ export default async function HistoryPage() {
       depositAmount,
       status: m.status as string,
       remainingMisses,
+      remainingMissesIfCheckinToday,
+      checkedInToday,
       isOngoing,
       notStartedYet,
       startDateLabel,
@@ -259,11 +275,21 @@ export default async function HistoryPage() {
                         <span>¥{s.depositAmount.toLocaleString()}</span>
                       </div>
                       {s.isOngoing && s.remainingMisses <= 0 && (
-                        <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                          <p className="text-xs text-red-600 font-semibold">
-                            {s.remainingMisses < 0
-                              ? '⛔ 達成率85%を下回っています…'
-                              : '🚨 あと1日でもサボるとアウトです！'}
+                        <div className={`mt-2 rounded-lg px-3 py-2 ${
+                          !s.checkedInToday && s.remainingMissesIfCheckinToday >= 0
+                            ? 'bg-orange-50 border border-orange-200'
+                            : 'bg-red-50 border border-red-200'
+                        }`}>
+                          <p className={`text-xs font-semibold ${
+                            !s.checkedInToday && s.remainingMissesIfCheckinToday >= 0
+                              ? 'text-orange-600'
+                              : 'text-red-600'
+                          }`}>
+                            {!s.checkedInToday && s.remainingMissesIfCheckinToday >= 0
+                              ? '📸 今日チェックインすればまだ間に合います！'
+                              : s.remainingMisses < 0
+                                ? '⛔ 達成率85%を下回っています…'
+                                : '🚨 あと1日でもサボるとアウトです！'}
                           </p>
                         </div>
                       )}
