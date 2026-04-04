@@ -139,8 +139,9 @@ export default async function HistoryPage() {
     }
   })
 
-  const activeChallenges = challengeStats.filter(s => s.status === 'active')
-  const pastChallenges = challengeStats.filter(s => s.status !== 'active')
+  // 期間終了したチャレンジはstatusがactiveでも「過去」として扱う
+  const activeChallenges = challengeStats.filter(s => s.status === 'active' && s.isOngoing)
+  const pastChallenges = challengeStats.filter(s => s.status !== 'active' || !s.isOngoing)
 
   const totalDeposit = allMemberships.reduce((sum, m) => sum + (m.deposit_amount ?? 0), 0)
   const completedCount = allMemberships.filter(m => m.status === 'completed').length
@@ -152,6 +153,7 @@ export default async function HistoryPage() {
   const statusConfig = {
     completed: { label: '✅ 返金済み', bg: 'bg-green-100', text: 'text-green-700' },
     forfeited: { label: '❌ 没収', bg: 'bg-red-100', text: 'text-red-700' },
+    active: { label: '⏳ 集計中', bg: 'bg-yellow-100', text: 'text-yellow-700' },
   } as const
 
   return (
