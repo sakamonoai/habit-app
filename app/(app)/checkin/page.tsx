@@ -87,10 +87,9 @@ export default async function CheckinPage() {
     const remainingMissesIfCheckinToday = checkedInToday ? remainingMisses : remainingMisses + 1
     const isOngoing = durationDays - elapsedDays >= 0
 
-    // チャレンジが削除/停止、またはfixedで期間終了ならアーカイブ
+    // チャレンジが削除/停止、または期間終了ならアーカイブ
     const isDeleted = !challenge || challenge.status === 'deleted' || challenge.status === 'suspended'
-    const isFixedEnded = challenge?.schedule_type === 'fixed' && !isOngoing
-    const isArchived = isDeleted || isFixedEnded
+    const isArchived = isDeleted || !isOngoing
 
     // まだ開始していないか判定（fixed: start_date未到来, flexible: joined_atが未来）
     const notStartedYet = challenge?.schedule_type === 'fixed' && challenge.start_date
